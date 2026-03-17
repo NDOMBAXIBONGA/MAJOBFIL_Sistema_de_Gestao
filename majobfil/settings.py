@@ -11,16 +11,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-import dj_database_url  # ← Descomentei (vamos usar!)
+#import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# ============================================
-# CONFIGURAÇÕES DE SEGURANÇA (removidas duplicações)
-# ============================================
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-production')
+# Configurações de segurança
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-local-aqui')
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -28,17 +23,23 @@ ALLOWED_HOSTS = [
     '.up.railway.app',  # Aceita qualquer subdomínio do railway
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.up.railway.app',
-]
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ============================================
-# APLICAÇÕES INSTALADAS
-# ============================================
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+#ALLOWED_HOSTS = []
+
+
+# Application definition
+
 INSTALLED_APPS = [
-    # Descomente se for usar admin_interface
-    # 'admin_interface',
-    # 'colorfield',
+    #'admin_interface',
+    #'colorfield', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,44 +47,36 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Seus apps
     'balanco',
     'conta',
     'lojas',
     'produtos',
     'relatorio',
+    
 ]
 
-# ============================================
-# CONFIGURAÇÕES DO ADMIN
-# ============================================
+# IMPORTANTE para Django 3.0+
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 SILENCED_SYSTEM_CHECKS = ['security.W019']
 
-# ============================================
-# MIDDLEWARE
-# ============================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Para arquivos estáticos
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'majobfil.middleware.force_custom_errors.ForceCustomErrorsMiddleware',  # Seu middleware customizado
+    'majobfil.middleware.force_custom_errors.ForceCustomErrorsMiddleware',
 ]
 
-# ============================================
-# URLs E TEMPLATES
-# ============================================
 ROOT_URLCONF = 'majobfil.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,71 +90,84 @@ TEMPLATES = [
     },
 ]
 
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'
+
 WSGI_APPLICATION = 'majobfil.wsgi.application'
 
-# ============================================
-# BANCO DE DADOS (VERSÃO SIMPLIFICADA COM dj_database_url)
-# ============================================
-# ✅ Esta configuração funciona tanto local (SQLite) quanto no Railway (PostgreSQL)
+
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('PGDATABASE'),
+        'USER': os.environ.get('PGUSER'),
+        'PASSWORD': os.environ.get('PGPASSWORD'),
+        'HOST': os.environ.get('PGHOST'),
+        'PORT': os.environ.get('PGPORT', '5432'),
+    }
 }
 
-# ============================================
-# VALIDAÇÃO DE SENHAS
-# ============================================
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
-# ============================================
-# INTERNACIONALIZAÇÃO
-# ============================================
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'Africa/Luanda'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# ============================================
-# ARQUIVOS ESTÁTICOS E MÍDIA
-# ============================================
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ============================================
-# CONFIGURAÇÕES DE AUTENTICAÇÃO
-# ============================================
-AUTH_USER_MODEL = 'conta.Conta'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-# ============================================
-# CONFIGURAÇÕES DE SEGURANÇA PARA PRODUÇÃO (OPCIONAIS)
-# ============================================
-if not DEBUG:
-    # Só ative estas configurações se seu site usar HTTPS
-    # SECURE_SSL_REDIRECT = True
-    # SESSION_COOKIE_SECURE = True
-    # CSRF_COOKIE_SECURE = True
-    # SECURE_HSTS_SECONDS = 31536000  # 1 ano
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # SECURE_HSTS_PRELOAD = True
-    pass
-
-# ============================================
-# CHAVE PRIMÁRIA PADRÃO
-# ============================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Adicione estas configurações ao seu settings.py
+
+AUTH_USER_MODEL = 'conta.Conta'  # Substitua 'sua_app' pelo nome do seu app
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.up.railway.app',
+]
