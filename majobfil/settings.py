@@ -1,6 +1,3 @@
-"""
-Django settings for majobfil project - Configurado para Railway
-"""
 import os
 from pathlib import Path
 import dj_database_url
