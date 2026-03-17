@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excluir Relatório - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none !important;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px !important;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center !important;
+            padding: 12px 5px !important;
+            margin: 5px !important;
+            justify-content: center !important;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0 !important;
+            font-size: 1.2rem !important;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Card de Confirmação */
+        .confirmacao-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .confirmacao-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-header-danger {
+            background: linear-gradient(135deg, var(--danger), #e83e8c);
+            color: white;
+            padding: 20px;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .alert-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .detalhes-relatorio {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+        
+        .info-value {
+            color: #6c757d;
+            text-align: right;
+            flex-grow: 1;
+        }
+        
+        .btn-excluir {
+            background: linear-gradient(135deg, var(--danger), #e83e8c);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-excluir:hover {
+            background: linear-gradient(135deg, #d42a2a, #d92c6c);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-cancelar {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-cancelar:hover {
+            background: #5a6268;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .consequencias {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .consequencias h6 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .consequencias ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        
+        .consequencias li {
+            color: #856404;
+            margin-bottom: 5px;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .badge {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+        
+        /* Modal responsivo */
+        .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 20px;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .confirmacao-card {
+                max-width: 550px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .confirmacao-card {
+                max-width: 100%;
+            }
+            
+            .card-body {
+                padding: 25px 20px;
+            }
+            
+            .card-header-danger {
+                padding: 15px 20px;
+            }
+            
+            .detalhes-relatorio {
+                padding: 15px;
+            }
+            
+            .alert-icon {
+                font-size: 3.5rem;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .top-bar-actions .dropdown {
+                align-self: flex-start;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                gap: 5px;
+                align-items: flex-start;
+            }
+            
+            .info-label, .info-value {
+                width: 100%;
+                text-align: left;
+            }
+            
+            .info-value {
+                margin-top: 2px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .action-buttons > a,
+            .action-buttons > button {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-header h5 {
+                font-size: 1.1rem;
+            }
+            
+            .alert-icon {
+                font-size: 3rem;
+            }
+            
+            .breadcrumb {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.4rem;
+            }
+            
+            .confirmacao-card {
+                border-radius: 10px;
+            }
+            
+            .card-header-danger {
+                padding: 12px 15px;
+            }
+            
+            .card-header-danger h3 {
+                font-size: 1.3rem;
+            }
+            
+            .card-body {
+                padding: 20px 15px;
+            }
+            
+            .detalhes-relatorio {
+                padding: 12px;
+                margin: 15px 0;
+            }
+            
+            .alert-icon {
+                font-size: 2.5rem;
+            }
+            
+            .consequencias {
+                padding: 12px;
+                margin: 15px 0;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+            
+            .modal-dialog {
+                margin: 5px;
+            }
+            
+            .modal-content {
+                border-radius: 10px;
+            }
+            
+            .modal-header, .modal-body, .modal-footer {
+                padding: 15px;
+            }
+            
+            .form-control-lg {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+            
+            .form-check-label {
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions span {
+                width: 100%;
+                text-align: center;
+                margin: 3px 0;
+            }
+            
+            .top-bar-actions .dropdown {
+                align-self: stretch;
+            }
+            
+            .top-bar-actions .dropdown .btn {
+                width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .action-buttons > a,
+            .action-buttons > button {
+                width: 100%;
+            }
+            
+            .info-item {
+                padding: 6px 0;
+            }
+            
+            .consequencias ul {
+                padding-left: 15px;
+            }
+            
+            .consequencias li {
+                font-size: 0.85rem;
+            }
+            
+            .form-check-label {
+                font-size: 0.85rem;
+            }
+            
+            .modal-title {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 0.3s;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal,
+            .action-buttons {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .confirmacao-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                max-width: 100% !important;
+            }
+            
+            .top-bar {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .loading-overlay .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .loading-overlay h4 {
+            margin-bottom: 10px;
+        }
+        
+        .loading-overlay p {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_lojas' %}">
+                        <i class="fas fa-store"></i><span>Lojas</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_estoque' %}">
+                        <i class="fas fa-boxes"></i><span>Estoque</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vendas' %}">
+                        <i class="fas fa-shopping-cart"></i><span>Vendas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_relatorios_diarios' %}">
+                        <i class="fas fa-chart-bar"></i><span>Relatórios</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <div>
+                    <h3 class="mb-0">Excluir Relatório</h3>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'listar_relatorios_diarios' %}">Relatórios</a></li>
+                            <li class="breadcrumb-item active">Excluir Relatório</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="top-bar-actions">
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        {{ user.get_full_name|default:user.username }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            {% if user.is_superuser %}
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Balanço</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Confirmação -->
+        <div class="confirmacao-card fade-in">
+            <div class="card-header-danger text-center">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3 d-none d-md-block"></i>
+                <i class="fas fa-exclamation-triangle fa-2x mb-2 d-md-none"></i>
+                <h3 class="mb-0">Confirmar Exclusão</h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="alert-icon text-danger">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <h4 class="text-danger">Atenção!</h4>
+                    <p class="text-muted">
+                        Você está prestes a excluir permanentemente um relatório do sistema. 
+                        Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+
+                <!-- Detalhes do Relatório -->
+                <div class="detalhes-relatorio">
+                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Relatório a Ser Excluído</h5>
+                    <div class="info-item">
+                        <span class="info-label">Data do Relatório:</span>
+                        <span class="info-value">{{ relatorio.data|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Loja:</span>
+                        <span class="info-value">{{ relatorio.loja.nome }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Usuário Responsável:</span>
+                        <span class="info-value">{{ relatorio.usuario.get_full_name|default:relatorio.usuario.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Geral:</span>
+                        <span class="info-value">AKZ {{ relatorio.total_geral|floatformat:2 }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value">
+                            {% if relatorio.esta_completamente_preenchido %}
+                                <span class="badge bg-success">Completo</span>
+                            {% else %}
+                                <span class="badge bg-warning">Parcial</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Data de Criação:</span>
+                        <span class="info-value">{{ relatorio.criado_em|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+
+                <!-- Consequências da Exclusão -->
+                <div class="consequencias">
+                    <h6><i class="fas fa-exclamation-circle me-2"></i>Esta ação irá:</h6>
+                    <ul>
+                        <li>Remover permanentemente todos os dados deste relatório</li>
+                        <li>Excluir registros de vendas e transações associadas</li>
+                        <li>Afetar relatórios consolidados e estatísticas do sistema</li>
+                        <li>Não poderá ser desfeita posteriormente</li>
+                    </ul>
+                </div>
+
+                <!-- Confirmação Final -->
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmacaoExclusao">
+                        <label class="form-check-label text-danger fw-bold" for="confirmacaoExclusao">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span class="d-none d-sm-inline">Eu entendo que esta ação é irreversível e desejo prosseguir com a exclusão</span>
+                            <span class="d-sm-none">Confirmo que entendo que esta ação é irreversível</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="d-flex justify-content-between action-buttons">
+                    <!-- CORREÇÃO: Usar relatorio.id em vez de relatorio_id -->
+                    <a href="{% url 'detalhes_relatorio_diario' relatorio.id %}" class="btn btn-cancelar">
+                        <i class="fas fa-arrow-left me-2"></i>Cancelar
+                    </a>
+                    <button type="button" class="btn btn-excluir" id="btnExcluir" disabled>
+                        <i class="fas fa-trash me-2"></i>Excluir Permanentemente
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmação Final -->
+        <div class="modal fade" id="modalConfirmacaoFinal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Confirmação Final
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-skull-crossbones fa-3x text-danger d-none d-md-block"></i>
+                            <i class="fas fa-skull-crossbones fa-2x text-danger d-md-none"></i>
+                        </div>
+                        <h4 class="text-danger mb-3">Última Chance!</h4>
+                        <p class="mb-4">
+                            Você está prestes a excluir permanentemente o relatório de <strong>{{ relatorio.data|date:"d/m/Y" }}</strong> 
+                            da <strong>{{ relatorio.loja.nome }}</strong>. Esta ação é <strong>IRREVERSÍVEL</strong>.
+                        </p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-key me-2"></i>
+                            <strong>Digite "EXCLUIR" no campo abaixo para confirmar:</strong>
+                        </div>
+                        <input type="text" class="form-control form-control-lg text-center mb-3" 
+                               id="confirmacaoTexto" placeholder="Digite EXCLUIR aqui">
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </button>
+                        <!-- CORREÇÃO: Usar relatorio.id em vez de relatorio_id -->
+                        <form method="POST" action="{% url 'excluir_relatorio_diario' relatorio.id %}" id="formExclusao">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao" disabled>
+                                <i class="fas fa-bomb me-2"></i>Confirmar Exclusão
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) closeSidebar();
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                        isSidebarCollapsed = true;
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+        });
+        
+        // Elementos DOM para exclusão
+        const checkboxConfirmacao = document.getElementById('confirmacaoExclusao');
+        const btnExcluir = document.getElementById('btnExcluir');
+        const confirmacaoTexto = document.getElementById('confirmacaoTexto');
+        const btnConfirmarExclusao = document.getElementById('btnConfirmarExclusao');
+        const modalConfirmacaoFinal = new bootstrap.Modal(document.getElementById('modalConfirmacaoFinal'));
+        
+        // Habilitar/desabilitar botão de exclusão baseado no checkbox
+        checkboxConfirmacao.addEventListener('change', function() {
+            btnExcluir.disabled = !this.checked;
+            if (!this.checked) {
+                btnExcluir.classList.remove('pulse');
+            } else {
+                btnExcluir.classList.add('pulse');
+                setTimeout(() => btnExcluir.classList.remove('pulse'), 300);
+            }
+        });
+        
+        // Abrir modal de confirmação final
+        btnExcluir.addEventListener('click', function() {
+            modalConfirmacaoFinal.show();
+            
+            // Focar no campo de texto após a modal abrir
+            setTimeout(() => {
+                confirmacaoTexto.focus();
+            }, 500);
+        });
+        
+        // Validação do texto de confirmação
+        confirmacaoTexto.addEventListener('input', function() {
+            const textoDigitado = this.value.trim().toUpperCase();
+            const textoEsperado = 'EXCLUIR';
+            
+            if (textoDigitado === textoEsperado) {
+                btnConfirmarExclusao.disabled = false;
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                btnConfirmarExclusao.classList.add('shake');
+                setTimeout(() => btnConfirmarExclusao.classList.remove('shake'), 500);
+            } else {
+                btnConfirmarExclusao.disabled = true;
+                this.classList.remove('is-valid');
+                if (textoDigitado !== '') {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            }
+        });
+        
+        // Efeito de loading no botão de confirmação final
+        document.getElementById('formExclusao').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnConfirmarExclusao');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...';
+            btn.disabled = true;
+            
+            // Adicionar overlay de loading
+            const overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div class="spinner-border text-light mb-3" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <h4>Excluindo Relatório...</h4>
+                <p class="mt-2">Esta operação pode levar alguns instantes.</p>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Prevenir navegação acidental
+            window.onbeforeunload = function() {
+                return 'A exclusão está em andamento. Tem certeza que deseja sair?';
+            };
+            
+            // Submeter o formulário após um pequeno delay para mostrar o loading
+            setTimeout(() => {
+                this.submit();
+            }, 1000);
+        });
+        
+        // Tecla Escape para cancelar modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('modalConfirmacaoFinal');
+                if (modal.classList.contains('show')) {
+                    modalConfirmacaoFinal.hide();
+                }
+                closeSidebar();
+            }
+        });
+        
+        // Otimização para mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Adicionar efeito hover em touch devices
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.classList.add('active');
+                });
+                
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('active');
+                });
+            });
+        }
+        
+        // Prevenir zoom duplo em iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página de exclusão de relatório carregada');
+            
+            // Adicionar classe para animação de entrada
+            setTimeout(() => {
+                document.querySelector('.confirmacao-card').classList.add('fade-in');
+            }, 100);
+            
+            // Auto-focar no checkbox de confirmação
+            setTimeout(() => {
+                checkboxConfirmacao.focus();
+            }, 300);
+        });
+        
+        // Acessibilidade - tecla Enter no checkbox
+        checkboxConfirmacao.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                this.checked = !this.checked;
+                this.dispatchEvent(new Event('change'));
+            }
+        });
+        
+        // Acessibilidade - tecla Enter no campo de texto de confirmação
+        confirmacaoTexto.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !btnConfirmarExclusao.disabled) {
+                btnConfirmarExclusao.click();
+            }
+        });
+        
+        // Mostrar mensagem se o formulário foi enviado anteriormente
+        if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 90vw;';
+            alertDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                Você retornou para a página de exclusão. Verifique se a operação foi concluída.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

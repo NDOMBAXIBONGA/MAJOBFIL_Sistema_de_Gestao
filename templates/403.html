@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Negado - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .error-container {
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .error-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: none;
+        }
+        
+        .error-header {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite alternate;
+        }
+        
+        .error-body {
+            padding: 40px 30px;
+        }
+        
+        .error-code {
+            font-size: 6rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+        
+        .error-title {
+            font-size: 2.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            color: #666;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn-error {
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .btn-error:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-error-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+        }
+        
+        .btn-error-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .error-details {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--danger);
+        }
+        
+        .error-details-title {
+            color: var(--danger);
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .error-info {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .login-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-10px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .error-header {
+                padding: 30px 20px;
+            }
+            
+            .error-body {
+                padding: 30px 20px;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.8rem;
+            }
+            
+            .error-actions {
+                flex-direction: column;
+            }
+            
+            .btn-error {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .login-form {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+            
+            .error-code {
+                font-size: 3rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .error-message {
+                font-size: 1rem;
+            }
+            
+            .error-icon {
+                font-size: 3rem;
+            }
+        }
+        
+        /* Logo styling */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+        }
+        
+        /* Footer */
+        .error-footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #999;
+            font-size: 0.9rem;
+        }
+        
+        .error-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .error-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="logo-container">
+            <a href="{% url 'login' %}" class="logo">
+                <i class="fas fa-chart-line logo-icon"></i>
+                <span>MAJOBFIL</span>
+            </a>
+        </div>
+        
+        <div class="error-card">
+            <div class="error-header">
+                <div class="error-icon">
+                    <i class="fas fa-ban"></i>
+                </div>
+                <h1 class="error-code">403</h1>
+                <h2 class="error-title">Acesso Negado</h2>
+            </div>
+            
+            <div class="error-body">
+                <p class="error-message">
+                    Você não tem permissão para acessar esta página ou recurso. 
+                    Esta ação requer privilégios específicos que não estão disponíveis na sua conta atual.
+                </p>
+                
+                <div class="error-details">
+                    <h3 class="error-details-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Informações do Erro
+                    </h3>
+                    <p class="error-info">
+                        {% if request.user.is_authenticated %}
+                            Usuário: {{ user.nome|default:user.username }}<br>
+                            Permissões: 
+                            {% if user.is_superuser %}
+                                Administrador
+                            {% elif user.is_staff %}
+                                Funcionário
+                            {% else %}
+                                Usuário Padrão
+                            {% endif %}
+                        {% else %}
+                            Você não está autenticado. Faça login para continuar.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="error-actions">
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-error btn-error-primary">
+                            <i class="fas fa-home"></i>
+                            Voltar ao Dashboard
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-error btn-error-outline">
+                            <i class="fas fa-arrow-left"></i>
+                            Voltar à Página Anterior
+                        </a>
+                        {% if user.is_superuser %}
+                            <a href="/admin/" class="btn btn-error btn-error-outline">
+                                <i class="fas fa-cog"></i>
+                                Painel Administrativo
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-error btn-error-primary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Fazer Login
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-error btn-error-outline">
+                            <i class="fas fa-home"></i>
+                            Página Inicial
+                        </a>
+                    {% endif %}
+                </div>
+                
+                {% if not request.user.is_authenticated %}
+                <div class="login-form">
+                    <h4 class="mb-3">Faça login para continuar</h4>
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Usuário</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-error btn-error-primary w-100">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Entrar
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="error-footer">
+            <p>
+                &copy; 2024 MAJOBFIL - Sistema de Gestão. 
+                <a href="mailto:suporte@majobfil.com">Contate o suporte</a> se precisar de assistência.
+            </p>
+            <p>
+                Erro 403: Permissão Negada | IP: {{ request.META.REMOTE_ADDR }}
+            </p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-focus no campo de usuário se houver formulário de login
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameField = document.getElementById('username');
+            if (usernameField) {
+                setTimeout(() => {
+                    usernameField.focus();
+                }, 500);
+            }
+            
+            // Registrar tentativa de acesso
+            console.warn('Tentativa de acesso negada (403):', {
+                path: window.location.pathname,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            });
+        });
+        
+        // Previne o clique direito para inspeção (opcional)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('Acesso ao menu de contexto está restrito nesta página.');
+            return false;
+        });
+        
+        // Previne F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 123 || // F12
+                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
+                (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

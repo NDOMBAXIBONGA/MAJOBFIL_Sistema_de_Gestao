@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Usuário - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Cards */
+        .form-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+        
+        .form-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .form-card .card-header {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        
+        /* Form Elements */
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+        
+        .form-floating > label {
+            padding-left: 15px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, var(--danger), #dc2626);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .section-title {
+            color: var(--primary);
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .errorlist {
+            color: #dc3545;
+            padding-left: 0;
+            list-style: none;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .user-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .password-strength {
+            height: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+        
+        .password-weak {
+            background-color: #ef4444;
+            width: 25%;
+        }
+        
+        .password-medium {
+            background-color: #f59e0b;
+            width: 50%;
+        }
+        
+        .password-strong {
+            background-color: #10b981;
+            width: 100%;
+        }
+        
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .form-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+            
+            .user-avatar {
+                width: 90px;
+                height: 90px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .form-card .card-header {
+                padding: 15px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .d-flex.justify-content-between > div {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                gap: 15px;
+            }
+            
+            .form-card .card-body {
+                padding: 15px;
+            }
+            
+            .form-control {
+                padding: 10px 12px;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .card-header .d-flex.justify-content-between {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .card-header .text-center {
+                margin-top: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .form-card {
+                border-radius: 10px;
+            }
+            
+            .form-card .card-header {
+                border-radius: 10px 10px 0 0;
+                padding: 12px;
+            }
+            
+            .user-avatar {
+                width: 80px;
+                height: 80px;
+                border-width: 3px;
+            }
+            
+            h3 {
+                font-size: 1.3rem;
+            }
+            
+            h5 {
+                font-size: 1.1rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .btn-lg {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+            }
+            
+            .modal-content {
+                border-radius: 8px;
+            }
+            
+            .modal-header, .modal-body, .modal-footer {
+                padding: 15px;
+            }
+            
+            .d-flex.justify-content-between.flex-wrap {
+                gap: 10px;
+            }
+            
+            .d-flex.justify-content-between.flex-wrap .btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions span {
+                width: 100%;
+                text-align: center;
+                margin: 5px 0;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .row .col-md-12.d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .row .col-md-12.d-flex.justify-content-between > div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .row .col-md-12.d-flex.justify-content-between .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .form-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i>Dashboard
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'criar_usuario' %}">
+                        <i class="fas fa-user-plus"></i>Criar Conta
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_usuarios' %}">
+                        <i class="fas fa-users"></i>Gerenciar Usuários
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <div>
+                    <h3 class="mb-0">Editar Usuário</h3>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'listar_usuarios' %}">Usuários</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'detalhes_usuario' usuario.id %}">{{ usuario.nome|truncatechars:20 }}</a></li>
+                            <li class="breadcrumb-item active">Editar</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="top-bar-actions">
+                    <a href="{% url 'detalhes_usuario' usuario.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        {{ user.nome|default:user.username }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Form Card -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h4 class="mb-1"><i class="fas fa-user-edit me-2"></i>Editar Usuário</h4>
+                                <p class="mb-0 opacity-75">Atualize os dados do usuário {{ usuario.nome }}</p>
+                            </div>
+                            <div class="text-center">
+                                <img src="https://ui-avatars.com/api/?name={{ usuario.nome|urlencode }}&background=667eea&color=fff&size=100" 
+                                     alt="Avatar" class="user-avatar mb-2">
+                                <div>
+                                    {% if usuario.is_superuser %}
+                                    <span class="badge bg-danger me-1">Admin</span>
+                                    {% elif usuario.is_staff %}
+                                    <span class="badge bg-warning me-1">Staff</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary me-1">Usuário</span>
+                                    {% endif %}
+                                    {% if usuario.is_active %}
+                                    <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" id="formEditarUsuario">
+                            {% csrf_token %}
+                            
+                            <!-- Informações de Acesso -->
+                            <h5 class="section-title mt-0">
+                                <i class="fas fa-key me-2"></i>Informações de Acesso
+                            </h5>
+                            <div class="form-grid mb-4">
+                                <div class="form-floating">
+                                    {{ form.username }}
+                                    <label for="id_username">Nome de usuário *</label>
+                                    {% if form.username.errors %}
+                                        <div class="errorlist">{{ form.username.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.email }}
+                                    <label for="id_email">Email *</label>
+                                    {% if form.email.errors %}
+                                        <div class="errorlist">{{ form.email.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Botão para redefinir senha -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#redefinirSenhaModal">
+                                        <i class="fas fa-key me-2"></i>Redefinir Senha
+                                    </button>
+                                    <small class="text-muted ms-2">Como administrador, você pode redefinir a senha deste usuário</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Informações Pessoais -->
+                            <h5 class="section-title">
+                                <i class="fas fa-user me-2"></i>Informações Pessoais
+                            </h5>
+                            <div class="form-grid mb-4">
+                                <div class="form-floating">
+                                    {{ form.nome }}
+                                    <label for="id_nome">Nome Completo *</label>
+                                    {% if form.nome.errors %}
+                                        <div class="errorlist">{{ form.nome.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.telemovel }}
+                                    <label for="id_telemovel">Telemóvel</label>
+                                    {% if form.telemovel.errors %}
+                                        <div class="errorlist">{{ form.telemovel.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.data_nascimento }}
+                                    <label for="id_data_nascimento">Data de Nascimento</label>
+                                    {% if form.data_nascimento.errors %}
+                                        <div class="errorlist">{{ form.data_nascimento.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.bilhete_identidade }}
+                                    <label for="id_bilhete_identidade">Bilhete de Identidade</label>
+                                    {% if form.bilhete_identidade.errors %}
+                                        <div class="errorlist">{{ form.bilhete_identidade.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Localização -->
+                            <h5 class="section-title">
+                                <i class="fas fa-map-marker-alt me-2"></i>Localização
+                            </h5>
+                            <div class="form-grid mb-4">
+                                <div class="form-floating">
+                                    {{ form.bairro }}
+                                    <label for="id_bairro">Bairro</label>
+                                    {% if form.bairro.errors %}
+                                        <div class="errorlist">{{ form.bairro.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.cidade }}
+                                    <label for="id_cidade">Cidade</label>
+                                    {% if form.cidade.errors %}
+                                        <div class="errorlist">{{ form.cidade.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.municipio }}
+                                    <label for="id_municipio">Município</label>
+                                    {% if form.municipio.errors %}
+                                        <div class="errorlist">{{ form.municipio.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="form-floating">
+                                    {{ form.provincia }}
+                                    <label for="id_provincia">Província</label>
+                                    {% if form.provincia.errors %}
+                                        <div class="errorlist">{{ form.provincia.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Permissões -->
+                            <h5 class="section-title">
+                                <i class="fas fa-shield-alt me-2"></i>Permissões do Sistema
+                            </h5>
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch mb-3 p-3 bg-light rounded">
+                                        {{ form.is_staff }}
+                                        <label class="form-check-label fw-bold" for="id_is_staff">
+                                            Usuário da Equipe (Staff)
+                                        </label>
+                                        <small class="form-text text-muted d-block mt-1">
+                                            Usuários staff podem acessar a área administrativa.
+                                        </small>
+                                        {% if form.is_staff.errors %}
+                                            <div class="errorlist">{{ form.is_staff.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="form-check form-switch mb-3 p-3 bg-light rounded">
+                                        {{ form.is_superuser }}
+                                        <label class="form-check-label fw-bold" for="id_is_superuser">
+                                            Superusuário
+                                        </label>
+                                        <small class="form-text text-muted d-block mt-1">
+                                            Superusuários têm acesso completo a todas as funcionalidades do sistema.
+                                        </small>
+                                        {% if form.is_superuser.errors %}
+                                            <div class="errorlist">{{ form.is_superuser.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="form-check form-switch mb-3 p-3 bg-light rounded">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label fw-bold" for="id_is_active">
+                                            Conta Ativa
+                                        </label>
+                                        <small class="form-text text-muted d-block mt-1">
+                                            Desmarque para desativar a conta do usuário.
+                                        </small>
+                                        {% if form.is_active.errors %}
+                                            <div class="errorlist">{{ form.is_active.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Buttons -->
+                            <div class="row mt-4 pt-4 border-top">
+                                <div class="col-md-12 d-flex justify-content-between flex-wrap gap-2">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="{% url 'detalhes_usuario' usuario.id %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                        <a href="{% url 'listar_usuarios' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>Voltar à Lista
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>Atualizar Usuário
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Redefinir Senha -->
+    <div class="modal fade" id="redefinirSenhaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Redefinir Senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRedefinirSenha">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Nova Senha</label>
+                            <input type="password" class="form-control" id="novaSenha" name="nova_senha" required>
+                            <div class="password-strength" id="passwordStrength"></div>
+                            <small class="form-text text-muted">
+                                A senha deve ter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e símbolos.
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar Nova Senha</label>
+                            <input type="password" class="form-control" id="confirmarSenha" name="confirmar_senha" required>
+                            <div class="invalid-feedback" id="passwordMismatch">
+                                As senhas não coincidem.
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" id="btnRedefinirSenha">Redefinir Senha</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Elementos do modal de redefinir senha
+            const modalRedefinirSenha = document.getElementById('redefinirSenhaModal');
+            const formRedefinirSenha = document.getElementById('formRedefinirSenha');
+            const btnRedefinirSenha = document.getElementById('btnRedefinirSenha');
+            const novaSenhaInput = document.getElementById('novaSenha');
+            const confirmarSenhaInput = document.getElementById('confirmarSenha');
+            const passwordStrength = document.getElementById('passwordStrength');
+            const passwordMismatch = document.getElementById('passwordMismatch');
+            
+            // Verificar força da senha
+            novaSenhaInput.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 0;
+                
+                // Verificar comprimento
+                if (password.length >= 8) strength++;
+                
+                // Verificar letras minúsculas e maiúsculas
+                if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
+                
+                // Verificar números
+                if (password.match(/\d/)) strength++;
+                
+                // Verificar caracteres especiais
+                if (password.match(/[^a-zA-Z\d]/)) strength++;
+                
+                // Atualizar indicador visual
+                passwordStrength.className = 'password-strength';
+                if (strength === 0) {
+                    passwordStrength.classList.add('password-weak');
+                } else if (strength <= 2) {
+                    passwordStrength.classList.add('password-medium');
+                } else {
+                    passwordStrength.classList.add('password-strong');
+                }
+            });
+            
+            // Verificar se as senhas coincidem
+            confirmarSenhaInput.addEventListener('input', function() {
+                if (novaSenhaInput.value !== this.value) {
+                    this.classList.add('is-invalid');
+                    passwordMismatch.style.display = 'block';
+                } else {
+                    this.classList.remove('is-invalid');
+                    passwordMismatch.style.display = 'none';
+                }
+            });
+            
+            // Função para redefinir senha
+            btnRedefinirSenha.addEventListener('click', function() {
+                const novaSenha = novaSenhaInput.value;
+                const confirmarSenha = confirmarSenhaInput.value;
+                
+                // Validações
+                if (novaSenha.length < 8) {
+                    showAlert('A senha deve ter pelo menos 8 caracteres.', 'danger');
+                    return;
+                }
+                
+                if (novaSenha !== confirmarSenha) {
+                    showAlert('As senhas não coincidem.', 'danger');
+                    return;
+                }
+                
+                // Mostrar loading
+                const originalText = btnRedefinirSenha.innerHTML;
+                btnRedefinirSenha.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Redefinindo...';
+                btnRedefinirSenha.disabled = true;
+                
+                // Enviar requisição
+                const formData = new FormData(formRedefinirSenha);
+                formData.append('user_id', '{{ usuario.id }}');
+                
+                fetch("{% url 'redefinir_senha_admin' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Restaurar botão
+                    btnRedefinirSenha.innerHTML = originalText;
+                    btnRedefinirSenha.disabled = false;
+                    
+                    if (data.success) {
+                        // Fechar modal e mostrar sucesso
+                        const modal = bootstrap.Modal.getInstance(modalRedefinirSenha);
+                        modal.hide();
+                        
+                        // Limpar formulário
+                        formRedefinirSenha.reset();
+                        passwordStrength.className = 'password-strength';
+                        
+                        showAlert('Senha redefinida com sucesso!', 'success');
+                    } else {
+                        // Mostrar erros
+                        if (data.errors) {
+                            let errorMessages = [];
+                            for (let field in data.errors) {
+                                errorMessages = errorMessages.concat(data.errors[field]);
+                            }
+                            showAlert('Erro: ' + errorMessages.join(', '), 'danger');
+                        } else {
+                            showAlert('Erro ao redefinir senha.', 'danger');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Restaurar botão
+                    btnRedefinirSenha.innerHTML = originalText;
+                    btnRedefinirSenha.disabled = false;
+                    showAlert('Erro de conexão.', 'danger');
+                });
+            });
+            
+            // Validação do formulário principal
+            const formEditarUsuario = document.getElementById('formEditarUsuario');
+            formEditarUsuario.addEventListener('submit', function(e) {
+                // Adicionar validação personalizada se necessário
+                console.log('Formulário de edição de usuário submetido');
+            });
+        });
+
+        // Função para mostrar alertas
+        function showAlert(message, type) {
+            // Remover alertas existentes
+            const alertasExistentes = document.querySelectorAll('.alert');
+            alertasExistentes.forEach(alerta => alerta.remove());
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto-remover após 5 segundos
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Função para obter cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

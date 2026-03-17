@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque Consolidado - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .badge-estoque {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+        
+        /* Classes de status */
+        .estoque-baixo {
+            background-color: #fff3cd !important;
+            border-left: 4px solid var(--warning) !important;
+        }
+        
+        .estoque-esgotado {
+            background-color: #f8d7da !important;
+            border-left: 4px solid var(--danger) !important;
+        }
+        
+        .estoque-normal {
+            border-left: 4px solid var(--success) !important;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        
+        .progress-estoque {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        /* Grid responsivo */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* Filtros responsivos */
+        .filters-form .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Tabela responsiva */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            min-width: 800px;
+        }
+        
+        /* Paginação responsiva */
+        .pagination-responsive .page-link {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .filters-form .row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .filters-form .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .table {
+                min-width: 700px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h5 {
+                font-size: 1.1rem;
+            }
+            
+            .btn-group {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .btn-group .btn {
+                margin-bottom: 5px;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            .pagination-responsive .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .stats-card {
+                border-radius: 10px;
+            }
+            
+            .card-header {
+                padding: 12px 15px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .badge {
+                font-size: 0.75rem;
+                padding: 3px 6px;
+            }
+            
+            h3 {
+                font-size: 1.3rem;
+            }
+            
+            h4 {
+                font-size: 1.5rem;
+            }
+            
+            h5 {
+                font-size: 1.1rem;
+            }
+            
+            h6 {
+                font-size: 0.95rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .modal-content {
+                border-radius: 8px;
+            }
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 15px;
+            }
+            
+            /* Ajustes para badges em linhas da tabela */
+            .table .badge {
+                font-size: 0.7rem;
+                padding: 2px 5px;
+            }
+            
+            /* Ajustes para ações em tabela */
+            .table td:last-child {
+                min-width: 120px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions .dropdown {
+                width: 100%;
+            }
+            
+            .top-bar-actions .dropdown-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid .col-4 {
+                display: none;
+            }
+            
+            .stats-grid .col-8 {
+                width: 100%;
+            }
+            
+            .pagination-responsive .page-item:not(.active):not(:first-child):not(:last-child) {
+                display: none;
+            }
+            
+            .table td,
+            .table th {
+                font-size: 0.8rem;
+                padding: 6px 4px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal,
+            .filters-form,
+            .pagination {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .stats-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .table {
+                min-width: auto;
+                font-size: 10pt !important;
+            }
+            
+            .table th,
+            .table td {
+                padding: 4px !important;
+            }
+            
+            .top-bar {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 15px !important;
+            }
+        }
+        
+        /* Melhorias para dropdowns em mobile */
+        @media (max-width: 576px) {
+            .dropdown-menu {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90% !important;
+                max-height: 80vh !important;
+                overflow-y: auto !important;
+            }
+        }
+        
+        /* Melhorias para tabela em mobile */
+        .mobile-table-view {
+            display: none;
+        }
+        
+        @media (max-width: 576px) {
+            .desktop-table {
+                display: none;
+            }
+            
+            .mobile-table-view {
+                display: block;
+            }
+            
+            .mobile-card {
+                margin-bottom: 15px;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            
+            .mobile-card .card-body {
+                padding: 15px;
+            }
+            
+            .mobile-card .status-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+            
+            .mobile-card .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .mobile-card .info-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.9rem;
+            }
+            
+            .mobile-card .info-value {
+                color: #333;
+                font-size: 0.95rem;
+                text-align: right;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'lista_balancos' %}">
+                        <i class="fas fa-balance-scale"></i><span>Gerenciar Balanços</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_produtos_estoque' %}">
+                        <i class="fas fa-box"></i><span>Gerenciar Estoque</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-boxes me-2"></i>Estoque Consolidado
+                </h3>
+                <div class="top-bar-actions">
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        {{ user.nome|default:user.username }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                                id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Configurações">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="settingsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'exportar_estoque' %}">
+                                <i class="fas fa-download me-2"></i>Exportar CSV
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'perfil' %}">
+                                <i class="fas fa-user me-2"></i>Perfil
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filtros -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <form method="get" class="filters-form">
+                            <div class="row g-3">
+                                <div>
+                                    <label class="form-label">Tipo</label>
+                                    <select name="tipo" class="form-select" onchange="this.form.submit()">
+                                        {% for valor, texto in tipos %}
+                                        <option value="{{ valor }}" {% if tipo_selecionado == valor %}selected{% endif %}>
+                                            {{ texto }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Loja</label>
+                                    <select name="loja" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Todas as Lojas</option>
+                                        {% for loja in lojas %}
+                                        <option value="{{ loja.id }}" {% if loja_selecionada == loja.id|stringformat:"i" %}selected{% endif %}>
+                                            {{ loja.nome }} ({{ loja.cidade }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select" onchange="this.form.submit()">
+                                        {% for valor, texto in status_opcoes %}
+                                        <option value="{{ valor }}" {% if status_selecionado == valor %}selected{% endif %}>
+                                            {{ texto }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="d-flex align-items-end">
+                                    <a href="{% url 'listar_produtos_estoque' %}" class="btn btn-secondary w-100">
+                                        <i class="fas fa-redo me-2"></i>Limpar Filtros
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-grid fade-in">
+            <div class="card stats-card border-start border-primary">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h6 class="text-muted">Total Itens</h6>
+                            <h3 class="mb-0">{{ estatisticas.total_items }}</h3>
+                            <small class="text-muted">
+                                {% if tipo_selecionado == 'produtos' %}
+                                Produtos
+                                {% else %}
+                                Recargas
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-box fa-2x text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card border-start border-success">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h6 class="text-muted">Estoque Total</h6>
+                            <h3 class="mb-0">{{ estatisticas.total_estoque }}</h3>
+                            <small class="text-muted">unidades</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-boxes fa-2x text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card border-start border-warning">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h6 class="text-muted">Valor Estoque</h6>
+                            <h3 class="mb-0">{{ estatisticas.total_valor_estoque|floatformat:2 }} Kz</h3>
+                            <small class="text-muted">valor total</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-money-bill-wave fa-2x text-warning opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card border-start border-info">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h6 class="text-muted">Status</h6>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="badge bg-success">{{ estatisticas.contagem_status.normal }}</span>
+                                <span class="badge bg-warning">{{ estatisticas.contagem_status.baixo }}</span>
+                                <span class="badge bg-danger">{{ estatisticas.contagem_status.esgotado }}</span>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-chart-pie fa-2x text-info opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Estoque (Desktop) -->
+        <div class="row desktop-table">
+            <div class="col-12">
+                <div class="card stats-card fade-in">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            {% if tipo_selecionado == 'produtos' %}
+                                Produtos em Estoque
+                            {% else %}
+                                Recargas em Estoque
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <a href="{% url 'exportar_estoque' %}?{{ request.GET.urlencode }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download me-1"></i>Exportar
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="25%">Item</th>
+                                        <th class="text-center">Preço</th>
+                                        {% if not loja_selecionada %}
+                                        <th class="text-center">Lojas</th>
+                                        {% endif %}
+                                        <th class="text-center">Estoque</th>
+                                        <th class="text-center">Valor Estoque</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in tabela_estoque %}
+                                    <tr class="estoque-{{ item.estoques.0.status|default:'normal' }}">
+                                        <td>
+                                            <strong>{{ item.nome }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                Código: 
+                                                {% if item.tipo == 'produto' %}
+                                                    PROD{{ item.id|stringformat:"04d" }}
+                                                {% else %}
+                                                    REC{{ item.id|stringformat:"04d" }}
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td class="text-center">
+                                            <h6 class="mb-0">{{ item.preco|floatformat:2 }} Kz</h6>
+                                        </td>
+                                        
+                                        {% if not loja_selecionada %}
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for estoque in item.estoques %}
+                                                <span class="badge bg-light text-dark" 
+                                                      title="{{ estoque.loja_nome }} - {{ estoque.quantidade }} unidades">
+                                                    {{ estoque.loja_nome|slice:":3" }}: {{ estoque.quantidade }}
+                                                </span>
+                                                {% empty %}
+                                                <span class="text-muted">Nenhuma loja</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                        {% endif %}
+                                        
+                                        <td class="text-center">
+                                            <h5 class="mb-0">{{ item.estoque_total }}</h5>
+                                            <small class="text-muted">unidades</small>
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            <h6 class="mb-0 text-success">{{ item.valor_total_estoque|floatformat:2 }} Kz</h6>
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            {% if item.estoque_total == 0 %}
+                                            <span class="badge bg-danger">Esgotado</span>
+                                            {% elif item.estoque_total < 10 %}
+                                            <span class="badge bg-warning">Baixo</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                        
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if item.tipo == 'produto' %}
+                                                    <a href="{% url 'detalhe_produto_loja' item.id %}" 
+                                                       class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                        <span class="d-none d-md-inline"> Detalhes</span>
+                                                    </a>
+                                                    
+                                                    {% if not loja_selecionada %}
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-outline-success dropdown-toggle" 
+                                                                data-bs-toggle="dropdown">
+                                                            <i class="fas fa-plus"></i>
+                                                            <span class="d-none d-md-inline"> Entrada</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            {% for loja in lojas %}
+                                                            <li>
+                                                                <a class="dropdown-item" href="#"
+                                                                   onclick="criarEntrada({{ item.id }}, {{ loja.id }})">
+                                                                    {{ loja.nome }}
+                                                                </a>
+                                                            </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                    {% else %}
+                                                    <button class="btn btn-outline-success"
+                                                            onclick="criarEntrada({{ item.id }}, {{ loja_selecionada }})">
+                                                        <i class="fas fa-plus"></i>
+                                                        <span class="d-none d-md-inline"> Entrada</span>
+                                                    </button>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <a href="#" class="btn btn-outline-info">
+                                                        <i class="fas fa-eye"></i>
+                                                        <span class="d-none d-md-inline"> Detalhes</span>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="{% if loja_selecionada %}6{% else %}7{% endif %}" class="text-center py-4">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                            <h5>Nenhum item encontrado</h5>
+                                            <p class="text-muted">
+                                                {% if loja_selecionada %}
+                                                    Não há 
+                                                    {% if tipo_selecionado == 'produtos' %}
+                                                        produtos
+                                                    {% else %}
+                                                        recargas
+                                                    {% endif %}
+                                                    em estoque nesta loja.
+                                                {% else %}
+                                                    Não há itens cadastrados ou não há estoque disponível.
+                                                {% endif %}
+                                            </p>
+                                            {% if user.is_superuser %}
+                                            <a href="{% url 'admin:produtos_produto_add' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus me-2"></i>Cadastrar Produto
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Paginação -->
+                        {% if tabela_estoque.has_other_pages %}
+                        <nav aria-label="Paginação" class="mt-4">
+                            <ul class="pagination justify-content-center pagination-responsive">
+                                {% if tabela_estoque.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page={{ tabela_estoque.previous_page_number }}{% if loja_selecionada %}&loja={{ loja_selecionada }}{% endif %}{% if tipo_selecionado %}&tipo={{ tipo_selecionado }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i>
+                                        <span class="d-none d-sm-inline"> Anterior</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in tabela_estoque.paginator.page_range %}
+                                    {% if tabela_estoque.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% elif num > tabela_estoque.number|add:'-3' and num < tabela_estoque.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" 
+                                           href="?page={{ num }}{% if loja_selecionada %}&loja={{ loja_selecionada }}{% endif %}{% if tipo_selecionado %}&tipo={{ tipo_selecionado }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado }}{% endif %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if tabela_estoque.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page={{ tabela_estoque.next_page_number }}{% if loja_selecionada %}&loja={{ loja_selecionada }}{% endif %}{% if tipo_selecionado %}&tipo={{ tipo_selecionado }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado }}{% endif %}">
+                                        <span class="d-none d-sm-inline">Próxima </span>
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Mobile (Cards) -->
+        <div class="row mobile-table-view">
+            <div class="col-12">
+                <div class="card stats-card fade-in">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            {% if tipo_selecionado == 'produtos' %}
+                                Produtos em Estoque
+                            {% else %}
+                                Recargas em Estoque
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <a href="{% url 'exportar_estoque' %}?{{ request.GET.urlencode }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% for item in tabela_estoque %}
+                        <div class="card mobile-card mb-3 estoque-{{ item.estoques.0.status|default:'normal' }}">
+                            <div class="card-body">
+                                <div class="status-badge">
+                                    {% if item.estoque_total == 0 %}
+                                    <span class="badge bg-danger">Esgotado</span>
+                                    {% elif item.estoque_total < 10 %}
+                                    <span class="badge bg-warning">Baixo</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <h6 class="mb-2">{{ item.nome }}</h6>
+                                <small class="text-muted d-block mb-3">
+                                    Código: 
+                                    {% if item.tipo == 'produto' %}
+                                        PROD{{ item.id|stringformat:"04d" }}
+                                    {% else %}
+                                        REC{{ item.id|stringformat:"04d" }}
+                                    {% endif %}
+                                </small>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Preço:</span>
+                                    <span class="info-value">{{ item.preco|floatformat:2 }} Kz</span>
+                                </div>
+                                
+                                {% if not loja_selecionada %}
+                                <div class="info-row">
+                                    <span class="info-label">Lojas:</span>
+                                    <span class="info-value">
+                                        {% for estoque in item.estoques|slice:":3" %}
+                                            {{ estoque.loja_nome|slice:":3" }}:{{ estoque.quantidade }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            Nenhuma
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Estoque:</span>
+                                    <span class="info-value">{{ item.estoque_total }} unidades</span>
+                                </div>
+                                
+                                <div class="info-row">
+                                    <span class="info-label">Valor Total:</span>
+                                    <span class="info-value text-success">{{ item.valor_total_estoque|floatformat:2 }} Kz</span>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <div class="btn-group w-100" role="group">
+                                        {% if item.tipo == 'produto' %}
+                                            <a href="{% url 'detalhe_produto_loja' item.id %}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i> Ver
+                                            </a>
+                                            
+                                            {% if not loja_selecionada %}
+                                            <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" 
+                                                    data-bs-toggle="dropdown">
+                                                <i class="fas fa-plus"></i> Entrada
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                {% for loja in lojas %}
+                                                <li>
+                                                    <a class="dropdown-item" href="#"
+                                                       onclick="criarEntrada({{ item.id }}, {{ loja.id }})">
+                                                        {{ loja.nome }}
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% else %}
+                                            <button class="btn btn-outline-success btn-sm"
+                                                    onclick="criarEntrada({{ item.id }}, {{ loja_selecionada }})">
+                                                <i class="fas fa-plus"></i> Entrada
+                                            </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <a href="#" class="btn btn-outline-info btn-sm">
+                                                <i class="fas fa-eye"></i> Detalhes
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>Nenhum item encontrado</h5>
+                            <p class="text-muted">
+                                {% if loja_selecionada %}
+                                    Não há 
+                                    {% if tipo_selecionado == 'produtos' %}
+                                        produtos
+                                    {% else %}
+                                        recargas
+                                    {% endif %}
+                                    em estoque nesta loja.
+                                {% else %}
+                                    Não há itens cadastrados ou não há estoque disponível.
+                                {% endif %}
+                            </p>
+                            {% if user.is_superuser %}
+                            <a href="{% url 'admin:produtos_produto_add' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Cadastrar Produto
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Paginação Mobile -->
+                        {% if tabela_estoque.has_other_pages %}
+                        <nav aria-label="Paginação" class="mt-4">
+                            <ul class="pagination justify-content-center pagination-responsive">
+                                {% if tabela_estoque.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page={{ tabela_estoque.previous_page_number }}{% if loja_selecionada %}&loja={{ loja_selecionada }}{% endif %}{% if tipo_selecionado %}&tipo={{ tipo_selecionado }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Pág. {{ tabela_estoque.number }} de {{ tabela_estoque.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if tabela_estoque.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" 
+                                       href="?page={{ tabela_estoque.next_page_number }}{% if loja_selecionada %}&loja={{ loja_selecionada }}{% endif %}{% if tipo_selecionado %}&tipo={{ tipo_selecionado }}{% endif %}{% if status_selecionado %}&status={{ status_selecionado }}{% endif %}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para criar entrada -->
+    <div class="modal fade" id="modalEntrada" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="post" action="{% url 'criar_entrada_estoque' %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title">Registrar Entrada de Estoque</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="produto_id" id="produto_id">
+                        <input type="hidden" name="loja_id" id="loja_id">
+                        
+                        <div class="mb-3">
+                            <label for="quantidadeEntrada" class="form-label">Quantidade</label>
+                            <input type="number" id="quantidadeEntrada" name="quantidade" class="form-control" min="1" value="1" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="custoUnitario" class="form-label">Custo Unitário (Kz)</label>
+                            <input type="number" id="custoUnitario" name="custo_unitario" class="form-control" step="0.01" min="0" value="0">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="motivoEntrada" class="form-label">Motivo</label>
+                            <textarea id="motivoEntrada" name="motivo" class="form-control" rows="3" 
+                                      placeholder="Compra, reposição, etc."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Registrar Entrada</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Auto-focus no campo quantidade quando modal abre
+            const entradaModal = document.getElementById('modalEntrada');
+            if (entradaModal) {
+                entradaModal.addEventListener('shown.bs.modal', function() {
+                    const quantidadeInput = document.querySelector('#modalEntrada input[name="quantidade"]');
+                    if (quantidadeInput) {
+                        setTimeout(() => {
+                            quantidadeInput.focus();
+                            quantidadeInput.select();
+                        }, 100);
+                    }
+                });
+            }
+        });
+        
+        // Função para criar entrada
+        function criarEntrada(produtoId, lojaId) {
+            document.getElementById('produto_id').value = produtoId;
+            document.getElementById('loja_id').value = lojaId;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalEntrada'));
+            modal.show();
+        }
+        
+        // Melhorias para dropdowns em mobile
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.addEventListener('click', (e) => {
+                if (isMobile) {
+                    e.stopPropagation();
+                }
+            });
+        });
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+            }
+        });
+        
+        // Prevenir zoom em inputs em mobile (exceto textarea)
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Otimização de performance
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // Redesenhar componentes se necessário
+            }, 250);
+        });
+        
+        // Suporte para impressão
+        window.addEventListener('beforeprint', () => {
+            // Mostrar apenas a tabela desktop
+            document.querySelector('.mobile-table-view').style.display = 'none';
+            document.querySelector('.desktop-table').style.display = 'block';
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Restaurar visibilidade original
+            if (window.innerWidth <= 576) {
+                document.querySelector('.mobile-table-view').style.display = 'block';
+                document.querySelector('.desktop-table').style.display = 'none';
+            }
+        });
+        
+        // Ajustar dropdowns para mobile
+        function adjustDropdownsForMobile() {
+            if (isMobile) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.position = 'fixed';
+                    menu.style.top = '50%';
+                    menu.style.left = '50%';
+                    menu.style.transform = 'translate(-50%, -50%)';
+                    menu.style.width = '90%';
+                    menu.style.maxHeight = '80vh';
+                    menu.style.overflowY = 'auto';
+                });
+            } else {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.position = '';
+                    menu.style.top = '';
+                    menu.style.left = '';
+                    menu.style.transform = '';
+                    menu.style.width = '';
+                    menu.style.maxHeight = '';
+                    menu.style.overflowY = '';
+                });
+            }
+        }
+        
+        // Ajustar dropdowns quando a tela é redimensionada
+        window.addEventListener('resize', adjustDropdownsForMobile);
+        
+        // Ajustar dropdowns no carregamento
+        document.addEventListener('DOMContentLoaded', adjustDropdownsForMobile);
+    </script>
+</body>
+</html>

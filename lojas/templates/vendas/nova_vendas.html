@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Vendas - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Header */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar h3 {
+            margin-bottom: 0;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .card-success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .card-info {
+            border-left: 4px solid var(--info);
+        }
+        
+        .card-warning {
+            border-left: 4px solid var(--warning);
+        }
+        
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-header-custom {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 20px;
+            border: none;
+        }
+        
+        /* Cards de Produtos */
+        .card-item {
+            transition: transform 0.2s, box-shadow 0.3s;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .card-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .estoque-baixo {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .estoque-medio {
+            border-left: 4px solid var(--warning);
+        }
+        
+        .estoque-alto {
+            border-left: 4px solid var(--success);
+        }
+        
+        .badge-estoque {
+            font-size: 0.8em;
+        }
+        
+        .item-imagem {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+        }
+        
+        .loja-info {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .loja-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .search-box {
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .btn-vender {
+            background: linear-gradient(135deg, var(--success), #20c997);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        
+        .btn-vender:hover {
+            background: linear-gradient(135deg, #218838, #1e9e7f);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .btn-vender:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .type-option {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .type-option:hover {
+            border-color: var(--primary);
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        .type-option.selected {
+            border-color: var(--primary);
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .type-option i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .type-option h6 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .type-option p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 0.75rem;
+        }
+        
+        .item-type-badge {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .produto-badge {
+            background: linear-gradient(45deg, var(--info), #3b82f6);
+        }
+        
+        .recarga-badge {
+            background: linear-gradient(45deg, var(--warning), #f59e0b);
+        }
+        
+        /* Modal Responsivo */
+        .modal-content {
+            border-radius: 15px;
+        }
+        
+        /* Grid Responsivo */
+        .item-card {
+            margin-bottom: 20px;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .item-imagem {
+                height: 180px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            
+            .type-selector {
+                flex-direction: column;
+            }
+            
+            .loja-info .row {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .loja-info .col-md-8,
+            .loja-info .col-md-4 {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .loja-info .col-md-4.text-md-end {
+                text-align: center !important;
+            }
+            
+            .search-box {
+                max-width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .col-md-8, .col-md-4 {
+                width: 100%;
+            }
+            
+            .col-md-4.text-end {
+                text-align: left !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .card-item {
+                margin-bottom: 15px;
+            }
+            
+            .item-imagem {
+                height: 160px;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            h4, h5, h6 {
+                font-size: 1.1rem;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .loja-info {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .card-item, .card-custom, .loja-info {
+                border-radius: 10px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions span {
+                width: 100%;
+                text-align: center;
+                margin: 2px 0;
+            }
+            
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+            
+            .item-imagem {
+                height: 140px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .type-option {
+                padding: 12px 10px;
+            }
+            
+            .type-option i {
+                font-size: 1.2rem;
+            }
+            
+            .item-type-badge {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+            
+            .badge-estoque {
+                font-size: 0.7rem;
+            }
+            
+            .alert {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .modal-header, .modal-footer {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .item-imagem {
+                height: 120px;
+            }
+            
+            .col-xl-3, .col-lg-4, .col-md-6 {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+            
+            .card-title {
+                font-size: 0.9rem;
+            }
+            
+            .card-text {
+                font-size: 0.8rem;
+            }
+            
+            .btn-vender {
+                font-size: 0.8rem;
+                padding: 8px 10px;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar,
+            .btn,
+            .dropdown,
+            .modal,
+            .no-print {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .card-item {
+                break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_lojas' %}">
+                        <i class="fas fa-store"></i><span>Lojas</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_estoque' %}">
+                        <i class="fas fa-boxes"></i><span>Estoque</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_vendas' %}">
+                        <i class="fas fa-shopping-cart"></i><span>Vendas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_relatorios_diarios' %}">
+                        <i class="fas fa-chart-bar"></i><span>Relatórios</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar fade-in">
+            <h3 class="mb-0">
+                <i class="fas fa-cash-register me-2"></i>Sistema de Vendas
+            </h3>
+            <div class="top-bar-actions">
+                <span class="text-muted">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user.nome|default:user.username }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opções do usuário">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                        {% if user.is_superuser %}
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Balanço</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seletor de Loja (apenas se for gerente de múltiplas lojas) -->
+        {% if lojas.count > 1 %}
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card card-custom">
+                    <div class="card-header-custom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-building me-2"></i>Selecionar Loja
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" class="row g-3 align-items-center">
+                            <div class="col-md-12">
+                                <select name="loja_id" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Selecione uma loja...</option>
+                                    {% for loja in lojas %}
+                                    <option value="{{ loja.id }}" 
+                                        {% if loja_selecionada and loja.id == loja_selecionada.id %}selected{% endif %}>
+                                        {{ loja.nome }} - {{ loja.cidade }}/{{ loja.provincia }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if mensagem %}
+        <!-- Mensagem se não for gerente -->
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ mensagem }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+
+        <!-- Seletor de Tipo (Produto/Recarga) -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="type-selector">
+                    <div class="type-option selected" data-type="todos" onclick="selectType('todos')">
+                        <i class="fas fa-th-list"></i>
+                        <h6>Todos os Itens</h6>
+                        <p>Produtos e Recargas</p>
+                    </div>
+                    <div class="type-option" data-type="produtos" onclick="selectType('produtos')">
+                        <i class="fas fa-box"></i>
+                        <h6>Produtos</h6>
+                        <p>Apenas produtos físicos</p>
+                    </div>
+                    <div class="type-option" data-type="recargas" onclick="selectType('recargas')">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h6>Recargas</h6>
+                        <p>Apenas recargas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações da Loja -->
+        {% if loja_selecionada %}
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="loja-info">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="h4 mb-2">{{ loja_selecionada.nome }}</h2>
+                            <p class="mb-1">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                {{ loja_selecionada.bairro }}, {{ loja_selecionada.cidade }} - 
+                                {{ loja_selecionada.municipio }}, {{ loja_selecionada.provincia }}
+                            </p>
+                            <p class="mb-0">
+                                <i class="fas fa-boxes me-2"></i>
+                                <span id="total-itens-info">{{ produtos_estoque.count|add:recargas_estoque.count }}</span> itens disponíveis
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div class="bg-white text-dark rounded p-3 d-inline-block">
+                                <h4 class="mb-0 text-primary" id="total-itens-display">
+                                    {{ produtos_estoque.count|add:recargas_estoque.count }}
+                                </h4>
+                                <small class="text-muted" id="tipo-itens-text">Itens Disponíveis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Busca -->
+        <div class="row mb-4 fade-in">
+            <div class="col-md-8">
+                <div class="input-group search-box">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" 
+                           placeholder="Buscar itens por nome..." 
+                           onkeyup="filtrarItens()">
+                    <button class="btn btn-outline-secondary" type="button" onclick="limparBusca()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                {% if user.is_superuser %}
+                <a href="{% url 'listar_estoque' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar ao Estoque
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Lista de Itens -->
+        <div class="row fade-in" id="itensContainer">
+            <!-- Produtos -->
+            {% for estoque in produtos_estoque %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4 item-card" data-type="produto" data-id="{{ estoque.id }}">
+                <div class="card card-item h-100 
+                    {% if estoque.quantidade <= 5 %}estoque-baixo
+                    {% elif estoque.quantidade <= 15 %}estoque-medio
+                    {% else %}estoque-alto{% endif %}">
+                    
+                    {% if estoque.produto.imagem %}
+                    <img src="{{ estoque.produto.imagem.url }}" 
+                         class="card-img-top item-imagem" 
+                         alt="{{ estoque.produto.nome }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                         style="height: 200px;">
+                        <i class="fas fa-box fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ estoque.produto.nome }}</h5>
+                            <span class="item-type-badge produto-badge">Produto</span>
+                        </div>
+                        
+                        <p class="card-text text-muted mb-2">
+                            <i class="fas fa-tag me-1"></i>
+                            Kz {{ estoque.produto.preco }}
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge 
+                                {% if estoque.quantidade <= 5 %}bg-danger
+                                {% elif estoque.quantidade <= 15 %}bg-warning
+                                {% else %}bg-success{% endif %} badge-estoque">
+                                <i class="fas fa-boxes me-1"></i>
+                                {{ estoque.quantidade }} unidades
+                            </span>
+                        </div>
+                        
+                        {% if estoque.quantidade <= 5 %}
+                        <div class="alert alert-warning py-2 mb-2">
+                            <small>
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Estoque baixo!
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Botão de Vender -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-vender btn-sm vender-btn" 
+                                    data-type="produto"
+                                    data-estoque-id="{{ estoque.id }}"
+                                    data-nome="{{ estoque.produto.nome }}"
+                                    data-quantidade="{{ estoque.quantidade }}"
+                                    data-preco="{{ estoque.produto.preco }}"
+                                    {% if estoque.quantidade == 0 %}disabled{% endif %}>
+                                <i class="fas fa-cash-register me-1"></i>
+                                Vender Produto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Recargas -->
+            {% for estoque in recargas_estoque %}
+            <div class="col-xl-3 col-lg-4 col-md-6 mb-4 item-card" data-type="recarga" data-id="{{ estoque.id }}">
+                <div class="card card-item h-100 
+                    {% if estoque.quantidade <= 5 %}estoque-baixo
+                    {% elif estoque.quantidade <= 15 %}estoque-medio
+                    {% else %}estoque-alto{% endif %}">
+                    
+                    {% if estoque.recarga.imagem %}
+                    <img src="{{ estoque.recarga.imagem.url }}" 
+                         class="card-img-top item-imagem" 
+                         alt="{{ estoque.recarga.nome }}">
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" 
+                         style="height: 200px;">
+                        <i class="fas fa-mobile-alt fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">{{ estoque.recarga.nome }}</h5>
+                            <span class="item-type-badge recarga-badge">Recarga</span>
+                        </div>
+                        
+                        <p class="card-text text-muted mb-2">
+                            <i class="fas fa-tag me-1"></i>
+                            Kz {{ estoque.recarga.preco }}
+                        </p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge 
+                                {% if estoque.quantidade <= 5 %}bg-danger
+                                {% elif estoque.quantidade <= 15 %}bg-warning
+                                {% else %}bg-success{% endif %} badge-estoque">
+                                <i class="fas fa-boxes me-1"></i>
+                                {{ estoque.quantidade }} unidades
+                            </span>
+                        </div>
+                        
+                        {% if estoque.quantidade <= 5 %}
+                        <div class="alert alert-warning py-2 mb-2">
+                            <small>
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Estoque baixo!
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Botão de Vender -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-vender btn-sm vender-btn"
+                                    data-type="recarga"
+                                    data-estoque-id="{{ estoque.id }}"
+                                    data-nome="{{ estoque.recarga.nome }}"
+                                    data-quantidade="{{ estoque.quantidade }}"
+                                    data-preco="{{ estoque.recarga.preco }}"
+                                    {% if estoque.quantidade == 0 %}disabled{% endif %}>
+                                <i class="fas fa-cash-register me-1"></i>
+                                Vender Recarga
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Mensagem quando não há itens -->
+            {% if not produtos_estoque and not recargas_estoque %}
+            <div class="col-12">
+                <div class="card-custom text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">Nenhum item em estoque</h3>
+                    <p class="text-muted">Não há itens disponíveis nesta loja no momento.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- Mensagem quando nenhuma loja está selecionada -->
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="card-custom text-center py-5">
+                    <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                    <h4>Nenhuma loja selecionada</h4>
+                    <p class="mb-0">Você precisa selecionar uma loja para visualizar os itens.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+
+    <!-- Modal de Venda -->
+    <div class="modal fade" id="vendaModal" tabindex="-1" aria-labelledby="vendaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vendaModalLabel">
+                        <i class="fas fa-cash-register me-2"></i>Registrar Venda
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="vendaForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="estoqueId" name="estoque_id">
+                        <input type="hidden" id="itemType" name="item_type">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Item:</label>
+                            <input type="text" id="itemNome" class="form-control" readonly>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preço Unitário:</label>
+                                <input type="text" id="precoUnitario" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Estoque Disponível:</label>
+                                <input type="text" id="estoqueDisponivel" class="form-control" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="quantidadeVenda" class="form-label">Quantidade a Vender:</label>
+                            <input type="number" class="form-control" id="quantidadeVenda" 
+                                   name="quantidade" min="1" value="1" required
+                                   onchange="calcularTotal()">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total:</label>
+                            <input type="text" id="valorTotal" class="form-control bg-light" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="observacao" class="form-label">Observação (opcional):</label>
+                            <textarea class="form-control" id="observacao" name="observacao" 
+                                      rows="2" placeholder="Observações sobre a venda..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarVenda()">
+                        <i class="fas fa-check me-1"></i> Confirmar Venda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Adicionar event listeners aos botões de venda
+            document.querySelectorAll('.vender-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const estoqueId = this.getAttribute('data-estoque-id');
+                    const nome = this.getAttribute('data-nome');
+                    const quantidade = parseInt(this.getAttribute('data-quantidade'));
+                    const preco = parseFloat(this.getAttribute('data-preco'));
+                    
+                    abrirModalVenda(type, estoqueId, nome, quantidade, preco);
+                });
+            });
+            
+            filtrarItensPorTipo('todos');
+        });
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+            }
+        });
+        
+        // Prevenir zoom em inputs em mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+
+        // Variável global para controlar o tipo selecionado
+        let currentType = 'todos';
+        let precoUnitarioAtual = 0;
+
+        // Função para abrir o modal de venda
+        function abrirModalVenda(type, estoqueId, nome, estoqueDisponivel, precoUnitario) {
+            console.log('Abrindo modal para:', type, estoqueId, nome, estoqueDisponivel, precoUnitario);
+            
+            document.getElementById('estoqueId').value = estoqueId;
+            document.getElementById('itemType').value = type;
+            document.getElementById('itemNome').value = nome;
+            document.getElementById('estoqueDisponivel').value = estoqueDisponivel + ' unidades';
+            document.getElementById('precoUnitario').value = 'Kz ' + precoUnitario.toFixed(2);
+            
+            // Limitar quantidade máxima ao estoque disponível
+            document.getElementById('quantidadeVenda').max = estoqueDisponivel;
+            document.getElementById('quantidadeVenda').value = 1;
+            
+            precoUnitarioAtual = precoUnitario;
+            calcularTotal();
+            
+            const modal = new bootstrap.Modal(document.getElementById('vendaModal'));
+            modal.show();
+        }
+        
+        function calcularTotal() {
+            const quantidade = parseInt(document.getElementById('quantidadeVenda').value) || 0;
+            const total = quantidade * precoUnitarioAtual;
+            
+            document.getElementById('valorTotal').value = 'Kz ' + total.toFixed(2);
+        }
+        
+        function confirmarVenda() {
+            const estoqueId = document.getElementById('estoqueId').value;
+            const itemType = document.getElementById('itemType').value;
+            const quantidade = parseInt(document.getElementById('quantidadeVenda').value);
+            const observacao = document.getElementById('observacao').value;
+            
+            console.log('Confirmando venda:', { estoqueId, itemType, quantidade, observacao });
+            
+            if (!quantidade || quantidade <= 0) {
+                alert('Por favor, informe uma quantidade válida.');
+                return;
+            }
+            
+            // Mostrar loading
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processando...';
+            btn.disabled = true;
+            
+            // Enviar requisição para o servidor
+            fetch('{% url "registrar_venda" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    estoque_id: estoqueId,
+                    item_type: itemType,
+                    quantidade: quantidade,
+                    observacao: observacao
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na resposta do servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Resposta do servidor:', data);
+                if (data.success) {
+                    alert('Venda registrada com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('vendaModal')).hide();
+                    location.reload(); // Recarregar a página para atualizar estoque
+                } else {
+                    alert('Erro ao registrar venda: ' + data.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao registrar venda. Tente novamente.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        // Função auxiliar para pegar o cookie CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Função para selecionar o tipo de item
+        function selectType(type) {
+            currentType = type;
+            
+            // Remover seleção anterior
+            document.querySelectorAll('.type-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Adicionar seleção atual
+            document.querySelector(`.type-option[data-type="${type}"]`).classList.add('selected');
+            
+            // Filtrar itens
+            filtrarItensPorTipo(type);
+            
+            // Atualizar informações da loja
+            atualizarInformacoesLoja(type);
+        }
+
+        // Função para filtrar itens por tipo
+        function filtrarItensPorTipo(type) {
+            const allItems = document.querySelectorAll('.item-card');
+            let visibleCount = 0;
+
+            allItems.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+                
+                if (type === 'todos' || 
+                    (type === 'produtos' && itemType === 'produto') || 
+                    (type === 'recargas' && itemType === 'recarga')) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Atualizar contador
+            document.getElementById('total-itens-display').textContent = visibleCount;
+            document.getElementById('total-itens-info').textContent = visibleCount;
+        }
+
+        // Função para atualizar informações da loja
+        function atualizarInformacoesLoja(type) {
+            const tipoItensText = document.getElementById('tipo-itens-text');
+            
+            switch(type) {
+                case 'todos':
+                    tipoItensText.textContent = 'Itens Disponíveis';
+                    break;
+                case 'produtos':
+                    tipoItensText.textContent = 'Produtos Disponíveis';
+                    break;
+                case 'recargas':
+                    tipoItensText.textContent = 'Recargas Disponíveis';
+                    break;
+            }
+        }
+
+        // Função de busca
+        function filtrarItens() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const itens = document.querySelectorAll('.item-card');
+            
+            for (let i = 0; i < itens.length; i++) {
+                const item = itens[i];
+                const nome = item.querySelector('.card-title').textContent.toLowerCase();
+                const itemType = item.getAttribute('data-type');
+                
+                // Verificar se o item corresponde ao tipo selecionado e ao termo de busca
+                const typeMatch = currentType === 'todos' || 
+                                 (currentType === 'produtos' && itemType === 'produto') || 
+                                 (currentType === 'recargas' && itemType === 'recarga');
+                
+                const nameMatch = nome.includes(filter);
+                
+                if (typeMatch && nameMatch) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            }
+        }
+        
+        function limparBusca() {
+            document.getElementById('searchInput').value = '';
+            filtrarItens();
+        }
+        
+        // Tecla Enter na busca
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filtrarItens();
+            }
+        });
+    </script>
+</body>
+</html>

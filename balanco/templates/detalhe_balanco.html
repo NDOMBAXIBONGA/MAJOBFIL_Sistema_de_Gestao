@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanço {{ balanco.loja.nome }} - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dstv: #667eea;
+            --zap: #f59e0b;
+            --unitel: #3b82f6;
+            --africell: #10b981;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-primary { 
+            background: linear-gradient(45deg, var(--primary), var(--secondary)); 
+            color: white; 
+        }
+        
+        .card-success { 
+            background: linear-gradient(45deg, var(--success), #059669); 
+            color: white; 
+        }
+        
+        .card-info { 
+            background: linear-gradient(45deg, var(--info), #2563eb); 
+            color: white; 
+        }
+        
+        .card-warning { 
+            background: linear-gradient(45deg, var(--warning), #d97706); 
+            color: white; 
+        }
+        
+        .card-danger { 
+            background: linear-gradient(45deg, var(--danger), #dc2626); 
+            color: white; 
+        }
+        
+        .badge-sm { 
+            font-size: 0.7rem; 
+            padding: 0.3em 0.6em; 
+        }
+        
+        .valor-positivo { 
+            color: var(--success); 
+            font-weight: bold; 
+        }
+        
+        .valor-negativo { 
+            color: var(--danger); 
+            font-weight: bold; 
+        }
+        
+        /* Grid responsivo */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* Tabela responsiva */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            min-width: 800px;
+        }
+        
+        /* Serviços financeiros */
+        .servico-financeiro-card {
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            height: 100%;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .servico-financeiro-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .servico-dstv {
+            background: linear-gradient(135deg, var(--dstv), #764ba2);
+            color: white;
+        }
+        
+        .servico-zap {
+            background: linear-gradient(135deg, var(--zap), #d97706);
+            color: white;
+        }
+        
+        .servico-unitel {
+            background: linear-gradient(135deg, var(--unitel), #2563eb);
+            color: white;
+        }
+        
+        .servico-africell {
+            background: linear-gradient(135deg, var(--africell), #059669);
+            color: white;
+        }
+        
+        .servico-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .servico-detalhes {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        .detalhe-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .detalhe-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detalhe-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .detalhe-valor {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.3em 0.6em;
+            border-radius: 10px;
+        }
+        
+        .progress { 
+            height: 8px; 
+            border-radius: 4px; 
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #495057;
+            background-color: #f8f9fa;
+        }
+        
+        .valor-destaque {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .servicos-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .servicos-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .servico-financeiro-card {
+                padding: 15px;
+            }
+            
+            .servico-icon {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .table {
+                min-width: 700px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h5 {
+                font-size: 1.1rem;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 10px 8px;
+                font-size: 0.9rem;
+            }
+            
+            .table .badge {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+            
+            .servico-detalhes {
+                padding: 8px;
+            }
+            
+            .detalhe-item {
+                font-size: 0.9rem;
+            }
+            
+            .valor-destaque {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .stats-card {
+                border-radius: 10px;
+            }
+            
+            .stats-card .col-4 {
+                display: none;
+            }
+            
+            .stats-card .col-8 {
+                width: 100%;
+            }
+            
+            .card-header {
+                padding: 12px 15px;
+            }
+            
+            .card-title {
+                font-size: 1.1rem;
+            }
+            
+            h3 {
+                font-size: 1.3rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h4 {
+                font-size: 1.2rem;
+            }
+            
+            h5 {
+                font-size: 1rem;
+            }
+            
+            h6 {
+                font-size: 0.95rem;
+            }
+            
+            small {
+                font-size: 0.8rem;
+            }
+            
+            .table {
+                min-width: 650px;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .table .btn-sm {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .servico-financeiro-card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+            
+            .servico-icon {
+                font-size: 1.8rem;
+                margin-bottom: 10px;
+            }
+            
+            .servico-detalhes {
+                padding: 6px;
+                margin-top: 10px;
+            }
+            
+            .detalhe-item {
+                font-size: 0.85rem;
+            }
+            
+            .empty-state {
+                padding: 30px 15px;
+            }
+            
+            .empty-state i {
+                font-size: 2.5rem;
+            }
+            
+            .pagination .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .top-bar-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid .stats-card .row {
+                text-align: center;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+            
+            .table td:nth-child(2),
+            .table td:nth-child(5) {
+                min-width: 100px;
+            }
+            
+            .servico-financeiro-card {
+                padding: 10px;
+            }
+            
+            .servico-detalhes {
+                padding: 5px;
+            }
+            
+            .detalhe-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            
+            .detalhe-valor {
+                align-self: flex-end;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal,
+            .pagination,
+            .servico-financeiro-card:hover {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .stats-card,
+            .user-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .table {
+                min-width: auto;
+                font-size: 10pt !important;
+            }
+            
+            .table th,
+            .table td {
+                padding: 4px !important;
+            }
+            
+            .top-bar {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .servico-financeiro-card {
+                border: 1px solid #ddd !important;
+            }
+        }
+        
+        /* Melhorias para progress bars */
+        .progress-bar.bg-success {
+            background-color: var(--success) !important;
+        }
+        
+        .progress-bar.bg-warning {
+            background-color: var(--warning) !important;
+        }
+        
+        .progress-bar.bg-danger {
+            background-color: var(--danger) !important;
+        }
+        
+        /* Layout para cards de serviços */
+        .servicos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        /* Cards de informações financeiras responsivos */
+        .finance-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .finance-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .finance-cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'lista_balancos' %}">
+                        <i class="fas fa-balance-scale"></i><span>Gerenciar Balanços</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_todos_itens' %}">
+                        <i class="fas fa-box"></i><span>Gerenciar Estoque</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar fade-in">
+            <div class="top-bar-header">
+                <div>
+                    <h3 class="mb-1">Detalhes do Balanço</h3>
+                    <p class="mb-0 text-muted">
+                        {{ balanco.loja.nome }} - {{ balanco.data_inicio|date:"d/m/Y" }} até {{ balanco.data_fim|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div class="top-bar-actions">
+                    <a href="{% url 'lista_balancos' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i><span class="d-none d-sm-inline">Voltar</span>
+                    </a>
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        <span class="d-none d-sm-inline">{{ user.nome|default:user.username }}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards Principais -->
+        <div class="stats-grid fade-in">
+            <div class="card stats-card card-primary text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Vendas</h5>
+                            <h2 class="mb-0">Kz {{ balanco.total_vendas_geral|default:0|floatformat:2 }}</h2>
+                            <small>{{ balanco.total_transacoes|default:0 }} transações</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-shopping-cart fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card card-success text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Geral</h5>
+                            <h2 class="mb-0">Kz {{ dados_relatorios.total_geral|default:0|floatformat:2 }}</h2>
+                            <small>Relatórios consolidados</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-file-invoice-dollar fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card card-info text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Arrecadado</h5>
+                            <h2 class="mb-0">Kz {{ dados_relatorios.total_arrecadado|default:0|floatformat:2 }}</h2>
+                            <small>Entrada real no caixa</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-cash-register fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card {% if dados_relatorios.status_balanco == 'positivo' %}card-warning{% else %}card-danger{% endif %} text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Balanço Final</h5>
+                            <h2 class="mb-0">
+                                {% if dados_relatorios.status_balanco == 'positivo' %}
+                                +Kz {{ dados_relatorios.diferenca_balanco|default:0|floatformat:2 }}
+                                {% else %}
+                                -Kz {{ dados_relatorios.diferenca_balanco|default:0|floatformat:2 }}
+                                {% endif %}
+                            </h2>
+                            <small>
+                                {% if dados_relatorios.status_balanco == 'positivo' %}
+                                <i class="fas fa-check-circle"></i> Positivo
+                                {% else %}
+                                <i class="fas fa-exclamation-triangle"></i> Falta
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-balance-scale fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Serviços de TV -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-tv me-2"></i>Serviços de TV</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="servicos-grid">
+                            <!-- DSTV -->
+                            <div class="servico-financeiro-card servico-dstv">
+                                <div class="servico-icon">
+                                    <i class="fas fa-satellite-dish"></i>
+                                </div>
+                                <h4>DSTV</h4>
+                                <h3 class="my-3">Kz {{ dados_relatorios.dstv.total|default:0|floatformat:2 }}</h3>
+                                
+                                <div class="servico-detalhes">
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Início DSTV</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.dstv.inicio|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Resto DSTV</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.dstv.resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Sem Resto</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.dstv.sem_resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Com 5%</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.dstv.com_5_percent|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Diferença</span>
+                                        <span class="detalhe-valor {% if dados_relatorios.dstv.status == 'positivo' %}valor-positivo{% else %}valor-negativo{% endif %}">
+                                            {% if dados_relatorios.dstv.status == 'positivo' %}
+                                            +Kz {{ dados_relatorios.dstv.diferenca|default:0|floatformat:2 }}
+                                            {% else %}
+                                            -Kz {{ dados_relatorios.dstv.diferenca|default:0|floatformat:2 }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <span class="status-badge {% if dados_relatorios.dstv.status == 'positivo' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if dados_relatorios.dstv.status == 'positivo' %}
+                                        <i class="fas fa-check me-1"></i>Positivo
+                                        {% else %}
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Falta
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- ZAP -->
+                            <div class="servico-financeiro-card servico-zap">
+                                <div class="servico-icon">
+                                    <i class="fas fa-broadcast-tower"></i>
+                                </div>
+                                <h4>ZAP</h4>
+                                <h3 class="my-3">Kz {{ dados_relatorios.zap.total|default:0|floatformat:2 }}</h3>
+                                
+                                <div class="servico-detalhes">
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Resto ZAP</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.zap.resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Sem Resto</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.zap.sem_resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <span class="status-badge bg-info">
+                                        <i class="fas fa-check me-1"></i>Consolidado
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Serviços de Telefonia -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-phone me-2"></i>Serviços de Telefonia</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="servicos-grid">
+                            <!-- UNITEL -->
+                            <div class="servico-financeiro-card servico-unitel">
+                                <div class="servico-icon">
+                                    <i class="fas fa-sim-card"></i>
+                                </div>
+                                <h4>UNITEL</h4>
+                                <h3 class="my-3">Kz {{ dados_relatorios.unitel.total|default:0|floatformat:2 }}</h3>
+                                
+                                <div class="servico-detalhes">
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Resto Unitel</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.unitel.resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Sem Resto</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.unitel.sem_resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <span class="status-badge bg-info">
+                                        <i class="fas fa-check me-1"></i>Consolidado
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- AFRICELL -->
+                            <div class="servico-financeiro-card servico-africell">
+                                <div class="servico-icon">
+                                    <i class="fas fa-sim-card"></i>
+                                </div>
+                                <h4>AFRICELL</h4>
+                                <h3 class="my-3">Kz {{ dados_relatorios.africell.total|default:0|floatformat:2 }}</h3>
+                                
+                                <div class="servico-detalhes">
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Resto Africell</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.africell.resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                    <div class="detalhe-item">
+                                        <span class="detalhe-label">Sem Resto</span>
+                                        <span class="detalhe-valor">Kz {{ dados_relatorios.africell.sem_resto|default:0|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <span class="status-badge bg-info">
+                                        <i class="fas fa-check me-1"></i>Consolidado
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Financeiras -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-money-bill-wave me-2"></i>Informações Financeiras</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="finance-cards-grid">
+                            <div class="servico-financeiro-card" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                                <div class="servico-icon">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <h5>DM</h5>
+                                <h4 class="my-2">Kz {{ dados_relatorios.dm|default:0|floatformat:2 }}</h4>
+                                <small class="opacity-75">Dinheiro em espécie</small>
+                            </div>
+                            <div class="servico-financeiro-card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                                <div class="servico-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <h5>Moedas</h5>
+                                <h4 class="my-2">Kz {{ dados_relatorios.moedas|default:0|floatformat:2 }}</h4>
+                                <small class="opacity-75">Moedas recebidas</small>
+                            </div>
+                            <div class="servico-financeiro-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                                <div class="servico-icon">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <h5>TPA</h5>
+                                <h4 class="my-2">Kz {{ dados_relatorios.tpa|default:0|floatformat:2 }}</h4>
+                                <small class="opacity-75">Pagamentos por cartão</small>
+                            </div>
+                            <div class="servico-financeiro-card" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+                                <div class="servico-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <h5>Gastos</h5>
+                                <h4 class="my-2">Kz {{ dados_relatorios.gastos|default:0|floatformat:2 }}</h4>
+                                <small class="opacity-75">Despesas operacionais</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Produtos -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="card-title mb-0"><i class="fas fa-cube me-2"></i>Top 10 Produtos</h5>
+                        <span class="badge bg-primary">{{ top_produtos|length }} produtos</span>
+                    </div>
+                    <div class="card-body">
+                        {% if top_produtos %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Produto</th>
+                                        <th class="text-end">Preço Unit.</th>
+                                        <th class="text-end">Qtd Vendida</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Nº Vendas</th>
+                                        <th class="text-end">Média/Venda</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for produto in top_produtos %}
+                                    <tr>
+                                        <td class="fw-bold">{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ produto.nome|default:"Produto não identificado" }}</strong>
+                                        </td>
+                                        <td class="text-end">Kz {{ produto.preco_unitario|default:0|floatformat:2 }}</td>
+                                        <td class="text-end">{{ produto.total_vendido|default:0 }}</td>
+                                        <td class="text-end">
+                                            <span class="fw-bold valor-destaque">Kz {{ produto.total_valor|default:0|floatformat:2 }}</span>
+                                        </td>
+                                        <td class="text-end">{{ produto.numero_vendas|default:0 }}</td>
+                                        <td class="text-end">Kz {{ produto.media_venda|default:0|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <h5>Nenhum produto vendido</h5>
+                            <p class="text-muted">Não foram registradas vendas de produtos no período selecionado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Recargas -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="card-title mb-0"><i class="fas fa-mobile-alt me-2"></i>Top 10 Recargas</h5>
+                        <span class="badge bg-success">{{ top_recargas|length }} recargas</span>
+                    </div>
+                    <div class="card-body">
+                        {% if top_recargas %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Recarga</th>
+                                        <th class="text-end">Preço Unit.</th>
+                                        <th class="text-end">Qtd Vendida</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Nº Vendas</th>
+                                        <th class="text-end">Média/Venda</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for recarga in top_recargas %}
+                                    <tr>
+                                        <td class="fw-bold">{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ recarga.nome|default:"Recarga não identificada" }}</strong>
+                                        </td>
+                                        <td class="text-end">Kz {{ recarga.preco_unitario|default:0|floatformat:2 }}</td>
+                                        <td class="text-end">{{ recarga.total_vendido|default:0 }}</td>
+                                        <td class="text-end">
+                                            <span class="fw-bold valor-destaque">Kz {{ recarga.total_valor|default:0|floatformat:2 }}</span>
+                                        </td>
+                                        <td class="text-end">{{ recarga.numero_vendas|default:0 }}</td>
+                                        <td class="text-end">Kz {{ recarga.media_venda|default:0|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-mobile"></i>
+                            <h5>Nenhuma recarga vendida</h5>
+                            <p class="text-muted">Não foram registradas vendas de recargas no período selecionado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendas por Dia Detalhadas -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="card-title mb-0"><i class="fas fa-calendar-day me-2"></i>Vendas por Dia - Detalhado</h5>
+                            <small class="text-muted">
+                                Mostrando {{ detalhes_vendas.start_index }} - {{ detalhes_vendas.end_index }} de {{ detalhes_vendas.paginator.count }} dias
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-info">{{ detalhes_vendas.paginator.count }} dias totais</span>
+                            <span class="badge bg-secondary ms-1">30 por página</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if detalhes_vendas %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th class="text-end">Total Vendas</th>
+                                        <th class="text-end">Produtos</th>
+                                        <th class="text-end">Recargas</th>
+                                        <th class="text-center">Transações</th>
+                                        <th>Progresso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for venda_dia in detalhes_vendas %}
+                                    <tr>
+                                        <td><strong>{{ venda_dia.data|default:"-" }}</strong></td>
+                                        <td class="text-end">
+                                            <strong class="valor-destaque">Kz {{ venda_dia.total|default:0|floatformat:2 }}</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <div>
+                                                <strong>Kz {{ venda_dia.produtos.total|default:0|floatformat:2 }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ venda_dia.produtos.quantidade|default:0 }} vendas</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div>
+                                                <strong>Kz {{ venda_dia.recargas.total|default:0|floatformat:2 }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ venda_dia.recargas.quantidade|default:0 }} vendas</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ venda_dia.total_transacoes|default:0 }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1 me-2" style="width: 100px;">
+                                                    {% with total=venda_dia.total|default:0 %}
+                                                    {% widthratio total 2000 100 as percent %}
+                                                    <div class="progress-bar 
+                                                        {% if total > 1000 %}bg-success
+                                                        {% elif total > 500 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}" 
+                                                        style="width: {% if percent > 100 %}100{% else %}{{ percent }}{% endif %}%">
+                                                    </div>
+                                                    {% endwith %}
+                                                </div>
+                                                <small class="text-muted">
+                                                    {% with total=venda_dia.total|default:0 %}
+                                                    {% widthratio total 2000 100 as percent %}
+                                                    {% if percent > 100 %}100{% else %}{{ percent }}{% endif %}%
+                                                    {% endwith %}
+                                                </small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginação -->
+                        {% if detalhes_vendas.paginator.num_pages > 1 %}
+                        <nav aria-label="Navegação de páginas de vendas por dia">
+                            <ul class="pagination justify-content-center mb-0">
+                                <!-- Botão Anterior -->
+                                {% if detalhes_vendas.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page_vendas={{ detalhes_vendas.previous_page_number }}#vendas-por-dia" aria-label="Anterior">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                                </li>
+                                {% endif %}
+
+                                <!-- Primeira página -->
+                                {% if detalhes_vendas.number > 3 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page_vendas=1#vendas-por-dia">1</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+
+                                <!-- Páginas ao redor da atual -->
+                                {% for num in detalhes_vendas.paginator.page_range %}
+                                    {% if num >= detalhes_vendas.number|add:"-2" and num <= detalhes_vendas.number|add:"2" %}
+                                        {% if detalhes_vendas.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page_vendas={{ num }}#vendas-por-dia">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Última página -->
+                                {% if detalhes_vendas.number < detalhes_vendas.paginator.num_pages|add:"-2" %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page_vendas={{ detalhes_vendas.paginator.num_pages }}#vendas-por-dia">{{ detalhes_vendas.paginator.num_pages }}</a>
+                                </li>
+                                {% endif %}
+
+                                <!-- Botão Próximo -->
+                                {% if detalhes_vendas.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page_vendas={{ detalhes_vendas.next_page_number }}#vendas-por-dia" aria-label="Próximo">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                            
+                            <!-- Informação da página atual -->
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Página {{ detalhes_vendas.number }} de {{ detalhes_vendas.paginator.num_pages }}
+                                </small>
+                            </div>
+                        </nav>
+                        {% endif %}
+
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h5>Nenhuma venda registrada</h5>
+                            <p class="text-muted">Não foram registradas vendas no período selecionado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Vendedores Detalhado -->
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>Top Vendedores - Detalhado</h5>
+                        <span class="badge bg-warning">{{ top_vendedores|length }} vendedores</span>
+                    </div>
+                    <div class="card-body">
+                        {% if top_vendedores %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vendedor</th>
+                                        <th class="text-end">Total Vendas</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th class="text-end">Média/Venda</th>
+                                        <th class="text-center">Produtos</th>
+                                        <th class="text-center">Recargas</th>
+                                        <th class="text-center">Performance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vendedor in top_vendedores %}
+                                    <tr>
+                                        <td class="fw-bold">{{ forloop.counter }}</td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ vendedor.nome|default:"Vendedor não identificado" }}</strong>
+                                                {% if vendedor.email %}
+                                                <br>
+                                                <small class="text-muted">{{ vendedor.email }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">{{ vendedor.total_vendas|default:0 }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="valor-destaque">Kz {{ vendedor.total_valor|default:0|floatformat:2 }}</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <small>Kz {{ vendedor.media_venda|default:0|floatformat:2 }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">{{ vendedor.vendas_produtos|default:0 }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">{{ vendedor.vendas_recargas|default:0 }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge 
+                                                {% if vendedor.performance == 'alta' %}bg-success
+                                                {% elif vendedor.performance == 'media' %}bg-warning
+                                                {% else %}bg-info{% endif %}">
+                                                {% if vendedor.performance == 'alta' %}Alta
+                                                {% elif vendedor.performance == 'media' %}Média
+                                                {% else %}Baixa{% endif %}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-user-times"></i>
+                            <h5>Nenhum vendedor com vendas</h5>
+                            <p class="text-muted">Não foram registradas vendas por vendedores no período selecionado.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Adicionar classe active ao link atual na sidebar
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') && currentPath.includes(link.getAttribute('href'))) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Melhorar experiência em mobile
+            if (isMobile) {
+                // Aumentar área de toque para botões
+                document.querySelectorAll('.btn').forEach(btn => {
+                    btn.style.minHeight = '44px';
+                    btn.style.display = 'inline-flex';
+                    btn.style.alignItems = 'center';
+                    btn.style.justifyContent = 'center';
+                });
+                
+                // Aumentar área de toque para itens da tabela
+                document.querySelectorAll('.table td').forEach(td => {
+                    if (!td.querySelector('a, button, input')) {
+                        td.style.minHeight = '44px';
+                        td.style.display = 'flex';
+                        td.style.alignItems = 'center';
+                    }
+                });
+            }
+        });
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+        
+        // Prevenir zoom em inputs em mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Otimização de performance
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // Redesenhar componentes se necessário
+            }, 250);
+        });
+        
+        // Suporte para impressão
+        window.addEventListener('beforeprint', () => {
+            // Ajustar tamanhos de fonte para impressão
+            document.querySelectorAll('.servico-financeiro-card h3').forEach(h3 => {
+                h3.style.fontSize = '1.5rem';
+            });
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Restaurar tamanhos de fonte
+            document.querySelectorAll('.servico-financeiro-card h3').forEach(h3 => {
+                h3.style.fontSize = '';
+            });
+        });
+        
+        // Animações suaves para melhor UX
+        document.addEventListener('DOMContentLoaded', () => {
+            // Adicionar efeito de carregamento suave
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+                document.body.style.transition = 'opacity 0.3s ease-in';
+            }, 100);
+            
+            // Adicionar scroll suave para âncoras
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId !== '#') {
+                        const targetElement = document.querySelector(targetId);
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Função para melhorar a leitura de valores em mobile
+        function formatCurrency(value) {
+            return 'Kz ' + parseFloat(value).toLocaleString('pt-PT', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        // Atualizar formatação de valores em mobile
+        if (isMobile) {
+            document.querySelectorAll('.valor-destaque, .detalhe-valor').forEach(element => {
+                const text = element.textContent;
+                if (text.includes('Kz')) {
+                    const value = text.replace('Kz', '').trim();
+                    element.textContent = formatCurrency(value);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

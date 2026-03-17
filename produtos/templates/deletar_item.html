@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excluir Item - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none !important;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px !important;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center !important;
+            padding: 12px 5px !important;
+            margin: 5px !important;
+            justify-content: center !important;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0 !important;
+            font-size: 1.2rem !important;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .confirmation-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .confirmation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .confirmation-card .card-header {
+            background: linear-gradient(45deg, var(--danger), #dc2626);
+            color: white;
+            border: none;
+            border-radius: 15px 15px 0 0;
+            padding: 20px 25px;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, var(--danger), #dc2626);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .item-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .item-type-badge {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        
+        .alert-position {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 90vw;
+        }
+        
+        .item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .item-icon {
+            font-size: 3rem;
+            color: #6c757d;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .confirmation-card {
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .confirmation-card .card-header {
+                padding: 15px 20px;
+            }
+            
+            .confirmation-card .card-body {
+                padding: 20px !important;
+            }
+            
+            .item-info {
+                padding: 15px;
+            }
+            
+            .alert-position {
+                left: 20px;
+                right: 20px;
+                min-width: auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .top-bar-actions .dropdown {
+                align-self: flex-start;
+            }
+            
+            .item-info .row {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .item-info .col-md-4 {
+                margin-bottom: 15px;
+            }
+            
+            .item-info .col-md-8 {
+                width: 100%;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-buttons > * {
+                width: 100%;
+            }
+            
+            .btn-danger, .btn-outline-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .breadcrumb {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.4rem;
+            }
+            
+            .confirmation-card {
+                border-radius: 10px;
+            }
+            
+            .confirmation-card .card-header {
+                padding: 12px 15px;
+                border-radius: 10px 10px 0 0;
+            }
+            
+            .confirmation-card .card-header h4 {
+                font-size: 1.2rem;
+            }
+            
+            .item-info {
+                padding: 12px;
+                margin: 15px 0;
+            }
+            
+            .item-image {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .item-icon {
+                font-size: 2.5rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+            
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+            
+            .alert-position {
+                top: 70px;
+                left: 10px;
+                right: 10px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions span {
+                width: 100%;
+                text-align: center;
+                margin: 3px 0;
+            }
+            
+            .top-bar-actions .dropdown {
+                align-self: stretch;
+            }
+            
+            .top-bar-actions .dropdown .btn {
+                width: 100%;
+            }
+            
+            .item-info .d-flex {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .item-type-badge {
+                align-self: center;
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .form-buttons > div {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .item-image {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .item-icon {
+                font-size: 2rem;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .confirmation-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .top-bar {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'cadastrar_item' %}">
+                        <i class="fas fa-box"></i><span>Cadastrar Itens</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_todos_itens' %}">
+                        <i class="fas fa-store"></i><span>Lista de Itens</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <div>
+                    <h3 class="mb-0">Excluir Item</h3>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'listar_todos_itens' %}">Itens</a></li>
+                            <li class="breadcrumb-item active">Excluir {{ item.nome }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="top-bar-actions">
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        {{ user.nome|default:user.username }}
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            {% if user.is_superuser %}
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Balanço</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Confirmation Card -->
+        <div class="row justify-content-center fade-in">
+            <div class="col-lg-8 col-xl-6">
+                <div class="card confirmation-card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div>
+                                <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h4>
+                            </div>
+                            <div class="text-center d-none d-md-block">
+                                <i class="fas fa-trash-alt fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-trash-alt fa-4x text-danger mb-3 d-none d-md-block"></i>
+                            <i class="fas fa-trash-alt fa-3x text-danger mb-3 d-md-none"></i>
+                            <h5>Você tem certeza que deseja excluir este item?</h5>
+                            <p class="text-muted">Esta ação não pode ser desfeita.</p>
+                        </div>
+                        
+                        <div class="item-info">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center mb-3 mb-md-0">
+                                    {% if item.imagem %}
+                                        <img src="{{ item.imagem.url }}" alt="{{ item.nome }}" class="item-image">
+                                    {% else %}
+                                        {% if item_type == 'produto' %}
+                                            <i class="fas fa-box item-icon"></i>
+                                        {% else %}
+                                            <i class="fas fa-mobile-alt item-icon"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap">
+                                        <h6 class="mb-1">{{ item.nome }}</h6>
+                                        <span class="item-type-badge">
+                                            {% if item_type == 'produto' %}Produto{% else %}Recarga{% endif %}
+                                        </span>
+                                    </div>
+                                    <p class="mb-2"><strong>Preço:</strong> Kz {{ item.preco|floatformat:2 }}</p>
+                                    <p class="mb-0 text-muted"><small>ID: {{ item.id }}</small></p>
+                                    {% if item.descricao %}
+                                    <p class="mt-2 mb-0"><small>{{ item.descricao|truncatechars:100 }}</small></p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Aviso de impacto -->
+                        <div class="alert alert-warning mt-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div>
+                                    <strong>Atenção!</strong> Ao excluir este item:
+                                    <ul class="mb-0 mt-1">
+                                        <li>Todas as referências a este item serão removidas</li>
+                                        <li>O histórico de vendas será mantido, mas sem vinculação ao item</li>
+                                        <li>A imagem do item será excluída do servidor</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulário para exclusão -->
+                        <form method="post" id="formExcluirItem">
+                            {% csrf_token %}
+                            <div class="d-flex justify-content-between flex-wrap gap-2 mt-4 form-buttons">
+                                <a href="{% url 'listar_todos_itens' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                </a>
+                                <button type="button" class="btn btn-danger" onclick="confirmarExclusao()" id="btnExcluir">
+                                    <i class="fas fa-trash me-2"></i>Sim, Excluir Item
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) closeSidebar();
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                        isSidebarCollapsed = true;
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+        });
+        
+        // Função para confirmar exclusão
+        function confirmarExclusao() {
+            const itemName = "{{ item.nome }}";
+            const confirmationMessage = `Tem certeza que deseja excluir o item "${itemName}"?\n\nEsta ação não pode ser desfeita.`;
+            
+            if (confirm(confirmationMessage)) {
+                // Mostrar loading no botão
+                const btn = document.getElementById('btnExcluir');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...';
+                btn.disabled = true;
+                btn.classList.add('shake');
+                
+                // Adicionar efeito visual de confirmação
+                document.querySelector('.confirmation-card').style.border = '2px solid var(--danger)';
+                
+                // Submeter o formulário após pequeno delay para efeito visual
+                setTimeout(() => {
+                    document.getElementById('formExcluirItem').submit();
+                }, 800);
+            }
+        }
+        
+        // Função para mostrar alertas
+        function showAlert(message, type) {
+            const alertasExistentes = document.querySelectorAll('.alert-position .alert');
+            alertasExistentes.forEach(alerta => {
+                if (!alerta.classList.contains('alert-dismissible')) {
+                    alerta.remove();
+                }
+            });
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-position`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // Prevenir envio duplo do formulário
+        let formSubmitted = false;
+        const formExcluirItem = document.getElementById('formExcluirItem');
+        if (formExcluirItem) {
+            formExcluirItem.addEventListener('submit', function(e) {
+                if (formSubmitted) {
+                    e.preventDefault();
+                    return false;
+                }
+                formSubmitted = true;
+                return true;
+            });
+        }
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+                
+                // Cancelar exclusão com ESC
+                if (confirm('Deseja cancelar a exclusão?')) {
+                    window.location.href = "{% url 'listar_todos_itens' %}";
+                }
+            }
+            
+            // Confirmar com Enter (com cuidado)
+            if (e.key === 'Enter' && e.target.id === 'btnExcluir') {
+                e.preventDefault();
+                confirmarExclusao();
+            }
+        });
+        
+        // Otimização para mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Adicionar efeito hover em touch devices
+        if ('ontouchstart' in window) {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.classList.add('active');
+                });
+                
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('active');
+                });
+            });
+        }
+        
+        // Prevenir zoom duplo em iOS
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Página de exclusão de item carregada');
+            
+            // Adicionar classe para animação de entrada
+            setTimeout(() => {
+                document.querySelector('.confirmation-card').classList.add('fade-in');
+            }, 100);
+        });
+    </script>
+</body>
+</html>

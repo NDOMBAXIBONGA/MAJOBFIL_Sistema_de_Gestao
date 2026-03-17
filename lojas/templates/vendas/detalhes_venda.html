@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Venda - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar h3 {
+            margin-bottom: 5px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        /* Cards Gerais */
+        .info-card, .receipt-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 30px;
+        }
+        
+        .info-card:hover, .receipt-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Receipt Card Especial */
+        .receipt-card {
+            border: 2px solid #e9ecef;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .receipt-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        
+        .receipt-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 13px 13px 0 0;
+        }
+        
+        .receipt-body {
+            padding: 30px;
+        }
+        
+        .receipt-footer {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 13px 13px;
+        }
+        
+        .divider {
+            border-top: 2px dashed #dee2e6;
+            margin: 25px 0;
+        }
+        
+        .info-badge {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            transform: translateY(-1px);
+        }
+        
+        /* Table Responsive */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            min-width: 600px;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+        
+        /* Badge Responsive */
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+        
+        /* Print Styles */
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            .sidebar, .sidebar-toggle, .top-bar, .btn, .no-print,
+            .info-card, .actions-row {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .receipt-card {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+            .receipt-card::before {
+                display: none;
+            }
+            .print-only {
+                display: block !important;
+            }
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .receipt-body {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+            
+            .receipt-header .row,
+            .receipt-footer .row {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .receipt-header .col-md-6,
+            .receipt-footer .col-md-8,
+            .receipt-footer .col-md-4 {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+            
+            .receipt-body {
+                padding: 15px;
+            }
+            
+            .table {
+                min-width: 500px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .table {
+                font-size: 0.85rem;
+                min-width: 400px;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            h2, h3 {
+                font-size: 1.3rem;
+            }
+            
+            h4 {
+                font-size: 1.2rem;
+            }
+            
+            h5 {
+                font-size: 1.1rem;
+            }
+            
+            .receipt-header {
+                padding: 15px;
+            }
+            
+            .info-card .card-body,
+            .receipt-body {
+                padding: 15px;
+            }
+            
+            .row.mb-4 .col-md-6 {
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .info-card, .receipt-card {
+                border-radius: 10px;
+            }
+            
+            .receipt-header {
+                padding: 12px;
+                border-radius: 10px 10px 0 0;
+            }
+            
+            .receipt-header h2, .receipt-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .receipt-body {
+                padding: 12px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions span {
+                width: 100%;
+                text-align: center;
+                margin: 2px 0;
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .d-flex.justify-content-between .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .table {
+                min-width: 350px;
+                font-size: 0.8rem;
+            }
+            
+            .info-badge {
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+            
+            .badge {
+                font-size: 0.7rem;
+            }
+            
+            .row .col-sm-5, .row .col-sm-7 {
+                padding: 5px;
+            }
+            
+            .divider {
+                margin: 15px 0;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .table {
+                min-width: 320px;
+            }
+            
+            .receipt-header h2 {
+                font-size: 1rem;
+            }
+            
+            .receipt-header h3 {
+                font-size: 0.9rem;
+            }
+            
+            .col-sm-5, .col-sm-7 {
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_lojas' %}">
+                        <i class="fas fa-store"></i><span>Lojas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_estoque' %}">
+                        <i class="fas fa-boxes"></i><span>Estoque</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_vendas' %}">
+                        <i class="fas fa-shopping-cart"></i><span>Vendas</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_relatorios_diarios' %}">
+                        <i class="fas fa-chart-bar"></i><span>Relatórios</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar fade-in">
+            <div>
+                <h3 class="mb-0">Detalhes da Venda</h3>
+                <small class="text-muted">Visualize todas as informações desta transação</small>
+            </div>
+            <div class="top-bar-actions">
+                <span class="text-muted">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user.get_full_name|default:user.username }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opções do usuário">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Card -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card receipt-card">
+                    <div class="receipt-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-md-start">
+                                <h2 class="mb-1"><i class="fas fa-receipt me-2"></i>MAJOBFIL</h2>
+                                <p class="mb-0 opacity-75">Sistema de Gestão Comercial</p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <h3 class="mb-1">COMPROVANTE DE VENDA</h3>
+                                <p class="mb-0 opacity-75">Nº #{{ venda.id }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-body">
+                        <!-- Informações da Venda -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Informações da Venda</h5>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Nº da Venda:</strong></div>
+                                    <div class="col-sm-7">#{{ venda.id }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Data:</strong></div>
+                                    <div class="col-sm-7">{{ venda.data_venda|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Hora:</strong></div>
+                                    <div class="col-sm-7">{{ venda.data_venda|date:"H:i" }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Vendedor:</strong></div>
+                                    <div class="col-sm-7">{{ venda.vendedor.get_full_name|default:venda.vendedor.username }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-primary mb-3"><i class="fas fa-store me-2"></i>Informações da Loja</h5>
+                                {% if venda.estoque_loja %}
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Loja:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_loja.loja.nome }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Localização:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_loja.loja.bairro }}, {{ venda.estoque_loja.loja.cidade }}</div>
+                                </div>
+                                {% if venda.estoque_loja.loja.provincia %}
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Província:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_loja.loja.provincia }}</div>
+                                </div>
+                                {% endif %}
+                                {% elif venda.estoque_recarga %}
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Loja:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_recarga.loja.nome }}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Localização:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_recarga.loja.bairro }}, {{ venda.estoque_recarga.loja.cidade }}</div>
+                                </div>
+                                {% if venda.estoque_recarga.loja.provincia %}
+                                <div class="row">
+                                    <div class="col-sm-5"><strong>Província:</strong></div>
+                                    <div class="col-sm-7">{{ venda.estoque_recarga.loja.provincia }}</div>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <!-- Detalhes do Item -->
+                        <h5 class="text-primary mb-3"><i class="fas fa-cube me-2"></i>Detalhes do Item</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                        <th>Código</th>
+                                        <th class="text-center">Quantidade</th>
+                                        <th class="text-end">Preço Unitário</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            {% if venda.estoque_loja %}
+                                                <strong>{{ venda.estoque_loja.produto.nome }}</strong>
+                                            {% elif venda.estoque_recarga %}
+                                                <strong>{{ venda.estoque_recarga.recarga.nome }}</strong>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if venda.estoque_loja %}bg-primary{% else %}bg-info{% endif %} info-badge">
+                                                {% if venda.estoque_loja %}Produto{% else %}Recarga{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if venda.estoque_loja %}
+                                                {{ venda.estoque_loja.produto.codigo|default:"N/A" }}
+                                            {% elif venda.estoque_recarga %}
+                                                {{ venda.estoque_recarga.recarga.codigo|default:"N/A" }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">{{ venda.quantidade }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            {% if venda.estoque_loja %}
+                                                {{ venda.estoque_loja.produto.preco|floatformat:2 }} Kz
+                                            {% elif venda.estoque_recarga %}
+                                                {{ venda.estoque_recarga.recarga.preco|floatformat:2 }} Kz
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <strong>{{ venda.valor_total|floatformat:2 }} Kz</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                        <td class="text-end text-success"><strong>{{ venda.valor_total|floatformat:2 }} Kz</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        {% if venda.observacao %}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3"><i class="fas fa-sticky-note me-2"></i>Observações</h5>
+                                <div class="alert alert-light border">
+                                    {{ venda.observacao }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="receipt-footer">
+                        <div class="row align-items-center">
+                            <div class="col-md-8 text-md-start mb-3 mb-md-0">
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-shield-alt me-2"></i>Transação segura e registrada
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-clock me-2"></i>Emitido em {{ venda.data_venda|date:"d/m/Y \à\s H:i" }}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <button class="btn btn-primary me-2" onclick="window.print()">
+                                    <i class="fas fa-print me-2"></i>Imprimir
+                                </button>
+                                <a href="{% url 'listar_vendas' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Information Cards -->
+        <div class="row fade-in">
+            <!-- Informações da Venda -->
+            <div class="col-lg-6 mb-4">
+                <div class="card info-card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Informações da Transação</h5>
+                        <span class="badge bg-light text-primary">ID: #{{ venda.id }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-calendar me-2"></i>Data:</strong></div>
+                            <div class="col-sm-8">{{ venda.data_venda|date:"d/m/Y" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-clock me-2"></i>Hora:</strong></div>
+                            <div class="col-sm-8">{{ venda.data_venda|date:"H:i:s" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-user me-2"></i>Vendedor:</strong></div>
+                            <div class="col-sm-8">{{ venda.vendedor.get_full_name|default:venda.vendedor.username }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-store me-2"></i>Loja:</strong></div>
+                            <div class="col-sm-8">
+                                {% if venda.estoque_loja %}
+                                    {{ venda.estoque_loja.loja.nome }}
+                                {% elif venda.estoque_recarga %}
+                                    {{ venda.estoque_recarga.loja.nome }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong><i class="fas fa-tag me-2"></i>Status:</strong></div>
+                            <div class="col-sm-8">
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Concluída</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhes do Item -->
+            <div class="col-lg-6 mb-4">
+                <div class="card info-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-cube me-2"></i>Detalhes do Item Vendido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-tag me-2"></i>Item:</strong></div>
+                            <div class="col-sm-8">
+                                {% if venda.estoque_loja %}
+                                    {{ venda.estoque_loja.produto.nome }}
+                                {% elif venda.estoque_recarga %}
+                                    {{ venda.estoque_recarga.recarga.nome }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-barcode me-2"></i>Código:</strong></div>
+                            <div class="col-sm-8">
+                                {% if venda.estoque_loja %}
+                                    {{ venda.estoque_loja.produto.codigo|default:"N/A" }}
+                                {% elif venda.estoque_recarga %}
+                                    {{ venda.estoque_recarga.recarga.codigo|default:"N/A" }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-box me-2"></i>Quantidade:</strong></div>
+                            <div class="col-sm-8">
+                                <span class="badge bg-primary">{{ venda.quantidade }} unidades</span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong><i class="fas fa-money-bill me-2"></i>Preço Unitário:</strong></div>
+                            <div class="col-sm-8">
+                                {% if venda.estoque_loja %}
+                                    {{ venda.estoque_loja.produto.preco|floatformat:2 }} Kz
+                                {% elif venda.estoque_recarga %}
+                                    {{ venda.estoque_recarga.recarga.preco|floatformat:2 }} Kz
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"><strong><i class="fas fa-calculator me-2"></i>Valor Total:</strong></div>
+                            <div class="col-sm-8">
+                                <h4 class="text-success mb-0">{{ venda.valor_total|floatformat:2 }} Kz</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Adicionais -->
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="card info-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações Adicionais</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <h6><i class="fas fa-box me-2"></i>Estoque Após Venda</h6>
+                                <p class="mb-0">
+                                    {% if venda.estoque_loja %}
+                                        Restaram <strong>{{ venda.estoque_loja.quantidade }}</strong> unidades em estoque
+                                    {% elif venda.estoque_recarga %}
+                                        Restaram <strong>{{ venda.estoque_recarga.quantidade }}</strong> unidades em estoque
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <h6><i class="fas fa-chart-line me-2"></i>Performance</h6>
+                                <p class="mb-0">
+                                    Venda registrada com sucesso no sistema
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6><i class="fas fa-history me-2"></i>Histórico</h6>
+                                <p class="mb-0">
+                                    Transação completada há {{ venda.data_venda|timesince }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row mt-4 no-print fade-in">
+            <div class="col-12 actions-row">
+                <div class="d-flex justify-content-between flex-wrap">
+                    <a href="{% url 'listar_vendas' %}" class="btn btn-secondary mb-2">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar para Lista de Vendas
+                    </a>
+                    <div>
+                        <button class="btn btn-primary me-2 mb-2" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Imprimir Comprovante
+                        </button>
+                        <a href="{% url 'nova_venda' %}" class="btn btn-success mb-2">
+                            <i class="fas fa-plus me-2"></i>Nova Venda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+        });
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+        
+        // Prevenir zoom em inputs em mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Melhorar a experiência de impressão
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar data/hora de impressão no comprovante
+            const originalPrint = window.print;
+            window.print = function() {
+                // Poderia adicionar um timestamp aqui se necessário
+                originalPrint.call(window);
+            };
+        });
+    </script>
+</body>
+</html>

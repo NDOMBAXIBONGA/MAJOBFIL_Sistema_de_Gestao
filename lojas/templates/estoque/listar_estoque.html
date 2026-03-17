@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .logo h4 {
+            transition: all 0.3s;
+            margin: 10px 0 5px;
+        }
+        
+        .sidebar .logo small {
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .table-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .filter-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .btn-action {
+            padding: 5px 10px;
+            margin: 0 2px;
+        }
+        
+        .stock-low {
+            background-color: #fff3cd !important;
+        }
+        
+        .stock-out {
+            background-color: #f8d7da !important;
+        }
+
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .type-option {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .type-option:hover {
+            border-color: var(--primary);
+            background-color: #f8f9fa;
+        }
+        
+        .type-option.selected {
+            border-color: var(--primary);
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .type-option i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .type-option h6 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .type-option p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 0.75rem;
+        }
+
+        .item-badge {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+        
+        .produto-badge {
+            background: linear-gradient(45deg, var(--info), #3b82f6);
+        }
+        
+        .recarga-badge {
+            background: linear-gradient(45deg, var(--warning), #f59e0b);
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            .type-selector {
+                flex-direction: column;
+            }
+            
+            .type-option {
+                width: 100%;
+            }
+            
+            .filter-card .row {
+                flex-direction: column;
+            }
+            
+            .filter-card .col-md-4 {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .filter-card .d-flex {
+                justify-content: center;
+            }
+            
+            .filter-card .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .table {
+                min-width: 800px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start !important;
+            }
+            
+            .top-bar .d-flex {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .table-card {
+                border-radius: 10px;
+            }
+            
+            .filter-card {
+                border-radius: 10px;
+            }
+            
+            .card-header {
+                padding: 12px 15px;
+            }
+            
+            .card-header h5 {
+                font-size: 1.1rem;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .type-option {
+                padding: 12px;
+            }
+            
+            .type-option i {
+                font-size: 1.2rem;
+            }
+            
+            .type-option h6 {
+                font-size: 0.9rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .item-badge {
+                font-size: 0.65rem;
+                padding: 3px 8px;
+            }
+            
+            .btn-action {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 60px 8px 10px;
+            }
+            
+            .top-bar {
+                padding: 10px;
+            }
+            
+            .d-flex.justify-content-between.align-items-center {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 15px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+            
+            .form-control, .form-select {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            
+            .table {
+                font-size: 0.8rem;
+            }
+            
+            .item-badge {
+                font-size: 0.6rem;
+                padding: 2px 6px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar h3 {
+                font-size: 1.3rem;
+            }
+            
+            .btn {
+                padding: 5px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .type-option i {
+                font-size: 1rem;
+            }
+            
+            .type-option h6 {
+                font-size: 0.8rem;
+            }
+            
+            .type-option p {
+                font-size: 0.65rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 6px 4px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal,
+            .overlay,
+            .type-selector,
+            .filter-card,
+            .btn-action {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .table-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .table {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_lojas' %}">
+                        <i class="fas fa-store"></i><span>Lojas</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'listar_estoque' %}">
+                        <i class="fas fa-boxes"></i><span>Estoque</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vendas' %}">
+                        <i class="fas fa-shopping-cart"></i><span>Vendas</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_relatorios_diarios' %}">
+                        <i class="fas fa-chart-bar"></i><span>Relatórios</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h3 class="mb-0">Estoque</h3>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="text-muted">
+                    <i class="fas fa-user me-2"></i>
+                    {{ user.nome|default:user.username }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-label="Opções do usuário">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Seletor de Tipo -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="type-selector">
+                    <div class="type-option {% if tipo_selecionado == 'todos' %}selected{% endif %}" 
+                         data-type="todos" onclick="selectType('todos')">
+                        <i class="fas fa-th-list"></i>
+                        <h6>Todos os Itens</h6>
+                        <p>Produtos e Recargas</p>
+                    </div>
+                    <div class="type-option {% if tipo_selecionado == 'produtos' %}selected{% endif %}" 
+                         data-type="produtos" onclick="selectType('produtos')">
+                        <i class="fas fa-box"></i>
+                        <h6>Produtos</h6>
+                        <p>Apenas produtos físicos</p>
+                    </div>
+                    <div class="type-option {% if tipo_selecionado == 'recargas' %}selected{% endif %}" 
+                         data-type="recargas" onclick="selectType('recargas')">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h6>Recargas</h6>
+                        <p>Apenas recargas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <input type="hidden" name="tipo" id="tipoInput" value="{{ tipo_selecionado }}">
+                            <div class="col-md-4">
+                                <label for="loja" class="form-label">Filtrar por Loja</label>
+                                <select name="loja" id="loja" class="form-select">
+                                    <option value="">Todas as Lojas</option>
+                                    {% for loja in lojas %}
+                                    <option value="{{ loja.id }}" {% if request.GET.loja == loja.id|stringformat:"i" %}selected{% endif %}>
+                                        {{ loja.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="produto" class="form-label">Filtrar por Nome</label>
+                                <input type="text" name="produto" id="produto" class="form-control" 
+                                       placeholder="Nome do item" value="{{ request.GET.produto }}">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-filter me-2"></i>Filtrar
+                                </button>
+                                <a href="{% url 'listar_estoque' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Limpar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <h4 id="titulo-estoque">Controle de Estoque</h4>
+                    <div>
+                        <a href="{% url 'adicionar_estoque' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Adicionar Estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estoque Table -->
+        <div class="row fade-in">
+            <div class="col-12">
+                <div class="card table-card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Loja</th>
+                                        <th>Item</th>
+                                        <th>Quantidade em Estoque</th>
+                                        <th>Total Vendido</th>
+                                        <th>Valor Total Vendido</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-estoque">
+                                    <!-- Produtos -->
+                                    {% for item in produtos_estoque %}
+                                    <tr class="item-row {% if item.quantidade == 0 %}stock-out{% elif item.quantidade < 10 %}stock-low{% endif %}" 
+                                        data-type="produto" data-id="{{ item.id }}">
+                                        <td>
+                                            <span class="item-badge produto-badge">Produto</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ item.loja.nome }}</strong><br>
+                                            <small class="text-muted">{{ item.loja.cidade }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.produto.imagem %}
+                                                <img src="{{ item.produto.imagem.url }}" alt="{{ item.produto.nome }}" 
+                                                    class="rounded me-2" width="40" height="40">
+                                                {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                                    style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-box text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ item.produto.nome }}</strong><br>
+                                                    <small class="text-muted">Kz {{ item.produto.preco }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold {% if item.quantidade == 0 %}text-danger{% elif item.quantidade < 10 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ item.quantidade }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">{{ item.total_vendido }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">{{ item.valor_total_vendas|floatformat:2 }} Kz</span>
+                                        </td>
+                                        <td>
+                                            {% if item.quantidade == 0 %}
+                                            <span class="badge bg-danger">Esgotado</span>
+                                            {% elif item.quantidade < 10 %}
+                                            <span class="badge bg-warning">Baixo</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'editar_estoque' item.id %}" class="btn btn-warning btn-action" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'nova_venda' %}?loja_id={{ item.loja.id }}" class="btn btn-success btn-action" title="Vender">
+                                                    <i class="fas fa-cash-register"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+
+                                    <!-- Recargas -->
+                                    {% for item in recargas_estoque %}
+                                    <tr class="item-row {% if item.quantidade == 0 %}stock-out{% elif item.quantidade < 10 %}stock-low{% endif %}" 
+                                        data-type="recarga" data-id="{{ item.id }}">
+                                        <td>
+                                            <span class="item-badge recarga-badge">Recarga</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ item.loja.nome }}</strong><br>
+                                            <small class="text-muted">{{ item.loja.cidade }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.recarga.imagem %}
+                                                <img src="{{ item.recarga.imagem.url }}" alt="{{ item.recarga.nome }}" 
+                                                     class="rounded me-2" width="40" height="40">
+                                                {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-mobile-alt text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ item.recarga.nome }}</strong><br>
+                                                    <small class="text-muted">Kz {{ item.recarga.preco }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold {% if item.quantidade == 0 %}text-danger{% elif item.quantidade < 10 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ item.quantidade }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">{{ item.total_vendido }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">{{ item.valor_total_vendas|floatformat:2 }} Kz</span>
+                                        </td>
+                                        <td>
+                                            {% if item.quantidade == 0 %}
+                                            <span class="badge bg-danger">Esgotado</span>
+                                            {% elif item.quantidade < 10 %}
+                                            <span class="badge bg-warning">Baixo</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'editar_estoque' item.id %}" class="btn btn-warning btn-action" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'nova_venda' %}?loja_id={{ item.loja.id }}" class="btn btn-success btn-action" title="Vender">
+                                                    <i class="fas fa-cash-register"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+
+                                    {% if not produtos_estoque and not recargas_estoque %}
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-boxes fa-3x mb-3"></i>
+                                            <p>Nenhum item em estoque encontrado</p>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Inicializar com o tipo selecionado
+            const tipoSelecionado = '{{ tipo_selecionado }}' || 'todos';
+            filtrarItensPorTipo(tipoSelecionado);
+        });
+
+        // Função para selecionar o tipo de item
+        function selectType(type) {
+            // Atualizar o campo hidden
+            document.getElementById('tipoInput').value = type;
+            
+            // Remover seleção anterior
+            document.querySelectorAll('.type-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Adicionar seleção atual
+            document.querySelector(`.type-option[data-type="${type}"]`).classList.add('selected');
+            
+            // Filtrar itens na tabela
+            filtrarItensPorTipo(type);
+            
+            // Atualizar título
+            atualizarTituloEstoque(type);
+        }
+
+        // Função para filtrar itens por tipo
+        function filtrarItensPorTipo(type) {
+            const allItems = document.querySelectorAll('.item-row');
+            let visibleCount = 0;
+
+            allItems.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+                
+                if (type === 'todos' || 
+                    (type === 'produtos' && itemType === 'produto') || 
+                    (type === 'recargas' && itemType === 'recarga')) {
+                    item.style.display = 'table-row';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Mostrar mensagem se não houver itens
+            const tabela = document.getElementById('tabela-estoque');
+            const emptyMessage = tabela.querySelector('tr:last-child');
+            
+            if (visibleCount === 0 && emptyMessage && emptyMessage.cells.length === 1) {
+                emptyMessage.style.display = 'table-row';
+            } else if (emptyMessage && emptyMessage.cells.length === 1) {
+                emptyMessage.style.display = 'none';
+            }
+        }
+
+        // Função para atualizar o título do estoque
+        function atualizarTituloEstoque(type) {
+            const titulo = document.getElementById('titulo-estoque');
+            
+            switch(type) {
+                case 'todos':
+                    titulo.textContent = 'Controle de Estoque - Todos os Itens';
+                    break;
+                case 'produtos':
+                    titulo.textContent = 'Controle de Estoque - Produtos';
+                    break;
+                case 'recargas':
+                    titulo.textContent = 'Controle de Estoque - Recargas';
+                    break;
+            }
+        }
+
+        // Função para buscar itens (opcional)
+        function buscarItens() {
+            const termo = document.getElementById('produto').value.toLowerCase();
+            const tipoAtual = document.getElementById('tipoInput').value;
+            
+            const allItems = document.querySelectorAll('.item-row');
+            let visibleCount = 0;
+
+            allItems.forEach(item => {
+                const itemType = item.getAttribute('data-type');
+                const itemNameElement = item.querySelector('td:nth-child(3) strong');
+                if (!itemNameElement) return;
+                
+                const itemName = itemNameElement.textContent.toLowerCase();
+                
+                const typeMatch = tipoAtual === 'todos' || 
+                                 (tipoAtual === 'produtos' && itemType === 'produto') || 
+                                 (tipoAtual === 'recargas' && itemType === 'recarga');
+                
+                const nameMatch = itemName.includes(termo);
+                
+                if (typeMatch && nameMatch) {
+                    item.style.display = 'table-row';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Adicionar evento de input para busca em tempo real
+        const produtoInput = document.getElementById('produto');
+        if (produtoInput) {
+            produtoInput.addEventListener('input', buscarItens);
+        }
+
+        // Otimização para mobile
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

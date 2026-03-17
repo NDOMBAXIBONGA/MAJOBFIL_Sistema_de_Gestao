@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balanços - MAJOBFIL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            transition: all 0.3s;
+        }
+        
+        /* Sidebar Responsiva */
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: white;
+            position: fixed;
+            width: var(--sidebar-width);
+            transition: all 0.3s;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-collapsed .logo h4,
+        .sidebar-collapsed .logo small,
+        .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+        
+        .sidebar-collapsed .logo {
+            padding: 15px 5px;
+        }
+        
+        .sidebar-collapsed .nav-link {
+            text-align: center;
+            padding: 12px 5px;
+            margin: 5px;
+            justify-content: center;
+        }
+        
+        .sidebar-collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link i {
+            width: 24px;
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: all 0.3s;
+            min-height: 100vh;
+        }
+        
+        .main-content-expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .top-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Cards */
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .card-success {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+        }
+        
+        .card-info {
+            background: linear-gradient(45deg, var(--info), #2563eb);
+            color: white;
+        }
+        
+        .card-warning {
+            background: linear-gradient(45deg, var(--warning), #d97706);
+            color: white;
+        }
+        
+        .badge-sm {
+            font-size: 0.7rem;
+            padding: 0.3em 0.6em;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .valor-positivo {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .valor-negativo {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        
+        /* Grid responsivo */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        /* Filtros responsivos */
+        .filters-form .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Tabela responsiva */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            min-width: 900px;
+        }
+        
+        /* Paginação responsiva */
+        .pagination-responsive .page-link {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 2px;
+            border: 1px solid #dee2e6;
+            color: var(--primary);
+        }
+        
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-color: var(--primary);
+        }
+        
+        /* Modal responsivo */
+        .modal-responsive .modal-dialog {
+            max-width: 95%;
+            margin: 10px auto;
+        }
+        
+        @media (min-width: 576px) {
+            .modal-responsive .modal-dialog {
+                max-width: 90%;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .modal-responsive .modal-dialog {
+                max-width: 80%;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .modal-responsive .modal-dialog {
+                max-width: 800px;
+            }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        /* Media Queries */
+        @media (max-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            
+            .table {
+                min-width: 850px;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            :root {
+                --sidebar-width: 220px;
+            }
+            
+            .main-content {
+                margin-left: 220px;
+            }
+            
+            .filters-form .row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            
+            .sidebar.active {
+                margin-left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 80px 15px 20px;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .top-bar {
+                padding: 15px;
+                border-radius: 10px;
+            }
+            
+            .top-bar-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .top-bar-actions {
+                justify-content: space-between;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .filters-form .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+            
+            .table {
+                min-width: 800px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h5 {
+                font-size: 1.1rem;
+            }
+            
+            .top-bar h3 {
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .table {
+                min-width: 700px;
+            }
+            
+            .table th,
+            .table td {
+                padding: 10px 8px;
+                font-size: 0.9rem;
+            }
+            
+            .table .badge {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+            
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+            
+            /* Ajustes para modais em mobile */
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 15px;
+            }
+            
+            .modal-title {
+                font-size: 1.2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 70px 10px 15px;
+            }
+            
+            .top-bar {
+                padding: 12px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .stats-card {
+                border-radius: 10px;
+            }
+            
+            .stats-card .col-4 {
+                display: none;
+            }
+            
+            .stats-card .col-8 {
+                width: 100%;
+            }
+            
+            .card-header {
+                padding: 12px 15px;
+            }
+            
+            .card-title {
+                font-size: 1.1rem;
+            }
+            
+            h3 {
+                font-size: 1.3rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h5 {
+                font-size: 1rem;
+            }
+            
+            small {
+                font-size: 0.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .table {
+                min-width: 650px;
+            }
+            
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                font-size: 0.85rem;
+            }
+            
+            .table .btn-sm {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .form-select,
+            .form-control {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .pagination-responsive .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .empty-state {
+                padding: 30px 15px;
+            }
+            
+            .empty-state i {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            
+            .top-bar-actions .btn,
+            .top-bar-actions .dropdown {
+                width: 100%;
+            }
+            
+            .top-bar-actions .dropdown-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid .stats-card .row {
+                text-align: center;
+            }
+            
+            .filters-form .col-12 {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+            
+            .table td:nth-child(4),
+            .table td:nth-child(7),
+            .table td:nth-child(8) {
+                min-width: 100px;
+            }
+            
+            .pagination-responsive .page-item:not(.active):not(:first-child):not(:last-child) {
+                display: none;
+            }
+        }
+        
+        /* Vista Mobile para tabela (cards) */
+        .mobile-balance-view {
+            display: none;
+        }
+        
+        @media (max-width: 576px) {
+            .desktop-table {
+                display: none;
+            }
+            
+            .mobile-balance-view {
+                display: block;
+            }
+            
+            .balance-card {
+                margin-bottom: 15px;
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-left: 4px solid var(--primary);
+            }
+            
+            .balance-card .status-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+            
+            .balance-card .card-body {
+                padding: 15px;
+            }
+            
+            .balance-card .info-section {
+                margin-bottom: 15px;
+            }
+            
+            .balance-card .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 6px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .balance-card .info-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.9rem;
+            }
+            
+            .balance-card .info-value {
+                color: #333;
+                font-size: 0.95rem;
+                text-align: right;
+            }
+            
+            .balance-card .store-info {
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 6px;
+                margin-bottom: 10px;
+            }
+            
+            .balance-card .period-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                margin-bottom: 8px;
+            }
+            
+            .balance-card .period-badge.diario { background: var(--primary); color: white; }
+            .balance-card .period-badge.semanal { background: var(--success); color: white; }
+            .balance-card .period-badge.mensal { background: var(--info); color: white; }
+            .balance-card .period-badge.anual { background: var(--warning); color: white; }
+            
+            .balance-card .actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+            }
+            
+            .balance-card .actions .btn {
+                flex: 1;
+                padding: 8px 12px;
+            }
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus styles para acessibilidade */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* Print styles */
+        @media print {
+            .sidebar,
+            .sidebar-toggle,
+            .top-bar-actions,
+            .btn,
+            .dropdown,
+            .modal,
+            .filters-form,
+            .pagination,
+            .mobile-balance-view,
+            .action-buttons {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .stats-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+            
+            .table {
+                min-width: auto;
+                font-size: 10pt !important;
+            }
+            
+            .table th,
+            .table td {
+                padding: 4px !important;
+            }
+            
+            .top-bar {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .desktop-table {
+                display: block !important;
+            }
+        }
+        
+        /* Melhorias para dropdowns em mobile */
+        @media (max-width: 576px) {
+            .dropdown-menu {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90% !important;
+                max-height: 80vh !important;
+                overflow-y: auto !important;
+            }
+        }
+        
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão para toggle da sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Overlay para fechar sidebar em mobile -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <h4 class="mb-0">MAJOBFIL</h4>
+            <small>Sistema de Gestão</small>
+        </div>
+        
+        <div class="mt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i><span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'lista_balancos' %}">
+                        <i class="fas fa-balance-scale"></i><span>Gerenciar Balanços</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_produtos_estoque' %}">
+                        <i class="fas fa-box"></i><span>Gerenciar Estoque</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Balanços Financeiros
+                </h3>
+                <div class="top-bar-actions">
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#criarBalancoModal">
+                            <i class="fas fa-plus me-1"></i><span class="d-none d-sm-inline">Criar Balanço</span>
+                        </button>
+                    </div>
+                    <span class="text-muted">
+                        <i class="fas fa-user me-2"></i>
+                        <span class="d-none d-sm-inline">{{ user.nome|default:user.username }}</span>
+                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" 
+                                id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Configurações">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="settingsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt me-2"></i>Sair
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Criar Balanço -->
+        <div class="modal fade modal-responsive" id="criarBalancoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Criar Novo Balanço</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="{% url 'criar_balanco_personalizado' %}" id="formCriarBalanco">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Loja *</label>
+                                    <select name="loja_id" class="form-select" required id="selectLoja">
+                                        <option value="">Selecione a loja</option>
+                                        {% for loja in todas_lojas %}
+                                            <option value="{{ loja.id }}" 
+                                                    {% if not user.is_superuser and loja not in user.lojas_gerenciadas.all %}disabled{% endif %}>
+                                                {{ loja.nome }} - {{ loja.cidade }}
+                                                {% if not user.is_superuser and loja not in user.lojas_gerenciadas.all %}
+                                                    (Sem permissão)
+                                                {% endif %}
+                                            </option>
+                                        {% empty %}
+                                            <option value="">Nenhuma loja cadastrada</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        {% if user.is_superuser %}
+                                            <i class="fas fa-shield-alt text-primary"></i> Superusuário: Todas as lojas disponíveis
+                                        {% else %}
+                                            <i class="fas fa-user-check text-info"></i> Você pode criar balanços apenas para lojas que gerenciam
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Tipo de Período *</label>
+                                    <select name="periodo_tipo" class="form-select" required id="selectPeriodo">
+                                        <option value="">Selecione o período</option>
+                                        <option value="diario">Diário</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="mensal">Mensal</option>
+                                        <option value="anual">Anual</option>
+                                        <option value="personalizado">Personalizado</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Data Início *</label>
+                                    <input type="date" name="data_inicio" class="form-control" required 
+                                        id="dataInicioModal">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Data Fim *</label>
+                                    <input type="date" name="data_fim" class="form-control" required
+                                        id="dataFimModal">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">Descrição (Opcional)</label>
+                                    <input type="text" name="descricao" class="form-control" 
+                                        placeholder="Ex: Balanço Trimestral, Análise Especial, etc.">
+                                </div>
+                                
+                                <!-- Informações de Permissão -->
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle me-2"></i>Informações:</h6>
+                                        <ul class="mb-0">
+                                            <li>Superusuários podem criar balanços para <strong>qualquer loja</strong></li>
+                                            <li>Usuários normais podem criar apenas para <strong>lojas que gerenciam</strong></li>
+                                            <li>O sistema calculará automaticamente vendas e relatórios do período</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-footer mt-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-success" id="btnCriarBalanco">
+                                    <i class="fas fa-plus me-1"></i>Criar Balanço
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        {% if messages %}
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filtros -->
+        <div class="row mb-4 fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <form method="get" class="filters-form">
+                            <div class="row g-3">
+                                <div>
+                                    <label class="form-label">Período</label>
+                                    <select name="periodo_tipo" class="form-select">
+                                        <option value="">Todos</option>
+                                        {% for value, label in periodo_choices %}
+                                        <option value="{{ value }}" {% if periodo_tipo_selecionado == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Loja</label>
+                                    <select name="loja" class="form-select">
+                                        <option value="">Todas</option>
+                                        {% for loja in lojas %}
+                                        <option value="{{ loja.id }}" {% if loja_selecionada == loja.id|stringformat:"i" %}selected{% endif %}>{{ loja.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Ano</label>
+                                    <select name="ano" class="form-select">
+                                        <option value="todos">Todos os anos</option>
+                                        {% for ano in anos_disponiveis %}
+                                        <option value="{{ ano }}" {% if ano_selecionado == ano|stringformat:"i" %}selected{% endif %}>{{ ano }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Mês</label>
+                                    <select name="mes" class="form-select">
+                                        <option value="">Todos os meses</option>
+                                        {% for i in "123456789101112" %}
+                                        <option value="{{ i }}" {% if mes_selecionado == i %}selected{% endif %}>
+                                            {{ i }}º Mês
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-filter me-1"></i>Filtrar
+                                        </button>
+                                        <a href="{% url 'lista_balancos' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-1"></i>Limpar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Resumo -->
+        <div class="stats-grid fade-in">
+            <div class="card stats-card card-primary text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Vendas</h5>
+                            <h2 class="mb-0">Kz {{ total_vendas|default:0|floatformat:2 }}</h2>
+                            <small>{{ total_balancos }} balanços</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-shopping-cart fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card card-success text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Geral</h5>
+                            <h2 class="mb-0">Kz {{ total_geral|default:0|floatformat:2 }}</h2>
+                            <small>Soma dos totais gerais</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-file-invoice-dollar fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stats-card card-info text-white">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-8">
+                            <h5>Total Arrecadado</h5>
+                            <h2 class="mb-0">Kz {{ total_arrecadado|default:0|floatformat:2 }}</h2>
+                            <small>Soma dos totais arrecadados</small>
+                        </div>
+                        <div class="col-4 text-end d-none d-sm-block">
+                            <i class="fas fa-cash-register fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Balanços (Desktop) -->
+        <div class="row desktop-table fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="card-title mb-0">Lista de Balanços</h5>
+                            <small class="text-muted">
+                                Mostrando {{ balancos.start_index }} - {{ balancos.end_index }} de {{ balancos.paginator.count }} balanços
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary">{{ balancos.paginator.count }} totais</span>
+                            <span class="badge bg-secondary ms-1">4 por página</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if balancos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Loja</th>
+                                        <th>Período</th>
+                                        <th>Intervalo</th>
+                                        <th>Gerente</th>
+                                        <th class="text-end">Total Geral</th>
+                                        <th class="text-end">Total Arrecadado</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for balanco in balancos %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ balanco.loja.nome }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ balanco.loja.cidade }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if balanco.periodo_tipo == 'diario' %}bg-primary
+                                                {% elif balanco.periodo_tipo == 'semanal' %}bg-success
+                                                {% elif balanco.periodo_tipo == 'mensal' %}bg-info
+                                                {% else %}bg-warning{% endif %}">
+                                                {{ balanco.get_periodo_tipo_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ balanco.descricao_periodo }}</td>
+                                        <td>
+                                            {% if balanco.primeiro_gerente %}
+                                                <span class="text-muted">Não definido</span>
+                                            {% else %}
+                                                <span class="text-muted">Não definido</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>Kz {{ balanco.total_geral_relatorios|default:0|floatformat:2 }}</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>Kz {{ balanco.total_arrecadado|default:0|floatformat:2 }}</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if balanco.total_geral_relatorios > balanco.total_arrecadado %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Negativo
+                                                    <br>
+                                                    <small>Falta: Kz {{ balanco.diferenca|default:0|floatformat:2 }}</small>
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Positivo
+                                                    {% if balanco.total_arrecadado > balanco.total_geral_relatorios %}
+                                                    <br>
+                                                    <small>Sobra: Kz {{ balanco.sobra|default:0|floatformat:2 }}</small>
+                                                    {% endif %}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'detalhe_balanco' balanco.id %}" class="btn btn-outline-primary" title="Detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                    <span class="d-none d-md-inline"> Ver</span>
+                                                </a>
+                                                <a href="{% url 'excluir_balanco' balanco.id %}" class="btn btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este balanço?')">
+                                                    <i class="fas fa-trash"></i>
+                                                    <span class="d-none d-md-inline"> Excluir</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginação -->
+                        {% if balancos.paginator.num_pages > 1 %}
+                        <nav aria-label="Navegação de páginas de balanços" class="mt-4">
+                            <ul class="pagination justify-content-center pagination-responsive">
+                                <!-- Botão Anterior -->
+                                {% if balancos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ balancos.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Anterior">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                                </li>
+                                {% endif %}
+
+                                <!-- Primeira página -->
+                                {% if balancos.number > 3 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">1</a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+
+                                <!-- Páginas ao redor da atual -->
+                                {% for num in balancos.paginator.page_range %}
+                                    {% if num >= balancos.number|add:"-2" and num <= balancos.number|add:"2" %}
+                                        {% if balancos.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                <!-- Última página -->
+                                {% if balancos.number < balancos.paginator.num_pages|add:"-2" %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ balancos.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ balancos.paginator.num_pages }}</a>
+                                </li>
+                                {% endif %}
+
+                                <!-- Botão Próximo -->
+                                {% if balancos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ balancos.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Próximo">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                            
+                            <!-- Informação da página atual -->
+                            <div class="text-center mt-2">
+                                <small class="text-muted">
+                                    Página {{ balancos.number }} de {{ balancos.paginator.num_pages }}
+                                </small>
+                            </div>
+                        </nav>
+                        {% endif %}
+
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <h5>Nenhum balanço encontrado</h5>
+                            <p class="text-muted">Crie seu primeiro balanço para começar a análise.</p>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#criarBalancoModal">
+                                <i class="fas fa-plus me-1"></i>Criar Primeiro Balanço
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Mobile para Balanços -->
+        <div class="row mobile-balance-view fade-in">
+            <div class="col-12">
+                <div class="card stats-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0">Lista de Balanços</h5>
+                            <small class="text-muted">{{ balancos.paginator.count }} totais</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if balancos %}
+                        <div class="balance-list">
+                            {% for balanco in balancos %}
+                            <div class="card balance-card">
+                                <div class="card-body">
+                                    <div class="status-badge">
+                                        {% if balanco.total_geral_relatorios > balanco.total_arrecadado %}
+                                            <span class="badge bg-danger">Negativo</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Positivo</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="store-info">
+                                        <h6 class="mb-1">{{ balanco.loja.nome }}</h6>
+                                        <small class="text-muted">{{ balanco.loja.cidade }}</small>
+                                    </div>
+                                    
+                                    <div class="period-badge {{ balanco.periodo_tipo }}">
+                                        {{ balanco.get_periodo_tipo_display }}
+                                    </div>
+                                    
+                                    <div class="info-section">
+                                        <div class="info-row">
+                                            <span class="info-label">Período:</span>
+                                            <span class="info-value">{{ balanco.descricao_periodo }}</span>
+                                        </div>
+                                        
+                                        <div class="info-row">
+                                            <span class="info-label">Total Geral:</span>
+                                            <span class="info-value">Kz {{ balanco.total_geral_relatorios|default:0|floatformat:2 }}</span>
+                                        </div>
+                                        
+                                        <div class="info-row">
+                                            <span class="info-label">Total Arrecadado:</span>
+                                            <span class="info-value">Kz {{ balanco.total_arrecadado|default:0|floatformat:2 }}</span>
+                                        </div>
+                                        
+                                        <div class="info-row">
+                                            <span class="info-label">Situação:</span>
+                                            <span class="info-value">
+                                                {% if balanco.total_geral_relatorios > balanco.total_arrecadado %}
+                                                    Falta: Kz {{ balanco.diferenca|default:0|floatformat:2 }}
+                                                {% else %}
+                                                    Sobra: Kz {{ balanco.sobra|default:0|floatformat:2 }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="actions">
+                                        <a href="{% url 'detalhe_balanco' balanco.id %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>Ver
+                                        </a>
+                                        <a href="{% url 'excluir_balanco' balanco.id %}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir este balanço?')">
+                                            <i class="fas fa-trash me-1"></i>Excluir
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Paginação Mobile -->
+                        {% if balancos.paginator.num_pages > 1 %}
+                        <nav aria-label="Navegação de páginas" class="mt-4">
+                            <ul class="pagination justify-content-center pagination-responsive">
+                                {% if balancos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ balancos.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Pág. {{ balancos.number }} de {{ balancos.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if balancos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ balancos.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <h5>Nenhum balanço encontrado</h5>
+                            <p class="text-muted">Crie seu primeiro balanço para começar a análise.</p>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#criarBalancoModal">
+                                <i class="fas fa-plus me-1"></i>Criar Primeiro Balanço
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Gerenciamento da sidebar responsiva
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('overlay');
+        
+        // Estado da sidebar
+        let isSidebarCollapsed = false;
+        let isMobile = window.innerWidth <= 992;
+        
+        // Função para alternar sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Em mobile, mostra/esconde a sidebar
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            } else {
+                // Em desktop, colapsa/expande a sidebar
+                isSidebarCollapsed = !isSidebarCollapsed;
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('main-content-expanded');
+                
+                // Salvar preferência no localStorage
+                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+            }
+        }
+        
+        // Fechar sidebar no mobile ao clicar no overlay
+        function closeSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Event listeners
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        
+        // Fechar sidebar ao clicar em um link (em mobile)
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeSidebar();
+                }
+            });
+        });
+        
+        // Ajustar ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 992;
+            
+            if (wasMobile !== isMobile) {
+                // Se mudou de mobile para desktop ou vice-versa, resetar estado
+                if (isMobile) {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.classList.remove('main-content-expanded');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    // Restaurar estado colapsado se estava salvo
+                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                    if (savedState) {
+                        sidebar.classList.add('sidebar-collapsed');
+                        mainContent.classList.add('main-content-expanded');
+                    }
+                }
+            }
+        });
+        
+        // Restaurar estado da sidebar no desktop
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!isMobile) {
+                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (savedState) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.classList.add('main-content-expanded');
+                    isSidebarCollapsed = true;
+                }
+            }
+            
+            // Configurar datas padrão
+            const hoje = new Date().toISOString().split('T')[0];
+            const dataInicioModal = document.getElementById('dataInicioModal');
+            const dataFimModal = document.getElementById('dataFimModal');
+            
+            if (dataInicioModal && dataFimModal) {
+                dataFimModal.value = hoje;
+                
+                // Data de início padrão: 7 dias atrás
+                const seteDiasAtras = new Date();
+                seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+                dataInicioModal.value = seteDiasAtras.toISOString().split('T')[0];
+            }
+            
+            // Auto-preencher datas baseado no tipo de período
+            const periodoSelect = document.getElementById('selectPeriodo');
+            if (periodoSelect) {
+                periodoSelect.addEventListener('change', function() {
+                    const hoje = new Date();
+                    const dataInicio = document.getElementById('dataInicioModal');
+                    const dataFim = document.getElementById('dataFimModal');
+                    
+                    if (!dataInicio || !dataFim) return;
+                    
+                    dataFim.value = hoje.toISOString().split('T')[0];
+                    
+                    switch(this.value) {
+                        case 'diario':
+                            dataInicio.value = hoje.toISOString().split('T')[0];
+                            break;
+                        case 'semanal':
+                            const semanaAtras = new Date(hoje);
+                            semanaAtras.setDate(hoje.getDate() - 7);
+                            dataInicio.value = semanaAtras.toISOString().split('T')[0];
+                            break;
+                        case 'mensal':
+                            const mesAtras = new Date(hoje);
+                            mesAtras.setMonth(hoje.getMonth() - 1);
+                            dataInicio.value = mesAtras.toISOString().split('T')[0];
+                            break;
+                        case 'anual':
+                            const anoAtras = new Date(hoje);
+                            anoAtras.setFullYear(hoje.getFullYear() - 1);
+                            dataInicio.value = anoAtras.toISOString().split('T')[0];
+                            break;
+                        case 'personalizado':
+                            // Mantém as datas atuais
+                            break;
+                    }
+                });
+            }
+            
+            // Validar datas antes do envio
+            const form = document.querySelector('#criarBalancoModal form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const dataInicio = new Date(document.getElementById('dataInicioModal').value);
+                    const dataFim = new Date(document.getElementById('dataFimModal').value);
+                    
+                    if (dataInicio > dataFim) {
+                        e.preventDefault();
+                        alert('A data de início não pode ser posterior à data de fim.');
+                        return false;
+                    }
+                    
+                    // Verificar se há loja selecionada
+                    const lojaSelect = document.querySelector('select[name="loja_id"]');
+                    if (lojaSelect && !lojaSelect.value) {
+                        e.preventDefault();
+                        alert('Selecione uma loja.');
+                        return false;
+                    }
+                    
+                    // Mostrar loading
+                    const btnCriar = document.getElementById('btnCriarBalanco');
+                    if (btnCriar) {
+                        btnCriar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Criando...';
+                        btnCriar.disabled = true;
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            // Melhorar experiência em modais para mobile
+            const modal = document.getElementById('criarBalancoModal');
+            if (modal) {
+                modal.addEventListener('shown.bs.modal', function() {
+                    if (isMobile) {
+                        // Focar no primeiro campo
+                        const firstInput = modal.querySelector('select[name="loja_id"]');
+                        if (firstInput) {
+                            setTimeout(() => {
+                                firstInput.focus();
+                            }, 300);
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Melhorias para dropdowns em mobile
+        function adjustDropdownsForMobile() {
+            if (isMobile) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.position = 'fixed';
+                    menu.style.top = '50%';
+                    menu.style.left = '50%';
+                    menu.style.transform = 'translate(-50%, -50%)';
+                    menu.style.width = '90%';
+                    menu.style.maxHeight = '80vh';
+                    menu.style.overflowY = 'auto';
+                });
+            } else {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.position = '';
+                    menu.style.top = '';
+                    menu.style.left = '';
+                    menu.style.transform = '';
+                    menu.style.width = '';
+                    menu.style.maxHeight = '';
+                    menu.style.overflowY = '';
+                });
+            }
+        }
+        
+        // Ajustar dropdowns quando a tela é redimensionada
+        window.addEventListener('resize', adjustDropdownsForMobile);
+        
+        // Ajustar dropdowns no carregamento
+        document.addEventListener('DOMContentLoaded', adjustDropdownsForMobile);
+        
+        // Função para melhorar a experiência em dispositivos touch
+        function improveTouchExperience() {
+            // Aumentar área de toque para botões em mobile
+            if (isMobile) {
+                document.querySelectorAll('.btn').forEach(btn => {
+                    btn.style.minHeight = '44px';
+                    btn.style.minWidth = '44px';
+                    btn.style.display = 'inline-flex';
+                    btn.style.alignItems = 'center';
+                    btn.style.justifyContent = 'center';
+                });
+                
+                // Aumentar área de toque para inputs e selects
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.style.minHeight = '44px';
+                });
+            }
+        }
+        
+        // Melhorar experiência touch
+        document.addEventListener('DOMContentLoaded', improveTouchExperience);
+        window.addEventListener('resize', improveTouchExperience);
+        
+        // Suporte para teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
+            }
+        });
+        
+        // Prevenir zoom em inputs em mobile
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
+        
+        // Otimização de performance
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                // Redesenhar componentes se necessário
+            }, 250);
+        });
+        
+        // Suporte para impressão
+        window.addEventListener('beforeprint', () => {
+            // Mostrar apenas a tabela desktop
+            document.querySelector('.mobile-balance-view').style.display = 'none';
+            document.querySelector('.desktop-table').style.display = 'block';
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Restaurar visibilidade original
+            if (window.innerWidth <= 576) {
+                document.querySelector('.mobile-balance-view').style.display = 'block';
+                document.querySelector('.desktop-table').style.display = 'none';
+            }
+        });
+        
+        // Animações suaves para melhor UX
+        document.addEventListener('DOMContentLoaded', () => {
+            // Adicionar efeito de carregamento suave
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+                document.body.style.transition = 'opacity 0.3s ease-in';
+            }, 100);
+        });
+        
+        // Função para confirmar exclusões
+        function confirmDelete(event) {
+            if (!confirm('Tem certeza que deseja excluir este balanço?')) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+        
+        // Adicionar confirm a todos os links de exclusão
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a[href*="excluir_balanco"]').forEach(link => {
+                link.addEventListener('click', confirmDelete);
+            });
+        });
+    </script>
+</body>
+</html>
