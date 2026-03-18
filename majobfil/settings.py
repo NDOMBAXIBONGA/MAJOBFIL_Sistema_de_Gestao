@@ -111,7 +111,7 @@ WSGI_APPLICATION = 'majobfil.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@postgres.railway.internal:5432/railway',
+        default='postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@nozomi.proxy.rlwy.net:41455/railway',
         conn_max_age=600,
         conn_health_checks=True,
     )
