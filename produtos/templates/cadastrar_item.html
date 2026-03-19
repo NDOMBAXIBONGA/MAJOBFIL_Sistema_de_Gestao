@@ -821,31 +821,35 @@
                             </h5>
                             
                             <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label for="id_imagem" class="form-label">Selecionar Imagem</label>
-                                        {{ form.imagem }}
-                                        {% if form.imagem.errors %}
-                                            <div class="errorlist">{{ form.imagem.errors }}</div>
-                                        {% endif %}
-                                        <div class="form-text">
-                                            Formatos suportados: JPG, PNG, GIF. Tamanho máximo: 5MB.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Pré-visualização da Imagem -->
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label class="form-label">Pré-visualização</label>
-                                        <div class="d-flex justify-content-center">
-                                            <div class="image-preview" id="imagePreview">
-                                                <div class="image-preview-placeholder">
-                                                    <i class="fas fa-image"></i>
-                                                    <p>Nenhuma imagem selecionada</p>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="id_imagem" class="form-label">Selecionar Imagem</label>
+                                            {{ form.imagem }}
+                                            
+                                            <!-- Mostrar imagem atual se existir -->
+                                            {% if form.instance.imagem %}
+                                                <div class="mt-2">
+                                                    <p class="mb-1">Imagem atual:</p>
+                                                    <img src="{{ form.instance.imagem.url }}" 
+                                                        alt="Imagem do produto" 
+                                                        style="max-width: 200px; max-height: 200px;" 
+                                                        class="img-thumbnail">
+                                                    
+                                                    <!-- Checkbox para remover imagem (opcional) -->
+                                                    <div class="form-check mt-2">
+                                                        <input type="checkbox" name="imagem-clear" id="imagem-clear" class="form-check-input">
+                                                        <label for="imagem-clear" class="form-check-label text-danger">Remover imagem atual</label>
+                                                    </div>
                                                 </div>
+                                            {% endif %}
+                                            
+                                            {% if form.imagem.errors %}
+                                                <div class="alert alert-danger mt-2">{{ form.imagem.errors }}</div>
+                                            {% endif %}
+                                            
+                                            <div class="form-text text-muted mt-2">
+                                                <i class="fas fa-info-circle"></i> 
+                                                Formatos suportados: JPG, PNG, GIF. Tamanho máximo: 5MB.
                                             </div>
                                         </div>
                                     </div>
