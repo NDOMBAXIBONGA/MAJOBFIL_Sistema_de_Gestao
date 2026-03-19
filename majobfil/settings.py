@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 import dj_database_url
-
 # Configurações de segurança
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 DEBUG = True
@@ -30,8 +29,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+#SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
+#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 #ALLOWED_HOSTS = []
 
