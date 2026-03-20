@@ -260,9 +260,9 @@ class Balanco(models.Model):
         # === CÁLCULOS ESPECÍFICOS DOS RELATÓRIOS ===
         
         # DSTV - Cálculo com 5%
-        total_dstv_sem_resto = self.total_dstv - self.total_resto_dstv
+        total_dstv_sem_resto = self.total_inicio_dstv - self.total_resto_dstv
         dstv_com_5_percent = total_dstv_sem_resto * Decimal('1.05')
-        diferenca_dstv = dstv_com_5_percent - self.total_dstv
+        diferenca_dstv = self.total_dstv - dstv_com_5_percent
         
         # ZAP
         total_zap_sem_resto = self.total_zap - self.total_resto_zap
