@@ -34,7 +34,7 @@ def produtos_loja_gerente(request):
         return render(request, 'vendas/nova_vendas.html', {
             'lojas': [],
             'produtos_estoque': [],
-            'recargas_estoque': [],  # Adicionado
+            'recargas_estoque': [],
             'mensagem': 'Você não é gerente de nenhuma loja.'
         })
     
@@ -51,7 +51,7 @@ def produtos_loja_gerente(request):
             'loja_selecionada': None,
             'lojas': lojas_gerente,
             'produtos_estoque': [],
-            'recargas_estoque': []  # Adicionado
+            'recargas_estoque': []
         })
 
 def render_produtos_loja(request, loja):
@@ -101,10 +101,10 @@ def render_produtos_loja(request, loja):
         'loja_selecionada': loja,
         'lojas': Loja.objects.filter(gerentes=request.user),
         'produtos_estoque': produtos_estoque,
-        'recargas_estoque': recargas_estoque,  # Adicionado
+        'recargas_estoque': recargas_estoque,
         'total_estoque': total_estoque,
-        'produtos_com_estoque': total_com_estoque,  # Agora inclui produtos e recargas
-        'recargas_com_estoque': recargas_com_estoque,  # Adicionado
+        'produtos_com_estoque': total_com_estoque,
+        'recargas_com_estoque': recargas_com_estoque,
         'estoque_baixo': estoque_baixo_total,
         'valor_total_estoque': f"{valor_total_estoque:.2f}"
     })
@@ -114,7 +114,6 @@ def render_produtos_loja(request, loja):
 @login_required
 def registrar_venda(request):
     try:
-        # Debug: verificar o que está chegando
         print("=== REGISTRAR VENDA CHAMADA ===")
         print("Content-Type:", request.content_type)
         print("Método:", request.method)
@@ -213,7 +212,7 @@ def registrar_venda(request):
         # Registrar a venda
         if item_type == 'produto':
             venda = Venda.objects.create(
-                estoque_loja=estoque,  # CORREÇÃO: usar estoque_loja
+                estoque_loja=estoque,
                 item_type='produto',
                 quantidade=quantidade,
                 valor_total=valor_total,
@@ -223,7 +222,7 @@ def registrar_venda(request):
             print(f"Venda de produto criada: {venda.id}")
         else:  # recarga
             venda = Venda.objects.create(
-                estoque_recarga=estoque,  # CORREÇÃO: usar estoque_recarga
+                estoque_recarga=estoque,
                 item_type='recarga',
                 quantidade=quantidade,
                 valor_total=valor_total,
@@ -256,6 +255,383 @@ def registrar_venda(request):
             'error': f'Erro interno: {str(e)}'
         })
 
+# ==================== NOVA FUNÇÃO PARA REGISTRAR VENDAS DE DIAS ANTERIORES ====================
+
+@require_POST
+@csrf_exempt
+@login_required
+def registrar_venda_retroativa(request):
+    """
+    Função para registrar vendas de dias anteriores (vendas retroativas)
+    Permite definir uma data específica para a venda
+    """
+    try:
+        print("=== REGISTRAR VENDA RETROATIVA CHAMADA ===")
+        
+        # Verificar se é JSON ou FormData
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST.dict()
+        
+        print("Dados recebidos:", data)
+        
+        # Extrair dados
+        estoque_id = data.get('estoque_id')
+        item_type = data.get('item_type', 'produto').lower().strip()
+        quantidade = data.get('quantidade')
+        data_venda = data.get('data_venda')
+        observacao = data.get('observacao', '')
+        justificativa = data.get('justificativa', '')
+        
+        print(f"Item type: '{item_type}', Estoque ID: '{estoque_id}', Quantidade: '{quantidade}', Data: '{data_venda}'")
+        
+        # Validar dados obrigatórios
+        if not estoque_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'ID do estoque não fornecido.'
+            })
+        
+        if not quantidade:
+            return JsonResponse({
+                'success': False,
+                'error': 'Quantidade não fornecida.'
+            })
+        
+        if not data_venda:
+            return JsonResponse({
+                'success': False,
+                'error': 'Data da venda não fornecida.'
+            })
+        
+        # Validar quantidade
+        try:
+            quantidade = int(quantidade)
+            if quantidade <= 0:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Quantidade deve ser maior que zero.'
+                })
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'error': 'Quantidade inválida.'
+            })
+        
+        # Validar data da venda
+        try:
+            data_venda_obj = datetime.strptime(data_venda, '%Y-%m-%d').date()
+            
+            # Verificar se a data não é futura
+            if data_venda_obj > datetime.now().date():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Não é possível registrar vendas com data futura.'
+                })
+            
+            # Verificar se a data não é muito antiga (ex: mais de 1 ano)
+            data_limite = datetime.now().date() - timedelta(days=365)
+            if data_venda_obj < data_limite:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Data muito antiga. Vendas retroativas só podem ser registradas até 1 ano atrás.'
+                })
+                
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato de data inválido. Use YYYY-MM-DD.'
+            })
+        
+        # Buscar o estoque
+        if item_type == 'produto':
+            try:
+                estoque = EstoqueLoja.objects.get(id=estoque_id)
+                preco_unitario = estoque.produto.preco
+                item_nome = estoque.produto.nome
+            except EstoqueLoja.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Estoque de produto não encontrado.'
+                })
+                
+        elif item_type == 'recarga':
+            try:
+                estoque = EstoqueRecarga.objects.get(id=estoque_id)
+                preco_unitario = estoque.recarga.preco
+                item_nome = estoque.recarga.nome
+            except EstoqueRecarga.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Estoque de recarga não encontrado.'
+                })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': f'Tipo de item inválido: "{item_type}". Tipos válidos: "produto" ou "recarga".'
+            })
+        
+        # Verificar permissão (apenas superuser pode registrar vendas retroativas)
+        if not request.user.is_superuser:
+            return JsonResponse({
+                'success': False,
+                'error': 'Apenas administradores podem registrar vendas de dias anteriores.'
+            })
+        
+        # Verificar se o usuário tem acesso à loja
+        if request.user not in estoque.loja.gerentes.all() and not request.user.is_superuser:
+            return JsonResponse({
+                'success': False,
+                'error': 'Você não tem permissão para registrar vendas nesta loja.'
+            })
+        
+        # Verificar estoque
+        if estoque.quantidade < quantidade:
+            return JsonResponse({
+                'success': False,
+                'error': f'Estoque insuficiente para a data atual. Disponível: {estoque.quantidade}'
+            })
+        
+        # Calcular valor total
+        valor_total = quantidade * preco_unitario
+        
+        # Construir observação com justificativa
+        observacao_completa = observacao
+        if justificativa:
+            if observacao_completa:
+                observacao_completa += f"\nJustificativa da venda retroativa: {justificativa}"
+            else:
+                observacao_completa = f"Venda retroativa do dia {data_venda}. Justificativa: {justificativa}"
+        else:
+            if observacao_completa:
+                observacao_completa += f"\nVenda retroativa registrada em {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+            else:
+                observacao_completa = f"Venda retroativa do dia {data_venda} registrada em {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        
+        # Registrar a venda com data específica
+        if item_type == 'produto':
+            venda = Venda.objects.create(
+                estoque_loja=estoque,
+                item_type='produto',
+                quantidade=quantidade,
+                valor_total=valor_total,
+                vendedor=request.user,
+                observacao=observacao_completa,
+                data_venda=data_venda_obj  # Data personalizada
+            )
+        else:  # recarga
+            venda = Venda.objects.create(
+                estoque_recarga=estoque,
+                item_type='recarga',
+                quantidade=quantidade,
+                valor_total=valor_total,
+                vendedor=request.user,
+                observacao=observacao_completa,
+                data_venda=data_venda_obj  # Data personalizada
+            )
+        
+        # Atualizar estoque
+        estoque.quantidade -= quantidade
+        estoque.save()
+        
+        print(f"Venda retroativa criada: {venda.id} para data {data_venda}")
+        
+        return JsonResponse({
+            'success': True,
+            'venda_id': venda.id,
+            'novo_estoque': estoque.quantidade,
+            'valor_total': float(valor_total),
+            'item_nome': item_nome,
+            'data_venda': data_venda,
+            'message': f'Venda retroativa do dia {data_venda} registrada com sucesso!'
+        })
+        
+    except Exception as e:
+        print(f"Erro em registrar_venda_retroativa: {str(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro interno: {str(e)}'
+        })
+
+# ==================== FUNÇÃO PARA LISTAR VENDAS RETROATIVAS ====================
+
+@require_GET
+@login_required
+def listar_vendas_retroativas(request):
+    """
+    Lista apenas vendas retroativas (que não são do dia atual)
+    Apenas superusers podem visualizar
+    """
+    if not request.user.is_superuser:
+        messages.error(request, 'Apenas administradores podem visualizar vendas retroativas.')
+        return redirect('listar_vendas')
+    
+    # Buscar vendas que não são do dia atual
+    hoje = datetime.now().date()
+    
+    vendas_retroativas = Venda.objects.filter(
+        data_venda__date__lt=hoje
+    ).order_by('-data_venda')
+    
+    # Aplicar filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    loja_id = request.GET.get('loja')
+    tipo = request.GET.get('tipo')
+    
+    if data_inicio:
+        vendas_retroativas = vendas_retroativas.filter(data_venda__date__gte=data_inicio)
+    if data_fim:
+        vendas_retroativas = vendas_retroativas.filter(data_venda__date__lte=data_fim)
+    if loja_id:
+        vendas_retroativas = vendas_retroativas.filter(
+            Q(estoque_loja__loja_id=loja_id) | 
+            Q(estoque_recarga__loja_id=loja_id)
+        )
+    if tipo and tipo != 'todos':
+        vendas_retroativas = vendas_retroativas.filter(item_type=tipo)
+    
+    # Estatísticas
+    total_vendas = vendas_retroativas.count()
+    valor_total = vendas_retroativas.aggregate(total=Sum('valor_total'))['total'] or 0
+    quantidade_total = vendas_retroativas.aggregate(total=Sum('quantidade'))['total'] or 0
+    
+    # Paginação
+    page = request.GET.get('page', 1)
+    paginator = Paginator(vendas_retroativas, 20)
+    
+    try:
+        vendas_paginadas = paginator.page(page)
+    except PageNotAnInteger:
+        vendas_paginadas = paginator.page(1)
+    except EmptyPage:
+        vendas_paginadas = paginator.page(paginator.num_pages)
+    
+    # Lojas para filtro
+    if request.user.is_superuser:
+        lojas = Loja.objects.all()
+    else:
+        lojas = Loja.objects.filter(gerentes=request.user)
+    
+    context = {
+        'vendas': vendas_paginadas,
+        'total_vendas': total_vendas,
+        'valor_total': valor_total,
+        'quantidade_total': quantidade_total,
+        'lojas': lojas,
+        'filtros': {
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'loja_id': loja_id,
+            'tipo': tipo,
+        }
+    }
+    return render(request, 'vendas/listar_vendas_retroativas.html', context)
+
+# ==================== FUNÇÃO PARA EDITAR DATA DE VENDA ====================
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from .models import Venda
+
+@require_POST
+@csrf_exempt
+@login_required
+def editar_data_venda(request, venda_id):
+    """
+    Função para editar a data de uma venda existente
+    Apenas superusers podem editar
+    """
+    # Verificar se é superuser
+    if not request.user.is_superuser:
+        return JsonResponse({
+            'success': False,
+            'error': 'Apenas administradores podem editar datas de vendas.'
+        })
+    
+    try:
+        # Buscar a venda
+        venda = get_object_or_404(Venda, id=venda_id)
+        
+        # Obter dados
+        if request.content_type == 'application/json':
+            import json
+            data = json.loads(request.body)
+            nova_data = data.get('data_venda')
+            justificativa = data.get('justificativa', '')
+        else:
+            nova_data = request.POST.get('data_venda')
+            justificativa = request.POST.get('justificativa', '')
+        
+        # Validar nova data
+        if not nova_data:
+            return JsonResponse({
+                'success': False,
+                'error': 'Nova data não fornecida.'
+            })
+        
+        # Validar formato da data
+        try:
+            nova_data_obj = datetime.strptime(nova_data, '%Y-%m-%d').date()
+            
+            # Verificar se a data não é futura
+            if nova_data_obj > datetime.now().date():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Não é possível definir data futura para a venda.'
+                })
+                
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato de data inválido. Use YYYY-MM-DD.'
+            })
+        
+        # Registrar data antiga
+        data_antiga = venda.data_venda.strftime('%d/%m/%Y')
+        
+        # Atualizar data
+        venda.data_venda = nova_data_obj
+        
+        # Adicionar observação sobre a alteração
+        timestamp = datetime.now().strftime('%d/%m/%Y %H:%M')
+        if justificativa:
+            nova_observacao = f"{venda.observacao}\n\n[ALTERAÇÃO] Data alterada de {data_antiga} para {nova_data}. Justificativa: {justificativa} (por {request.user.username} em {timestamp})"
+        else:
+            nova_observacao = f"{venda.observacao}\n\n[ALTERAÇÃO] Data alterada de {data_antiga} para {nova_data} por {request.user.username} em {timestamp}"
+        
+        venda.observacao = nova_observacao[:500]  # Limitar tamanho
+        venda.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Data da venda alterada de {data_antiga} para {nova_data}',
+            'nova_data': nova_data,
+            'data_antiga': data_antiga
+        })
+        
+    except Venda.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': f'Venda com ID {venda_id} não encontrada.'
+        })
+    except Exception as e:
+        print(f"Erro ao editar data da venda: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'error': f'Erro ao alterar data: {str(e)}'
+        })
+    
 @require_GET
 @csrf_exempt
 def api_totais_vendas(request):
@@ -438,7 +814,6 @@ def excluir_loja(request, loja_id):
     context = {'loja': loja}
     return render(request, 'lojas/excluir_loja.html', context)
 
-# views.py
 @login_required
 def detalhes_loja(request, loja_id):
     loja = get_object_or_404(Loja, id=loja_id)
@@ -470,7 +845,6 @@ def detalhes_loja(request, loja_id):
     }
     return render(request, 'lojas/detalhes_loja.html', context)
 
-# views.py - Corrigindo a view listar_estoque
 @login_required
 def listar_estoque(request):
     tipo_selecionado = request.GET.get('tipo', 'todos')
@@ -505,9 +879,6 @@ def listar_estoque(request):
         if hasattr(EstoqueRecarga, 'objects'):
             recargas_estoque = recargas_estoque.filter(recarga__nome__icontains=produto_nome)
     
-    # NÃO tente atribuir às propriedades - elas são calculadas automaticamente
-    # Apenas use as propriedades no template
-    
     context = {
         'produtos_estoque': produtos_estoque,
         'recargas_estoque': recargas_estoque,
@@ -516,7 +887,6 @@ def listar_estoque(request):
     }
     return render(request, 'estoque/listar_estoque.html', context)
 
-# views.py
 @login_required
 def adicionar_estoque(request):
     if request.method == 'POST':
@@ -590,7 +960,6 @@ def adicionar_estoque(request):
     }
     return render(request, 'estoque/adicionar_estoque.html', context)
 
-# views.py
 @login_required
 def editar_estoque(request, estoque_id):
     # Primeiro tenta encontrar como EstoqueLoja (produto)
@@ -695,7 +1064,6 @@ def listar_vendas(request):
     }
     return render(request, 'vendas/listar_vendas.html', context)
 
-# views.py
 @login_required
 def detalhes_venda(request, venda_id):
     venda = get_object_or_404(Venda, id=venda_id)
@@ -709,7 +1077,6 @@ def detalhes_venda(request, venda_id):
             messages.error(request, 'Você não tem permissão para visualizar esta venda.')
             return redirect('listar_vendas')
     
-    # Adicionar informações contextuais se necessário
     context = {
         'venda': venda,
     }

@@ -21,4 +21,7 @@ urlpatterns = [
     path('vendas/', views.listar_vendas, name='listar_vendas'),
     path('vendas/novo/', views.registrar_venda, name='registrar_venda'),
     path('vendas/<int:venda_id>/detalhes/', views.detalhes_venda, name='detalhes_venda'),
+    path('vendas/registrar-retroativa/', views.registrar_venda_retroativa, name='registrar_venda_retroativa'),
+    path('vendas/retroativas/', views.listar_vendas_retroativas, name='listar_vendas_retroativas'),
+    path('vendas/<int:venda_id>/editar-data/', views.editar_data_venda, name='editar_data_venda'),
 ]

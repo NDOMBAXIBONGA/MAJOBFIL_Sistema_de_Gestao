@@ -312,6 +312,22 @@
             transform: none;
         }
         
+        .btn-retroativo {
+            background: linear-gradient(135deg, var(--warning), #f59e0b);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 10px 15px;
+            transition: all 0.3s;
+        }
+        
+        .btn-retroativo:hover {
+            background: linear-gradient(135deg, #d97706, #ea580c);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
         .type-selector {
             display: flex;
             gap: 10px;
@@ -382,6 +398,19 @@
         /* Grid Responsivo */
         .item-card {
             margin-bottom: 20px;
+        }
+        
+        /* Botões de ação */
+        .btn-group-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-retroativo-sm {
+            background: linear-gradient(135deg, var(--warning), #f59e0b);
+            font-size: 0.8rem;
+            padding: 5px 10px;
         }
         
         /* Media Queries */
@@ -587,7 +616,7 @@
                 font-size: 0.8rem;
             }
             
-            .btn-vender {
+            .btn-vender, .btn-retroativo-sm {
                 font-size: 0.8rem;
                 padding: 8px 10px;
             }
@@ -636,7 +665,7 @@
             border: 0;
         }
         
-        /* Focus styles para acessibilidade */
+        /* Focus styles */
         a:focus,
         button:focus,
         input:focus,
@@ -706,6 +735,11 @@
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
+                <!--<li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vendas_retroativas' %}">
+                        <i class="fas fa-calendar-alt"></i><span>Vendas Retroativas</span>
+                    </a>
+                </li>-->
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link active" href="{% url 'listar_vendas' %}">
@@ -741,7 +775,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
                         {% if user.is_superuser %}
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Balanço</a></li>
+                        <li><a class="dropdown-item" href="{% url 'listar_vendas_retroativas' %}"><i class="fas fa-calendar-alt me-2"></i>Vendas Retroativas</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
@@ -923,9 +957,9 @@
                         </div>
                         {% endif %}
 
-                        <!-- Botão de Vender -->
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-vender btn-sm vender-btn" 
+                        <!-- Botões de Ação -->
+                        <div class="btn-group-actions">
+                            <button class="btn btn-vender btn-sm flex-grow-1 vender-btn" 
                                     data-type="produto"
                                     data-estoque-id="{{ estoque.id }}"
                                     data-nome="{{ estoque.produto.nome }}"
@@ -933,8 +967,20 @@
                                     data-preco="{{ estoque.produto.preco }}"
                                     {% if estoque.quantidade == 0 %}disabled{% endif %}>
                                 <i class="fas fa-cash-register me-1"></i>
-                                Vender Produto
+                                Vender
                             </button>
+                            {% if user.is_superuser %}
+                            <button class="btn btn-retroativo btn-sm btn-retroativo-sm vender-retroativo-btn"
+                                    data-type="produto"
+                                    data-estoque-id="{{ estoque.id }}"
+                                    data-nome="{{ estoque.produto.nome }}"
+                                    data-quantidade="{{ estoque.quantidade }}"
+                                    data-preco="{{ estoque.produto.preco }}"
+                                    {% if estoque.quantidade == 0 %}disabled{% endif %}>
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Retroativa
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -990,9 +1036,9 @@
                         </div>
                         {% endif %}
 
-                        <!-- Botão de Vender -->
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-vender btn-sm vender-btn"
+                        <!-- Botões de Ação -->
+                        <div class="btn-group-actions">
+                            <button class="btn btn-vender btn-sm flex-grow-1 vender-btn"
                                     data-type="recarga"
                                     data-estoque-id="{{ estoque.id }}"
                                     data-nome="{{ estoque.recarga.nome }}"
@@ -1000,8 +1046,20 @@
                                     data-preco="{{ estoque.recarga.preco }}"
                                     {% if estoque.quantidade == 0 %}disabled{% endif %}>
                                 <i class="fas fa-cash-register me-1"></i>
-                                Vender Recarga
+                                Vender
                             </button>
+                            {% if user.is_superuser %}
+                            <button class="btn btn-retroativo btn-sm btn-retroativo-sm vender-retroativo-btn"
+                                    data-type="recarga"
+                                    data-estoque-id="{{ estoque.id }}"
+                                    data-nome="{{ estoque.recarga.nome }}"
+                                    data-quantidade="{{ estoque.quantidade }}"
+                                    data-preco="{{ estoque.recarga.preco }}"
+                                    {% if estoque.quantidade == 0 %}disabled{% endif %}>
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Retroativa
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -1036,7 +1094,7 @@
         {% endif %}
     </div>
 
-    <!-- Modal de Venda -->
+    <!-- Modal de Venda Normal -->
     <div class="modal fade" id="vendaModal" tabindex="-1" aria-labelledby="vendaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1097,6 +1155,86 @@
         </div>
     </div>
 
+    <!-- Modal de Venda Retroativa -->
+    <div class="modal fade" id="vendaRetroativaModal" tabindex="-1" aria-labelledby="vendaRetroativaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="vendaRetroativaModalLabel">
+                        <i class="fas fa-calendar-alt me-2"></i>Registrar Venda Retroativa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="vendaRetroativaForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="retroativaEstoqueId" name="estoque_id">
+                        <input type="hidden" id="retroativaItemType" name="item_type">
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Venda Retroativa:</strong> Registre vendas de dias anteriores. Apenas administradores podem realizar esta operação.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Item:</label>
+                            <input type="text" id="retroativaItemNome" class="form-control" readonly>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preço Unitário:</label>
+                                <input type="text" id="retroativaPrecoUnitario" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Estoque Disponível:</label>
+                                <input type="text" id="retroativaEstoqueDisponivel" class="form-control" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="retroativaDataVenda" class="form-label">Data da Venda:</label>
+                            <input type="date" class="form-control" id="retroativaDataVenda" 
+                                   name="data_venda" required>
+                            <small class="text-muted">Selecione a data em que a venda ocorreu</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="retroativaQuantidade" class="form-label">Quantidade a Vender:</label>
+                            <input type="number" class="form-control" id="retroativaQuantidade" 
+                                   name="quantidade" min="1" value="1" required
+                                   onchange="calcularTotalRetroativo()">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Valor Total:</label>
+                            <input type="text" id="retroativaValorTotal" class="form-control bg-light" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="retroativaJustificativa" class="form-label">Justificativa da Venda Retroativa <span class="text-danger">*</span>:</label>
+                            <textarea class="form-control" id="retroativaJustificativa" name="justificativa" 
+                                      rows="3" required placeholder="Explique o motivo da venda retroativa..."></textarea>
+                            <small class="text-muted">Esta justificativa será registrada na observação da venda</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="retroativaObservacao" class="form-label">Observação Adicional (opcional):</label>
+                            <textarea class="form-control" id="retroativaObservacao" name="observacao" 
+                                      rows="2" placeholder="Observações adicionais sobre a venda..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="confirmarVendaRetroativa()">
+                        <i class="fas fa-calendar-alt me-1"></i> Confirmar Venda Retroativa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Gerenciamento da sidebar responsiva
@@ -1105,29 +1243,22 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const overlay = document.getElementById('overlay');
         
-        // Estado da sidebar
         let isSidebarCollapsed = false;
         let isMobile = window.innerWidth <= 992;
         
-        // Função para alternar sidebar
         function toggleSidebar() {
             if (isMobile) {
-                // Em mobile, mostra/esconde a sidebar
                 sidebar.classList.toggle('active');
                 overlay.classList.toggle('active');
                 document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
             } else {
-                // Em desktop, colapsa/expande a sidebar
                 isSidebarCollapsed = !isSidebarCollapsed;
                 sidebar.classList.toggle('sidebar-collapsed');
                 mainContent.classList.toggle('main-content-expanded');
-                
-                // Salvar preferência no localStorage
                 localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
             }
         }
         
-        // Fechar sidebar no mobile ao clicar no overlay
         function closeSidebar() {
             if (isMobile) {
                 sidebar.classList.remove('active');
@@ -1136,26 +1267,20 @@
             }
         }
         
-        // Event listeners
         sidebarToggle.addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', closeSidebar);
         
-        // Fechar sidebar ao clicar em um link (em mobile)
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.addEventListener('click', () => {
-                if (isMobile) {
-                    closeSidebar();
-                }
+                if (isMobile) closeSidebar();
             });
         });
         
-        // Ajustar ao redimensionar a janela
         window.addEventListener('resize', () => {
             const wasMobile = isMobile;
             isMobile = window.innerWidth <= 992;
             
             if (wasMobile !== isMobile) {
-                // Se mudou de mobile para desktop ou vice-versa, resetar estado
                 if (isMobile) {
                     sidebar.classList.remove('sidebar-collapsed');
                     mainContent.classList.remove('main-content-expanded');
@@ -1163,7 +1288,6 @@
                     overlay.classList.remove('active');
                     document.body.style.overflow = '';
                 } else {
-                    // Restaurar estado colapsado se estava salvo
                     const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
                     if (savedState) {
                         sidebar.classList.add('sidebar-collapsed');
@@ -1173,7 +1297,6 @@
             }
         });
         
-        // Restaurar estado da sidebar no desktop
         window.addEventListener('DOMContentLoaded', () => {
             if (!isMobile) {
                 const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -1184,7 +1307,7 @@
                 }
             }
             
-            // Adicionar event listeners aos botões de venda
+            // Adicionar event listeners aos botões de venda normal
             document.querySelectorAll('.vender-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const type = this.getAttribute('data-type');
@@ -1192,15 +1315,32 @@
                     const nome = this.getAttribute('data-nome');
                     const quantidade = parseInt(this.getAttribute('data-quantidade'));
                     const preco = parseFloat(this.getAttribute('data-preco'));
-                    
                     abrirModalVenda(type, estoqueId, nome, quantidade, preco);
                 });
             });
             
+            // Adicionar event listeners aos botões de venda retroativa
+            document.querySelectorAll('.vender-retroativo-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const estoqueId = this.getAttribute('data-estoque-id');
+                    const nome = this.getAttribute('data-nome');
+                    const quantidade = parseInt(this.getAttribute('data-quantidade'));
+                    const preco = parseFloat(this.getAttribute('data-preco'));
+                    abrirModalVendaRetroativa(type, estoqueId, nome, quantidade, preco);
+                });
+            });
+            
             filtrarItensPorTipo('todos');
+            
+            // Definir data máxima para venda retroativa (hoje)
+            const hoje = new Date().toISOString().split('T')[0];
+            const dataInput = document.getElementById('retroativaDataVenda');
+            if (dataInput) {
+                dataInput.max = hoje;
+            }
         });
         
-        // Suporte para teclado
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSidebar();
@@ -1212,28 +1352,23 @@
             }
         });
         
-        // Prevenir zoom em inputs em mobile
         document.addEventListener('touchstart', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
                 e.target.style.fontSize = '16px';
             }
         }, { passive: true });
-
-        // Variável global para controlar o tipo selecionado
+        
         let currentType = 'todos';
         let precoUnitarioAtual = 0;
-
-        // Função para abrir o modal de venda
+        let precoUnitarioRetroativoAtual = 0;
+        
+        // Função para abrir modal de venda normal
         function abrirModalVenda(type, estoqueId, nome, estoqueDisponivel, precoUnitario) {
-            console.log('Abrindo modal para:', type, estoqueId, nome, estoqueDisponivel, precoUnitario);
-            
             document.getElementById('estoqueId').value = estoqueId;
             document.getElementById('itemType').value = type;
             document.getElementById('itemNome').value = nome;
             document.getElementById('estoqueDisponivel').value = estoqueDisponivel + ' unidades';
             document.getElementById('precoUnitario').value = 'Kz ' + precoUnitario.toFixed(2);
-            
-            // Limitar quantidade máxima ao estoque disponível
             document.getElementById('quantidadeVenda').max = estoqueDisponivel;
             document.getElementById('quantidadeVenda').value = 1;
             
@@ -1244,11 +1379,37 @@
             modal.show();
         }
         
+        // Função para abrir modal de venda retroativa
+        function abrirModalVendaRetroativa(type, estoqueId, nome, estoqueDisponivel, precoUnitario) {
+            document.getElementById('retroativaEstoqueId').value = estoqueId;
+            document.getElementById('retroativaItemType').value = type;
+            document.getElementById('retroativaItemNome').value = nome;
+            document.getElementById('retroativaEstoqueDisponivel').value = estoqueDisponivel + ' unidades';
+            document.getElementById('retroativaPrecoUnitario').value = 'Kz ' + precoUnitario.toFixed(2);
+            document.getElementById('retroativaQuantidade').max = estoqueDisponivel;
+            document.getElementById('retroativaQuantidade').value = 1;
+            
+            // Definir data atual como padrão
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('retroativaDataVenda').value = hoje;
+            
+            precoUnitarioRetroativoAtual = precoUnitario;
+            calcularTotalRetroativo();
+            
+            const modal = new bootstrap.Modal(document.getElementById('vendaRetroativaModal'));
+            modal.show();
+        }
+        
         function calcularTotal() {
             const quantidade = parseInt(document.getElementById('quantidadeVenda').value) || 0;
             const total = quantidade * precoUnitarioAtual;
-            
             document.getElementById('valorTotal').value = 'Kz ' + total.toFixed(2);
+        }
+        
+        function calcularTotalRetroativo() {
+            const quantidade = parseInt(document.getElementById('retroativaQuantidade').value) || 0;
+            const total = quantidade * precoUnitarioRetroativoAtual;
+            document.getElementById('retroativaValorTotal').value = 'Kz ' + total.toFixed(2);
         }
         
         function confirmarVenda() {
@@ -1257,20 +1418,16 @@
             const quantidade = parseInt(document.getElementById('quantidadeVenda').value);
             const observacao = document.getElementById('observacao').value;
             
-            console.log('Confirmando venda:', { estoqueId, itemType, quantidade, observacao });
-            
             if (!quantidade || quantidade <= 0) {
                 alert('Por favor, informe uma quantidade válida.');
                 return;
             }
             
-            // Mostrar loading
             const btn = event.target;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processando...';
             btn.disabled = true;
             
-            // Enviar requisição para o servidor
             fetch('{% url "registrar_venda" %}', {
                 method: 'POST',
                 headers: {
@@ -1284,18 +1441,12 @@
                     observacao: observacao
                 })
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erro na resposta do servidor');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Resposta do servidor:', data);
                 if (data.success) {
                     alert('Venda registrada com sucesso!');
                     bootstrap.Modal.getInstance(document.getElementById('vendaModal')).hide();
-                    location.reload(); // Recarregar a página para atualizar estoque
+                    location.reload();
                 } else {
                     alert('Erro ao registrar venda: ' + data.error);
                     btn.innerHTML = originalText;
@@ -1309,8 +1460,70 @@
                 btn.disabled = false;
             });
         }
-
-        // Função auxiliar para pegar o cookie CSRF
+        
+        function confirmarVendaRetroativa() {
+            const estoqueId = document.getElementById('retroativaEstoqueId').value;
+            const itemType = document.getElementById('retroativaItemType').value;
+            const quantidade = parseInt(document.getElementById('retroativaQuantidade').value);
+            const dataVenda = document.getElementById('retroativaDataVenda').value;
+            const justificativa = document.getElementById('retroativaJustificativa').value;
+            const observacao = document.getElementById('retroativaObservacao').value;
+            
+            if (!quantidade || quantidade <= 0) {
+                alert('Por favor, informe uma quantidade válida.');
+                return;
+            }
+            
+            if (!dataVenda) {
+                alert('Por favor, informe a data da venda.');
+                return;
+            }
+            
+            if (!justificativa) {
+                alert('Por favor, informe uma justificativa para a venda retroativa.');
+                return;
+            }
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processando...';
+            btn.disabled = true;
+            
+            fetch('{% url "registrar_venda_retroativa" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    estoque_id: estoqueId,
+                    item_type: itemType,
+                    quantidade: quantidade,
+                    data_venda: dataVenda,
+                    justificativa: justificativa,
+                    observacao: observacao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Venda retroativa registrada com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('vendaRetroativaModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar venda retroativa: ' + data.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao registrar venda retroativa. Tente novamente.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+        
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -1325,34 +1538,23 @@
             }
             return cookieValue;
         }
-
-        // Função para selecionar o tipo de item
+        
         function selectType(type) {
             currentType = type;
-            
-            // Remover seleção anterior
             document.querySelectorAll('.type-option').forEach(option => {
                 option.classList.remove('selected');
             });
-            
-            // Adicionar seleção atual
             document.querySelector(`.type-option[data-type="${type}"]`).classList.add('selected');
-            
-            // Filtrar itens
             filtrarItensPorTipo(type);
-            
-            // Atualizar informações da loja
             atualizarInformacoesLoja(type);
         }
-
-        // Função para filtrar itens por tipo
+        
         function filtrarItensPorTipo(type) {
             const allItems = document.querySelectorAll('.item-card');
             let visibleCount = 0;
-
+            
             allItems.forEach(item => {
                 const itemType = item.getAttribute('data-type');
-                
                 if (type === 'todos' || 
                     (type === 'produtos' && itemType === 'produto') || 
                     (type === 'recargas' && itemType === 'recarga')) {
@@ -1362,16 +1564,13 @@
                     item.style.display = 'none';
                 }
             });
-
-            // Atualizar contador
+            
             document.getElementById('total-itens-display').textContent = visibleCount;
             document.getElementById('total-itens-info').textContent = visibleCount;
         }
-
-        // Função para atualizar informações da loja
+        
         function atualizarInformacoesLoja(type) {
             const tipoItensText = document.getElementById('tipo-itens-text');
-            
             switch(type) {
                 case 'todos':
                     tipoItensText.textContent = 'Itens Disponíveis';
@@ -1384,8 +1583,7 @@
                     break;
             }
         }
-
-        // Função de busca
+        
         function filtrarItens() {
             const input = document.getElementById('searchInput');
             const filter = input.value.toLowerCase();
@@ -1395,19 +1593,11 @@
                 const item = itens[i];
                 const nome = item.querySelector('.card-title').textContent.toLowerCase();
                 const itemType = item.getAttribute('data-type');
-                
-                // Verificar se o item corresponde ao tipo selecionado e ao termo de busca
                 const typeMatch = currentType === 'todos' || 
                                  (currentType === 'produtos' && itemType === 'produto') || 
                                  (currentType === 'recargas' && itemType === 'recarga');
-                
                 const nameMatch = nome.includes(filter);
-                
-                if (typeMatch && nameMatch) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
+                item.style.display = (typeMatch && nameMatch) ? 'block' : 'none';
             }
         }
         
@@ -1416,7 +1606,6 @@
             filtrarItens();
         }
         
-        // Tecla Enter na busca
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();

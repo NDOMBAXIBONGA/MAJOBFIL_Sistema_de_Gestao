@@ -225,9 +225,31 @@
             transform: translateY(-1px);
         }
         
+        .btn-warning-custom {
+            background: linear-gradient(45deg, var(--warning), #ea580c);
+            border: none;
+            color: white;
+        }
+        
+        .btn-warning-custom:hover {
+            background: linear-gradient(45deg, #d97706, #c2410c);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
         .btn-action {
             padding: 5px 10px;
             margin: 0 2px;
+        }
+        
+        /* Badge Retroativo */
+        .badge-retroativo {
+            background: linear-gradient(45deg, var(--warning), #ea580c);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 5px;
         }
         
         /* Table Responsive */
@@ -237,7 +259,7 @@
         }
         
         .table {
-            min-width: 900px;
+            min-width: 1000px;
         }
         
         .table th {
@@ -285,6 +307,16 @@
             box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
         }
         
+        /* Modal */
+        .modal-content {
+            border-radius: 15px;
+        }
+        
+        .modal-header.bg-warning-custom {
+            background: linear-gradient(45deg, var(--warning), #ea580c);
+            color: white;
+        }
+        
         /* Media Queries */
         @media (max-width: 1200px) {
             :root {
@@ -296,7 +328,7 @@
             }
             
             .table {
-                min-width: 800px;
+                min-width: 900px;
             }
         }
         
@@ -342,7 +374,7 @@
             
             .table {
                 font-size: 0.9rem;
-                min-width: 700px;
+                min-width: 800px;
             }
             
             .filter-card .card-body .row.g-3 {
@@ -369,7 +401,7 @@
         @media (max-width: 768px) {
             .table {
                 font-size: 0.85rem;
-                min-width: 600px;
+                min-width: 700px;
             }
             
             .btn {
@@ -457,17 +489,13 @@
             }
             
             .table {
-                min-width: 500px;
+                min-width: 600px;
                 font-size: 0.8rem;
             }
             
             .badge {
                 font-size: 0.7rem;
                 padding: 3px 6px;
-            }
-            
-            .col-xl-3 {
-                margin-bottom: 15px;
             }
             
             .pagination .page-item .page-link {
@@ -488,7 +516,7 @@
         
         @media (max-width: 400px) {
             .table {
-                min-width: 450px;
+                min-width: 500px;
             }
             
             .pagination {
@@ -559,7 +587,7 @@
             border: 0;
         }
         
-        /* Focus styles para acessibilidade */
+        /* Focus styles */
         a:focus,
         button:focus,
         input:focus,
@@ -634,6 +662,11 @@
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
+                <!--<li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_vendas_retroativas' %}">
+                        <i class="fas fa-calendar-alt"></i><span>Vendas Retroativas</span>
+                    </a>
+                </li>-->
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link active" href="{% url 'listar_vendas' %}">
@@ -666,6 +699,9 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                        {% if user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'listar_vendas_retroativas' %}"><i class="fas fa-calendar-alt me-2"></i>Vendas Retroativas</a></li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
                             <i class="fas fa-sign-out-alt me-2"></i>Sair
@@ -808,13 +844,18 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center flex-wrap">
                     <h4>Histórico de Vendas</h4>
-                    <div class="d-flex align-items-center flex-wrap">
-                        <span class="text-muted me-3 mb-2">
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <span class="text-muted">
                             Mostrando {{ vendas.start_index }} - {{ vendas.end_index }} de {{ vendas.paginator.count }} vendas
                         </span>
-                        <a href="{% url 'nova_venda' %}" class="btn btn-primary mb-2">
+                        <a href="{% url 'nova_venda' %}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Nova Venda
                         </a>
+                        {% if user.is_superuser %}
+                        <button type="button" class="btn btn-warning-custom" data-bs-toggle="modal" data-bs-target="#editarDataModal">
+                            <i class="fas fa-calendar-edit me-2"></i>Editar Data
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -841,10 +882,13 @@
                                 </thead>
                                 <tbody>
                                     {% for venda in vendas %}
-                                    <tr>
+                                    <tr class="{% if venda.data_venda|date:'Y-m-d' != hoje %}table-warning{% endif %}">
                                         <td>
                                             <small>{{ venda.data_venda|date:"d/m/Y" }}</small><br>
                                             <small class="text-muted">{{ venda.data_venda|date:"H:i" }}</small>
+                                            {% if venda.data_venda|date:'Y-m-d' != hoje %}
+                                            <span class="badge-retroativo">Retroativa</span>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             {% if venda.estoque_loja %}
@@ -852,27 +896,27 @@
                                             {% elif venda.estoque_recarga %}
                                                 {{ venda.estoque_recarga.loja.nome }}
                                             {% else %}
-                                                N/A
+                                                <span class="text-muted">N/A</span>
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if venda.estoque_loja %}
+                                            {% if venda.item_type == 'produto' and venda.estoque_loja %}
                                                 <strong>{{ venda.estoque_loja.produto.nome }}</strong><br>
                                                 <small class="text-muted">{{ venda.estoque_loja.produto.codigo|default:"-" }}</small>
-                                            {% elif venda.estoque_recarga %}
+                                            {% elif venda.item_type == 'recarga' and venda.estoque_recarga %}
                                                 <strong>{{ venda.estoque_recarga.recarga.nome }}</strong><br>
                                                 <small class="text-muted">{{ venda.estoque_recarga.recarga.codigo|default:"-" }}</small>
                                             {% else %}
-                                                <strong>Item não encontrado</strong>
+                                                <span class="text-muted">Item não encontrado</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <span class="badge bg-primary">{{ venda.quantidade }}</span>
                                         </td>
                                         <td>
-                                            {% if venda.estoque_loja %}
+                                            {% if venda.item_type == 'produto' and venda.estoque_loja %}
                                                 {{ venda.estoque_loja.produto.preco|floatformat:2 }} Kz
-                                            {% elif venda.estoque_recarga %}
+                                            {% elif venda.item_type == 'recarga' and venda.estoque_recarga %}
                                                 {{ venda.estoque_recarga.recarga.preco|floatformat:2 }} Kz
                                             {% else %}
                                                 0.00 Kz
@@ -885,9 +929,27 @@
                                             <small>{{ venda.vendedor.get_full_name|default:venda.vendedor.username }}</small>
                                         </td>
                                         <td>
-                                            <a href="{% url 'detalhes_venda' venda.id %}" class="btn btn-sm btn-info btn-action" title="Detalhes">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'detalhes_venda' venda.id %}" class="btn btn-sm btn-info btn-action" title="Detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if user.is_superuser %}
+                                                <button type="button" class="btn btn-sm btn-warning btn-action editar-data-btn" 
+                                                        data-venda-id="{{ venda.id }}"
+                                                        data-venda-data="{{ venda.data_venda|date:'Y-m-d' }}"
+                                                        data-venda-item="
+                                                            {% if venda.item_type == 'produto' and venda.estoque_loja %}
+                                                                {{ venda.estoque_loja.produto.nome }}
+                                                            {% elif venda.item_type == 'recarga' and venda.estoque_recarga %}
+                                                                {{ venda.estoque_recarga.recarga.nome }}
+                                                            {% else %}
+                                                                Venda {{ venda.id }}
+                                                            {% endif %}"
+                                                        title="Editar Data">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                     </tr>
                                     {% empty %}
@@ -950,6 +1012,55 @@
         </div>
     </div>
 
+    <!-- Modal Editar Data da Venda -->
+    <div class="modal fade" id="editarDataModal" tabindex="-1" aria-labelledby="editarDataModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning-custom">
+                    <h5 class="modal-title" id="editarDataModalLabel">
+                        <i class="fas fa-calendar-edit me-2"></i>Editar Data da Venda
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editarDataForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="editarVendaId" name="venda_id">
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Atenção:</strong> Apenas administradores podem alterar datas de vendas. Esta ação será registrada no histórico.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Venda:</label>
+                            <input type="text" id="editarVendaItem" class="form-control" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editarNovaData" class="form-label">Nova Data:</label>
+                            <input type="date" class="form-control" id="editarNovaData" name="data_venda" required>
+                            <small class="text-muted">Selecione a nova data para esta venda</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editarJustificativa" class="form-label">Justificativa da Alteração <span class="text-danger">*</span>:</label>
+                            <textarea class="form-control" id="editarJustificativa" name="justificativa" 
+                                      rows="3" required placeholder="Explique o motivo da alteração da data..."></textarea>
+                            <small class="text-muted">Esta justificativa será registrada na observação da venda</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="confirmarEdicaoData()">
+                        <i class="fas fa-save me-1"></i> Salvar Alteração
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Gerenciamento da sidebar responsiva
@@ -958,29 +1069,22 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const overlay = document.getElementById('overlay');
         
-        // Estado da sidebar
         let isSidebarCollapsed = false;
         let isMobile = window.innerWidth <= 992;
         
-        // Função para alternar sidebar
         function toggleSidebar() {
             if (isMobile) {
-                // Em mobile, mostra/esconde a sidebar
                 sidebar.classList.toggle('active');
                 overlay.classList.toggle('active');
                 document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
             } else {
-                // Em desktop, colapsa/expande a sidebar
                 isSidebarCollapsed = !isSidebarCollapsed;
                 sidebar.classList.toggle('sidebar-collapsed');
                 mainContent.classList.toggle('main-content-expanded');
-                
-                // Salvar preferência no localStorage
                 localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
             }
         }
         
-        // Fechar sidebar no mobile ao clicar no overlay
         function closeSidebar() {
             if (isMobile) {
                 sidebar.classList.remove('active');
@@ -989,26 +1093,24 @@
             }
         }
         
-        // Event listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', closeSidebar);
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
         
-        // Fechar sidebar ao clicar em um link (em mobile)
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.addEventListener('click', () => {
-                if (isMobile) {
-                    closeSidebar();
-                }
+                if (isMobile) closeSidebar();
             });
         });
         
-        // Ajustar ao redimensionar a janela
         window.addEventListener('resize', () => {
             const wasMobile = isMobile;
             isMobile = window.innerWidth <= 992;
             
             if (wasMobile !== isMobile) {
-                // Se mudou de mobile para desktop ou vice-versa, resetar estado
                 if (isMobile) {
                     sidebar.classList.remove('sidebar-collapsed');
                     mainContent.classList.remove('main-content-expanded');
@@ -1016,7 +1118,6 @@
                     overlay.classList.remove('active');
                     document.body.style.overflow = '';
                 } else {
-                    // Restaurar estado colapsado se estava salvo
                     const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
                     if (savedState) {
                         sidebar.classList.add('sidebar-collapsed');
@@ -1026,7 +1127,6 @@
             }
         });
         
-        // Restaurar estado da sidebar no desktop
         window.addEventListener('DOMContentLoaded', () => {
             if (!isMobile) {
                 const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -1037,26 +1137,143 @@
                 }
             }
             
-            // Adicionar tooltips para os botões de ação
+            // Adicionar tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+            
+            // Configurar botões de editar data
+            document.querySelectorAll('.editar-data-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const vendaId = this.getAttribute('data-venda-id');
+                    const vendaData = this.getAttribute('data-venda-data');
+                    const vendaItem = this.getAttribute('data-venda-item');
+                    
+                    document.getElementById('editarVendaId').value = vendaId;
+                    document.getElementById('editarVendaItem').value = vendaItem;
+                    document.getElementById('editarNovaData').value = vendaData;
+                    document.getElementById('editarJustificativa').value = '';
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('editarDataModal'));
+                    modal.show();
+                });
+            });
         });
         
-        // Suporte para teclado
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSidebar();
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) bsModal.hide();
+                });
             }
         });
         
-        // Prevenir zoom em inputs em mobile
         document.addEventListener('touchstart', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
                 e.target.style.fontSize = '16px';
             }
         }, { passive: true });
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        function confirmarEdicaoData() {
+    const vendaId = document.getElementById('editarVendaId').value;
+    const novaData = document.getElementById('editarNovaData').value;
+    const justificativa = document.getElementById('editarJustificativa').value;
+    
+    console.log('=== CONFIRMANDO EDIÇÃO DE DATA ===');
+    console.log('Venda ID:', vendaId);
+    console.log('Nova Data:', novaData);
+    console.log('Justificativa:', justificativa);
+    
+    if (!vendaId) {
+        alert('Erro: ID da venda não encontrado.');
+        return;
+    }
+    
+    if (!novaData) {
+        alert('Por favor, selecione uma nova data.');
+        return;
+    }
+    
+    if (!justificativa) {
+        alert('Por favor, informe uma justificativa para a alteração.');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Salvando...';
+    btn.disabled = true;
+    
+    // Usar URL com template tag do Django para garantir a URL correta
+    const url = "{% url 'editar_data_venda' 0 %}".replace('0', vendaId);
+    
+    console.log('URL completa:', url);
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            data_venda: novaData,
+            justificativa: justificativa
+        })
+    })
+    .then(response => {
+        console.log('Status da resposta:', response.status);
+        console.log('Content-Type:', response.headers.get('content-type'));
+        
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return response.text().then(text => {
+                console.error('Resposta não é JSON:', text.substring(0, 500));
+                throw new Error('O servidor retornou uma resposta inválida. Verifique se a URL está correta.');
+            });
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log('Dados recebidos:', data);
+        if (data.success) {
+            alert(data.message || 'Data alterada com sucesso!');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editarDataModal'));
+            if (modal) modal.hide();
+            location.reload();
+        } else {
+            alert('Erro: ' + (data.error || 'Erro desconhecido'));
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Erro detalhado:', error);
+        alert('Erro ao alterar data da venda: ' + error.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
     </script>
 </body>
 </html>

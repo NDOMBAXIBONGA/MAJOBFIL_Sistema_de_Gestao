@@ -279,6 +279,30 @@
             margin-bottom: 20px;
         }
         
+        /* Seletor de itens por página */
+        .items-per-page {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .items-per-page label {
+            margin: 0;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .items-per-page select {
+            width: auto;
+            cursor: pointer;
+        }
+        
         .btn-exportar {
             background: linear-gradient(135deg, var(--success), #20c997);
             color: white;
@@ -297,18 +321,41 @@
         }
         
         /* Paginação */
+        .pagination {
+            margin-bottom: 0;
+        }
+        
         .pagination .page-link {
             color: var(--primary);
             border: none;
             padding: 10px 15px;
             margin: 0 3px;
             border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .pagination .page-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
         
         .pagination .page-item.active .page-link {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .pagination .page-item.disabled .page-link {
+            color: #ccc;
+            background: #f8f9fa;
+        }
+        
+        .pagination-info {
+            text-align: center;
+            color: #6c757d;
+            margin-top: 15px;
+            font-size: 0.9rem;
         }
         
         /* Grid System */
@@ -405,6 +452,10 @@
             .filtros {
                 padding: 15px;
             }
+            
+            .items-per-page {
+                justify-content: flex-start;
+            }
         }
         
         @media (max-width: 768px) {
@@ -434,6 +485,11 @@
             .filtros .btn {
                 width: 100%;
                 margin-bottom: 10px;
+            }
+            
+            .pagination .page-link {
+                padding: 8px 12px;
+                font-size: 0.9rem;
             }
         }
         
@@ -495,6 +551,16 @@
                 font-size: 0.8rem;
                 margin: 0 1px;
             }
+            
+            .pagination .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+                margin: 0 2px;
+            }
+            
+            .pagination-info {
+                font-size: 0.8rem;
+            }
         }
         
         @media (max-width: 400px) {
@@ -554,6 +620,9 @@
             .dropdown,
             .modal,
             .filtros,
+            .items-per-page,
+            .pagination,
+            .pagination-info,
             .acoes-btn {
                 display: none !important;
             }
@@ -753,10 +822,7 @@
                     </div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-6">
-                        <!-- Barra de pesquisa removida conforme solicitado -->
-                    </div>
-                    <div class="col-md-6 text-end">
+                    <div class="col-12 text-end">
                         <button type="submit" class="btn btn-primary me-2">
                             <i class="fas fa-search me-2"></i>Buscar
                         </button>
@@ -766,6 +832,20 @@
                     </div>
                 </div>
             </form>
+        </div>
+
+        <!-- Seletor de itens por página -->
+        <div class="items-per-page fade-in">
+            <label for="itensPorPagina" class="fw-bold">
+                <i class="fas fa-list me-2"></i>Itens por página:
+            </label>
+            <select id="itensPorPagina" class="form-select" onchange="changeItemsPerPage(this.value)">
+                <option value="5" {% if filtros.itens_por_pagina == 5 %}selected{% endif %}>5</option>
+                <option value="10" {% if filtros.itens_por_pagina == 10 %}selected{% endif %}>10</option>
+                <option value="25" {% if filtros.itens_por_pagina == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if filtros.itens_por_pagina == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if filtros.itens_por_pagina == 100 %}selected{% endif %}>100</option>
+            </select>
         </div>
 
         <!-- Mensagens -->
@@ -782,7 +862,7 @@
         <div class="table-container fade-in">
             <div class="table-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0"><i class="fas fa-list me-2"></i>Relatórios</h5>
-                <span class="badge bg-light text-dark">{{ relatorios_recentes|length }} registros</span>
+                <span class="badge bg-light text-dark">{{ relatorios_recentes.paginator.count }} registros</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -847,14 +927,107 @@
                         </td>
                     </tr>
                     {% endfor %}
-                </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Paginação -->
+        {% if is_paginated %}
+        <div class="table-container fade-in" style="padding: 20px;">
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    <!-- Primeira página -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1&data_inicial={{ filtros.data_inicial }}&data_final={{ filtros.data_final }}&loja={{ filtros.loja_id }}&status={{ filtros.status }}&itens_por_pagina={{ filtros.itens_por_pagina }}" aria-label="Primeira">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;&laquo;</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Página anterior -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&data_inicial={{ filtros.data_inicial }}&data_final={{ filtros.data_final }}&loja={{ filtros.loja_id }}&status={{ filtros.status }}&itens_por_pagina={{ filtros.itens_por_pagina }}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo;</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Números das páginas -->
+                    {% for num in page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&data_inicial={{ filtros.data_inicial }}&data_final={{ filtros.data_final }}&loja={{ filtros.loja_id }}&status={{ filtros.status }}&itens_por_pagina={{ filtros.itens_por_pagina }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Próxima página -->
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&data_inicial={{ filtros.data_inicial }}&data_final={{ filtros.data_final }}&loja={{ filtros.loja_id }}&status={{ filtros.status }}&itens_por_pagina={{ filtros.itens_por_pagina }}" aria-label="Próxima">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Última página -->
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ paginator.num_pages }}&data_inicial={{ filtros.data_inicial }}&data_final={{ filtros.data_final }}&loja={{ filtros.loja_id }}&status={{ filtros.status }}&itens_por_pagina={{ filtros.itens_por_pagina }}" aria-label="Última">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&raquo;&raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Informações de paginação -->
+            <div class="pagination-info">
+                <i class="fas fa-chart-line me-1"></i>
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ paginator.count }} registros
+                <br>
+                <small class="text-muted">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    Página {{ page_obj.number }} de {{ paginator.num_pages }}
+                </small>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Função para alterar itens por página
+        function changeItemsPerPage(value) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('itens_por_pagina', value);
+            params.set('page', '1');
+            window.location.href = window.location.pathname + '?' + params.toString();
+        }
+
         // Gerenciamento da sidebar responsiva
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
@@ -893,8 +1066,12 @@
         }
         
         // Event listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', closeSidebar);
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
+        }
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
         
         // Fechar sidebar ao clicar em um link (em mobile)
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
@@ -940,27 +1117,33 @@
                 }
             }
             
-            // Data inicial padrão: 7 dias atrás
-            const seteDiasAtras = new Date();
-            seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-            
-            // Só preencher se não houver valor já
-            if (!document.getElementById('dataInicial').value) {
-                document.getElementById('dataInicial').valueAsDate = seteDiasAtras;
+            // Data inicial padrão: 7 dias atrás (só se não houver valor)
+            const dataInicialInput = document.getElementById('dataInicial');
+            if (dataInicialInput && !dataInicialInput.value) {
+                const seteDiasAtras = new Date();
+                seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+                dataInicialInput.valueAsDate = seteDiasAtras;
             }
             
             // Data final padrão: hoje (só se não houver valor)
-            if (!document.getElementById('dataFinal').value) {
-                document.getElementById('dataFinal').valueAsDate = new Date();
+            const dataFinalInput = document.getElementById('dataFinal');
+            if (dataFinalInput && !dataFinalInput.value) {
+                dataFinalInput.valueAsDate = new Date();
             }
         });
         
         // Limpar filtros
         function limparFiltros() {
-            document.getElementById('dataInicial').value = '';
-            document.getElementById('dataFinal').value = '';
-            document.getElementById('filtroLoja').value = '';
-            document.getElementById('filtroStatus').value = '';
+            const dataInicial = document.getElementById('dataInicial');
+            const dataFinal = document.getElementById('dataFinal');
+            const filtroLoja = document.getElementById('filtroLoja');
+            const filtroStatus = document.getElementById('filtroStatus');
+            
+            if (dataInicial) dataInicial.value = '';
+            if (dataFinal) dataFinal.value = '';
+            if (filtroLoja) filtroLoja.value = '';
+            if (filtroStatus) filtroStatus.value = '';
+            
             document.getElementById('filtroForm').submit();
         }
         
@@ -975,6 +1158,22 @@
                 });
             }
         });
+        
+        // Prevenir envio duplicado de formulário
+        let isSubmitting = false;
+        const filtroForm = document.getElementById('filtroForm');
+        if (filtroForm) {
+            filtroForm.addEventListener('submit', function(e) {
+                if (isSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                isSubmitting = true;
+                setTimeout(() => {
+                    isSubmitting = false;
+                }, 1000);
+            });
+        }
     </script>
 </body>
 </html>

@@ -9,6 +9,9 @@ from django.utils import timezone
 from decimal import Decimal
 from django.db.models import Q
 from conta.utils import registrar_atividade
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
 @login_required
 def lista_relatorios(request):
@@ -86,8 +89,32 @@ def lista_relatorios(request):
         pendentes = len([r for r in relatorios_com_calculos if r.status == 'pendente'])
         total_relatorios = len(relatorios_com_calculos)
 
+    # --- PAGINAÇÃO ---
+    # Número de itens por página (pode ser configurável via GET)
+    itens_por_pagina = request.GET.get('itens_por_pagina', 5)
+    try:
+        itens_por_pagina = int(itens_por_pagina)
+        if itens_por_pagina not in [5, 10, 25, 50, 100]:
+            itens_por_pagina = 5
+    except ValueError:
+        itens_por_pagina = 5
+
+    # Criar paginador
+    paginator = Paginator(relatorios_com_calculos, itens_por_pagina)
+    page = request.GET.get('page', 1)
+
+    try:
+        relatorios_paginados = paginator.page(page)
+    except PageNotAnInteger:
+        relatorios_paginados = paginator.page(1)
+    except EmptyPage:
+        relatorios_paginados = paginator.page(paginator.num_pages)
+
+    # Criar range de páginas para exibição
+    page_range = get_page_range(relatorios_paginados)
+
     context = {
-        'relatorios_recentes': relatorios_com_calculos,
+        'relatorios_recentes': relatorios_paginados,  # Agora é um objeto Page
         'total_relatorios': total_relatorios,
         'completos': completos,
         'negativos': negativos,
@@ -98,10 +125,41 @@ def lista_relatorios(request):
             'data_final': data_final,
             'loja_id': loja_id,
             'status': status,
-        }
+            'itens_por_pagina': itens_por_pagina,
+        },
+        # Dados de paginação
+        'paginator': paginator,
+        'page_obj': relatorios_paginados,
+        'is_paginated': paginator.num_pages > 1,
+        'page_range': page_range,
     }
     
     return render(request, 'lista_relatorios.html', context)
+
+def get_page_range(page_obj, max_pages=5):
+    """
+    Função auxiliar para gerar um range de páginas inteligente
+    Mostra no máximo 'max_pages' páginas ao redor da página atual
+    """
+    current_page = page_obj.number
+    num_pages = page_obj.paginator.num_pages
+    
+    if num_pages <= max_pages:
+        return range(1, num_pages + 1)
+    
+    # Calcular o range de páginas
+    half = max_pages // 2
+    start = current_page - half
+    end = current_page + half
+    
+    if start <= 1:
+        start = 1
+        end = max_pages
+    elif end >= num_pages:
+        end = num_pages
+        start = num_pages - max_pages + 1
+    
+    return range(start, end + 1)
 
 # Manter as outras views existentes (criar, editar, detalhes, deletar, etc.)
 @login_required
