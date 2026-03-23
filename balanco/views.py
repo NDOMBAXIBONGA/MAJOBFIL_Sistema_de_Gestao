@@ -123,7 +123,7 @@ def detalhe_balanco(request, balanco_id):
         
         # Configurar paginação
         page = request.GET.get('page_vendas', 1)
-        paginator = Paginator(todas_vendas_diarias, 30)  # 30 itens por página
+        paginator = Paginator(todas_vendas_diarias, 10)  # 30 itens por página
         
         try:
             detalhes_vendas = paginator.page(page)

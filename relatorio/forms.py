@@ -9,7 +9,7 @@ class RelatorioDiarioForm(forms.ModelForm):
         fields = [
             'loja', 'data', 'tpa', 'dstv', 'inicio_dstv', 'resto_dstv',
             'zap', 'resto_zap', 'unitel', 'resto_unitel',
-            'africell', 'resto_africell', 'recargas', 'acc',
+            'africell', 'inicio_africell', 'resto_africell', 'recargas', 'acc',
             'total_geral', 'dm', 'moedas', 'gastos', 'observacao_falta'
         ]
         widgets = {
@@ -63,6 +63,11 @@ class RelatorioDiarioForm(forms.ModelForm):
                 'min': '0'
             }),
             'africell': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0'
+            }),
+            'inicio_africell': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0'
@@ -121,6 +126,7 @@ class RelatorioDiarioForm(forms.ModelForm):
             'unitel': 'UNITEL',
             'resto_unitel': 'RESTO DA UNITEL',
             'africell': 'AFRICEL',
+            'inicio_africell': 'INICIO DA AFRICEL',
             'resto_africell': 'RESTO DA AFRICEL',
             'recargas': 'RECARGAS',
             'acc': 'ACC',
@@ -155,10 +161,6 @@ class RelatorioDiarioForm(forms.ModelForm):
             lojas_disponiveis = self.fields['loja'].queryset
             if lojas_disponiveis.count() == 1 and not self.instance.pk:
                 self.initial['loja'] = lojas_disponiveis.first()
-                # Opcional: tornar o campo readonly se quiser
-                # self.fields['loja'].widget.attrs['readonly'] = True
-                # self.fields['loja'].widget.attrs['disabled'] = True
-                # self.fields['loja'].required = False
         else:
             # Fallback se não há request (pode acontecer no admin)
             try:
@@ -169,6 +171,16 @@ class RelatorioDiarioForm(forms.ModelForm):
     
     def clean(self):
         cleaned_data = super().clean()
+        
+        # Validar vendas de Africell
+        inicio_africell = cleaned_data.get('inicio_africell', Decimal('0.00'))
+        resto_africell = cleaned_data.get('resto_africell', Decimal('0.00'))
+        
+        if inicio_africell < resto_africell:
+            self.add_error(
+                'resto_africell',
+                'O resto da Africell não pode ser maior que o início.'
+            )
         
         # Calcular totais para validação
         total_geral = cleaned_data.get('total_geral', Decimal('0.00'))

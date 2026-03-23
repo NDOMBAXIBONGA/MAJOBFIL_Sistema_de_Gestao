@@ -775,6 +775,10 @@
                 <div class="campo-formulario">
                     {{ form.acc }}
                 </div>
+                <!-- Campo oculto para armazenar o valor calculado da Africell -->
+                <div class="campo-formulario">
+                    {{ form.africell }}
+                </div>
                 
                 <!-- ETAPA 1: Loja & Data -->
                 <div id="etapa1" class="etapa ativa fade-in">
@@ -926,14 +930,16 @@
                         </div>
                         <div class="col-md-6 mb-3 mb-md-0">
                             <div class="form-group">
-                                <label class="form-label">Africell</label>
-                                {{ form.africell }}
+                                <label class="form-label">Início da Africell</label>
+                                {{ form.inicio_africell }}
+                                <small class="form-text text-muted">Valor inicial da Africell no início do dia</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="form-label">Resto da Africell</label>
                                 {{ form.resto_africell }}
+                                <small class="form-text text-muted">Valor que sobrou da Africell no final do dia</small>
                             </div>
                         </div>
                     </div>
@@ -1127,7 +1133,7 @@
                                         <span class="resumo-valor" id="resumo-unitel">AKZ 0.00</span>
                                     </div>
                                     <div class="resumo-item d-flex justify-content-between">
-                                        <span>Africell:</span>
+                                        <span>Africell (Vendido):</span>
                                         <span class="resumo-valor" id="resumo-africell">AKZ 0.00</span>
                                     </div>
                                 </div>
@@ -1194,7 +1200,7 @@
                             <div class="total-geral-box text-center">
                                 <h4><i class="fas fa-calculator"></i> TOTAL GERAL</h4>
                                 <h2 id="resumo-total-geral">AKZ 0.00</h2>
-                                <small>DSTV + ZAP + Unitel + Africell + Produtos + Recargas</small>
+                                <small>DSTV + ZAP + Unitel + Africell (Vendido) + Produtos + Recargas</small>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
@@ -1386,6 +1392,21 @@
             acc_recargas: 0
         };
 
+        // Função para calcular o valor da Africell (início - resto)
+        function calcularValorAfricell() {
+            const inicio = parseFloat(document.getElementById('id_inicio_africell').value) || 0;
+            const resto = parseFloat(document.getElementById('id_resto_africell').value) || 0;
+            const valorCalculado = inicio - resto;
+            
+            // Atualizar o campo oculto da Africell com o valor calculado
+            const campoAfricell = document.getElementById('id_africell');
+            if (campoAfricell) {
+                campoAfricell.value = valorCalculado.toFixed(2);
+            }
+            
+            return valorCalculado;
+        }
+
         // Função para carregar dados do ACC (valor total das vendas)
         function carregarDadosACC() {
             const lojaId = document.getElementById('id_loja').value;
@@ -1508,7 +1529,7 @@
             const camposObrigatorios = {
                 1: ['id_data', 'id_loja'],
                 2: ['id_dstv', 'id_zap'],
-                3: ['id_unitel', 'id_africell'],
+                3: ['id_unitel', 'id_inicio_africell', 'id_resto_africell'],
                 4: ['id_dm', 'id_moedas', 'id_tpa', 'id_gastos']
             };
 
@@ -1526,6 +1547,9 @@
         }
 
         function atualizarResumo() {
+            // Calcular o valor da Africell (início - resto)
+            const valorAfricell = calcularValorAfricell();
+            
             // Atualizar informações da loja e data
             const lojaSelect = document.getElementById('id_loja');
             const lojaTexto = lojaSelect.options[lojaSelect.selectedIndex].text;
@@ -1539,7 +1563,7 @@
             document.getElementById('resumo-dstv').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_dstv').value) || 0).toFixed(2);
             document.getElementById('resumo-zap').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_zap').value) || 0).toFixed(2);
             document.getElementById('resumo-unitel').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_unitel').value) || 0).toFixed(2);
-            document.getElementById('resumo-africell').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_africell').value) || 0).toFixed(2);
+            document.getElementById('resumo-africell').textContent = 'AKZ ' + valorAfricell.toFixed(2);
             document.getElementById('resumo-tpa').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_tpa').value) || 0).toFixed(2);
             document.getElementById('resumo-dm').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_dm').value) || 0).toFixed(2);
             document.getElementById('resumo-moedas').textContent = 'AKZ ' + (parseFloat(document.getElementById('id_moedas').value) || 0).toFixed(2);
@@ -1551,15 +1575,14 @@
             document.getElementById('resumo-total-recargas').textContent = (accData.acc_recargas || 0) + ' unidades';
             document.getElementById('resumo-valor-recargas').textContent = 'AKZ ' + parseFloat(accData.valor_recargas || 0).toFixed(2);
 
-            // Calcular total geral
+            // Calcular total geral (usando o valor calculado da Africell)
             const dstv = parseFloat(document.getElementById('id_dstv').value) || 0;
             const zap = parseFloat(document.getElementById('id_zap').value) || 0;
             const unitel = parseFloat(document.getElementById('id_unitel').value) || 0;
-            const africell = parseFloat(document.getElementById('id_africell').value) || 0;
             const produtos = parseFloat(accData.valor_produtos) || 0;
             const recargas = parseFloat(accData.valor_recargas) || 0;
 
-            const totalGeral = dstv + zap + unitel + africell + produtos + recargas;
+            const totalGeral = dstv + zap + unitel + valorAfricell + produtos + recargas;
             document.getElementById('resumo-total-geral').textContent = 'AKZ ' + totalGeral.toFixed(2);
             
             // Atualizar o campo total_geral do formulário Django
@@ -1628,11 +1651,33 @@
         document.addEventListener('DOMContentLoaded', function() {
             atualizarNavegacao();
             
+            // Adicionar event listeners para recalcular quando os campos da Africell mudarem
+            const inicioAfricell = document.getElementById('id_inicio_africell');
+            const restoAfricell = document.getElementById('id_resto_africell');
+            
+            if (inicioAfricell && restoAfricell) {
+                inicioAfricell.addEventListener('input', function() {
+                    calcularValorAfricell();
+                    if (etapaAtual === 5) {
+                        atualizarResumo();
+                    }
+                });
+                restoAfricell.addEventListener('input', function() {
+                    calcularValorAfricell();
+                    if (etapaAtual === 5) {
+                        atualizarResumo();
+                    }
+                });
+            }
+            
             // Adicionar event listener para o botão de atualizar ACC
             document.getElementById('btn-atualizar').addEventListener('click', carregarDadosACC);
             
             // Adicionar validação no envio do formulário
             document.getElementById('relatorioForm').addEventListener('submit', function(e) {
+                // Garantir que o valor da Africell seja calculado antes de enviar
+                calcularValorAfricell();
+                
                 if (faltaDinheiro) {
                     const observacao = document.getElementById('id_observacao_falta').value.trim();
                     if (!observacao) {

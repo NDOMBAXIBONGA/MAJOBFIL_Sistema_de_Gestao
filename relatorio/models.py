@@ -8,14 +8,14 @@ class RelatorioDiario(models.Model):
         on_delete=models.CASCADE, 
         verbose_name='Loja',
         related_name='relatorios_diarios',
-        null=True  # Permite null para migrações
+        null=True
     )
     usuario = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE,
-    verbose_name='Usuário/Gerente',
-    related_name='relatorios_diarios',
-    null=True  # Adicione esta linha temporariamente
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name='Usuário/Gerente',
+        related_name='relatorios_diarios',
+        null=True
     )
     data = models.DateField(verbose_name='Data')
     
@@ -76,6 +76,12 @@ class RelatorioDiario(models.Model):
         verbose_name='AFRICEL',
         default=0
     )
+    inicio_africell = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        verbose_name='INICIO DA AFRICEL',
+        default=0
+    )
     resto_africell = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -91,7 +97,6 @@ class RelatorioDiario(models.Model):
         default=0
     )
 
-    # No models.py, na classe RelatorioDiario
     detalhes_recargas = models.TextField(
         blank=True, 
         null=True, 
@@ -151,6 +156,10 @@ class RelatorioDiario(models.Model):
     def calcular_diferenca(self):
         """Calcula a diferença entre total arrecadado e total geral"""
         return self.calcular_total_arrecadado() - self.total_geral
+    
+    def calcular_vendas_africell(self):
+        """Calcula o valor vendido de Africell (Início - Resto)"""
+        return (self.inicio_africell or Decimal('0.00')) - (self.resto_africell or Decimal('0.00'))
     
     def tem_campos_vazios(self):
         """Verifica se há campos importantes vazios (None ou 0)"""
@@ -223,19 +232,6 @@ class RelatorioDiario(models.Model):
             if valor == Decimal('0.00') or valor is None:
                 return False
         return True
-    
-    def calcular_total_arrecadado(self):
-        """Calcula o total arrecadado"""
-        total = Decimal('0.00')
-        for campo in self.get_campos_monetarios():
-            valor = getattr(self, campo)
-            if valor and valor != Decimal('0.00'):
-                total += valor
-        return total
-    
-    def calcular_diferenca(self):
-        """Calcula a diferença entre total geral e total arrecadado"""
-        return self.total_geral - self.calcular_total_arrecadado()
 
     class Meta:
         verbose_name = 'Relatório Diário'

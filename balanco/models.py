@@ -62,6 +62,7 @@ class Balanco(models.Model):
     total_unitel = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     total_resto_unitel = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     total_africell = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_inicio_africell = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # NOVO CAMPO
     total_resto_africell = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     
     # Financeiro
@@ -88,6 +89,7 @@ class Balanco(models.Model):
     detalhes_produtos = models.JSONField(default=dict, blank=True)
     detalhes_recargas = models.JSONField(default=dict, blank=True)
     detalhes_vendedores = models.JSONField(default=dict, blank=True)
+    detalhes_relatorios = models.JSONField(default=dict, blank=True)  # NOVO CAMPO
     
     # Metadados
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -161,6 +163,7 @@ class Balanco(models.Model):
         self.total_unitel = relatorios_periodo.aggregate(total=Sum('unitel'))['total'] or Decimal('0.00')
         self.total_resto_unitel = relatorios_periodo.aggregate(total=Sum('resto_unitel'))['total'] or Decimal('0.00')
         self.total_africell = relatorios_periodo.aggregate(total=Sum('africell'))['total'] or Decimal('0.00')
+        self.total_inicio_africell = relatorios_periodo.aggregate(total=Sum('inicio_africell'))['total'] or Decimal('0.00')  # NOVO
         self.total_resto_africell = relatorios_periodo.aggregate(total=Sum('resto_africell'))['total'] or Decimal('0.00')
         
         # Financeiro
@@ -188,7 +191,7 @@ class Balanco(models.Model):
             self.margem_lucro = Decimal('0.00')
     
     def coletar_detalhes(self):
-        """Coleta dados detalhados para análise - VERSÃO ATUALIZADA"""
+        """Coleta dados detalhados para análise - VERSÃO ATUALIZADA COM INICIO AFRICELL"""
         from lojas.models import Venda
         from relatorio.models import RelatorioDiario
         
@@ -270,8 +273,9 @@ class Balanco(models.Model):
         # Unitel
         total_unitel_sem_resto = self.total_unitel - self.total_resto_unitel
         
-        # Africell
-        total_africell_sem_resto = self.total_africell - self.total_resto_africell
+        # Africell - Cálculo das vendas (Início - Resto)
+        total_africell_sem_resto = self.total_inicio_africell - self.total_resto_africell
+        vendas_africell_calculadas = total_africell_sem_resto
         
         # Status do balanço geral
         if self.total_geral_relatorios > self.total_arrecadado:
@@ -364,13 +368,13 @@ class Balanco(models.Model):
                 'performance': 'alta' if vendedor['total_valor'] and vendedor['total_valor'] > 1000 else 'media' if vendedor['total_valor'] and vendedor['total_valor'] > 500 else 'baixa'
             })
         
-        # === DADOS DOS RELATÓRIOS PARA O TEMPLATE ===
+        # === DADOS DOS RELATÓRIOS PARA O TEMPLATE (ATUALIZADO COM INICIO AFRICELL) ===
         dados_relatorios = {
             'dstv': {
                 'total': float(self.total_dstv),
                 'inicio': float(self.total_inicio_dstv),
                 'resto': float(self.total_resto_dstv),
-                'sem_resto': float(total_dstv_sem_resto),
+                'vendas': float(total_dstv_sem_resto),
                 'com_5_percent': float(dstv_com_5_percent),
                 'diferenca': float(diferenca_dstv),
                 'status': 'falta' if diferenca_dstv > 0 else 'positivo'
@@ -378,17 +382,18 @@ class Balanco(models.Model):
             'zap': {
                 'total': float(self.total_zap),
                 'resto': float(self.total_resto_zap),
-                'sem_resto': float(total_zap_sem_resto)
+                'vendas': float(total_zap_sem_resto)
             },
             'unitel': {
                 'total': float(self.total_unitel),
                 'resto': float(self.total_resto_unitel),
-                'sem_resto': float(total_unitel_sem_resto)
+                'vendas': float(total_unitel_sem_resto)
             },
             'africell': {
                 'total': float(self.total_africell),
+                'inicio': float(self.total_inicio_africell),  # NOVO
                 'resto': float(self.total_resto_africell),
-                'sem_resto': float(total_africell_sem_resto)
+                'vendas': float(vendas_africell_calculadas)  # NOVO
             },
             'dm': float(self.total_dm),
             'moedas': float(self.total_moedas),
@@ -406,19 +411,20 @@ class Balanco(models.Model):
         self.detalhes_produtos = top_produtos
         self.detalhes_recargas = top_recargas
         self.detalhes_vendedores = top_vendedores
-        
-        # Salvar dados dos relatórios em JSON separado
-        self.detalhes_relatorios = dados_relatorios
+        self.detalhes_relatorios = dados_relatorios  # NOVO
 
     def calcular_dados_relatorios_em_tempo_real(self):
-        """Calcula dados dos relatórios em tempo real se necessário"""
+        """Calcula dados dos relatórios em tempo real se necessário (ATUALIZADO)"""
         from decimal import Decimal
         
         try:
             # DSTV - Cálculo com 5%
-            total_dstv_sem_resto = self.total_dstv - self.total_resto_dstv
+            total_dstv_sem_resto = self.total_inicio_dstv - self.total_resto_dstv
             dstv_com_5_percent = total_dstv_sem_resto * Decimal('1.05')
             diferenca_dstv = dstv_com_5_percent - self.total_dstv
+            
+            # Africell - Vendas calculadas (Início - Resto)
+            vendas_africell_calculadas = self.total_inicio_africell - self.total_resto_africell
             
             # Status do balanço geral
             if self.total_geral_relatorios > self.total_arrecadado:
@@ -436,7 +442,7 @@ class Balanco(models.Model):
                     'total': float(self.total_dstv),
                     'inicio': float(self.total_inicio_dstv),
                     'resto': float(self.total_resto_dstv),
-                    'sem_resto': float(total_dstv_sem_resto),
+                    'vendas': float(total_dstv_sem_resto),
                     'com_5_percent': float(dstv_com_5_percent),
                     'diferenca': float(diferenca_dstv),
                     'status': 'falta' if diferenca_dstv > 0 else 'positivo'
@@ -444,17 +450,18 @@ class Balanco(models.Model):
                 'zap': {
                     'total': float(self.total_zap),
                     'resto': float(self.total_resto_zap),
-                    'sem_resto': float(self.total_zap - self.total_resto_zap)
+                    'vendas': float(self.total_zap - self.total_resto_zap)
                 },
                 'unitel': {
                     'total': float(self.total_unitel),
                     'resto': float(self.total_resto_unitel),
-                    'sem_resto': float(self.total_unitel - self.total_resto_unitel)
+                    'vendas': float(self.total_unitel - self.total_resto_unitel)
                 },
                 'africell': {
                     'total': float(self.total_africell),
+                    'inicio': float(self.total_inicio_africell),
                     'resto': float(self.total_resto_africell),
-                    'sem_resto': float(self.total_africell - self.total_resto_africell)
+                    'vendas': float(vendas_africell_calculadas)
                 },
                 'dm': float(self.total_dm),
                 'moedas': float(self.total_moedas),
@@ -501,6 +508,11 @@ class Balanco(models.Model):
         return (self.total_resto_dstv + self.total_resto_zap + 
                 self.total_resto_unitel + self.total_resto_africell)
     
+    @property
+    def vendas_africell_calculadas(self):
+        """Vendas calculadas da Africell (Início - Resto)"""
+        return self.total_inicio_africell - self.total_resto_africell
+    
     @classmethod
     def gerar_balanco(cls, loja, periodo_tipo, data_inicio=None, data_fim=None, usuario=None):
         """Gera um balanço para o período especificado"""
@@ -537,6 +549,7 @@ class Balanco(models.Model):
             balanco.save()
         
         return balanco
+
 
 class MovimentoEstoque(models.Model):
     """
