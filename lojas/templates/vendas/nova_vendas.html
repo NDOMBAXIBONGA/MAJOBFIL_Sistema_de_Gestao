@@ -328,6 +328,22 @@
             transform: translateY(-1px);
         }
         
+        .btn-devolucao {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 8px 12px;
+            transition: all 0.3s;
+        }
+        
+        .btn-devolucao:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
         .type-selector {
             display: flex;
             gap: 10px;
@@ -411,6 +427,35 @@
             background: linear-gradient(135deg, var(--warning), #f59e0b);
             font-size: 0.8rem;
             padding: 5px 10px;
+        }
+        
+        .btn-devolucao-sm {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            font-size: 0.8rem;
+            padding: 5px 10px;
+        }
+        
+        /* Badge de status */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .status-normal {
+            background: linear-gradient(45deg, var(--success), #059669);
+            color: white;
+        }
+        
+        .status-parcial {
+            background: linear-gradient(45deg, var(--warning), #f59e0b);
+            color: white;
+        }
+        
+        .status-devolvida {
+            background: linear-gradient(45deg, var(--danger), #dc2626);
+            color: white;
         }
         
         /* Media Queries */
@@ -616,7 +661,7 @@
                 font-size: 0.8rem;
             }
             
-            .btn-vender, .btn-retroativo-sm {
+            .btn-vender, .btn-retroativo-sm, .btn-devolucao-sm {
                 font-size: 0.8rem;
                 padding: 8px 10px;
             }
@@ -735,11 +780,11 @@
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
-                <!--<li class="nav-item">
-                    <a class="nav-link" href="{% url 'listar_vendas_retroativas' %}">
-                        <i class="fas fa-calendar-alt"></i><span>Vendas Retroativas</span>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_devolucoes' %}">
+                        <i class="fas fa-undo-alt"></i><span>Devoluções</span>
                     </a>
-                </li>-->
+                </li>
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link active" href="{% url 'listar_vendas' %}">
@@ -751,6 +796,13 @@
                         <i class="fas fa-chart-bar"></i><span>Relatórios</span>
                     </a>
                 </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_movimentacoes_estoque' %}">
+                        <i class="fas fa-history"></i><span>Movimentações</span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>
@@ -776,6 +828,7 @@
                         <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
                         {% if user.is_superuser %}
                         <li><a class="dropdown-item" href="{% url 'listar_vendas_retroativas' %}"><i class="fas fa-calendar-alt me-2"></i>Vendas Retroativas</a></li>
+                        <li><a class="dropdown-item" href="{% url 'listar_devolucoes' %}"><i class="fas fa-undo-alt me-2"></i>Devoluções</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
@@ -1235,6 +1288,72 @@
         </div>
     </div>
 
+    <!-- Modal de Devolução -->
+    <div class="modal fade" id="devolucaoModal" tabindex="-1" aria-labelledby="devolucaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="devolucaoModalLabel">
+                        <i class="fas fa-undo-alt me-2"></i>Registrar Devolução
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="devolucaoForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="devolucaoVendaId" name="venda_id">
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> A devolução irá reverter o estoque e registrar uma movimentação. Esta ação não pode ser desfeita.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Venda:</label>
+                            <input type="text" id="devolucaoVendaInfo" class="form-control" readonly>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Quantidade Original:</label>
+                                <input type="text" id="devolucaoQuantidadeOriginal" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Quantidade Disponível:</label>
+                                <input type="text" id="devolucaoQuantidadeDisponivel" class="form-control" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="devolucaoQuantidade" class="form-label">Quantidade a Devolver:</label>
+                            <input type="number" class="form-control" id="devolucaoQuantidade" 
+                                   name="quantidade" min="1" required>
+                            <small class="text-muted">Deixe em branco para devolver toda a quantidade</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="devolucaoMotivo" class="form-label">Motivo da Devolução <span class="text-danger">*</span>:</label>
+                            <input type="text" class="form-control" id="devolucaoMotivo" 
+                                   name="motivo" required placeholder="Ex: Produto com defeito, Devolução do cliente, etc.">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="devolucaoObservacao" class="form-label">Observação Adicional (opcional):</label>
+                            <textarea class="form-control" id="devolucaoObservacao" name="observacao" 
+                                      rows="2" placeholder="Informações adicionais sobre a devolução..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarDevolucao()">
+                        <i class="fas fa-undo-alt me-1"></i> Confirmar Devolução
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Gerenciamento da sidebar responsiva
@@ -1389,7 +1508,6 @@
             document.getElementById('retroativaQuantidade').max = estoqueDisponivel;
             document.getElementById('retroativaQuantidade').value = 1;
             
-            // Definir data atual como padrão
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('retroativaDataVenda').value = hoje;
             
@@ -1397,6 +1515,25 @@
             calcularTotalRetroativo();
             
             const modal = new bootstrap.Modal(document.getElementById('vendaRetroativaModal'));
+            modal.show();
+        }
+        
+        // Função para abrir modal de devolução
+        function abrirModalDevolucao(vendaId, vendaInfo, quantidadeOriginal, quantidadeRestante) {
+            document.getElementById('devolucaoVendaId').value = vendaId;
+            document.getElementById('devolucaoVendaInfo').value = vendaInfo;
+            document.getElementById('devolucaoQuantidadeOriginal').value = quantidadeOriginal + ' unidades';
+            document.getElementById('devolucaoQuantidadeDisponivel').value = quantidadeRestante + ' unidades';
+            
+            const quantidadeInput = document.getElementById('devolucaoQuantidade');
+            quantidadeInput.max = quantidadeRestante;
+            quantidadeInput.placeholder = `Máx: ${quantidadeRestante}`;
+            quantidadeInput.value = quantidadeRestante;
+            
+            document.getElementById('devolucaoMotivo').value = '';
+            document.getElementById('devolucaoObservacao').value = '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('devolucaoModal'));
             modal.show();
         }
         
@@ -1519,6 +1656,71 @@
             .catch(error => {
                 console.error('Erro:', error);
                 alert('Erro ao registrar venda retroativa. Tente novamente.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+        
+        function confirmarDevolucao() {
+            const vendaId = document.getElementById('devolucaoVendaId').value;
+            let quantidade = document.getElementById('devolucaoQuantidade').value;
+            const motivo = document.getElementById('devolucaoMotivo').value;
+            const observacao = document.getElementById('devolucaoObservacao').value;
+            
+            if (!vendaId) {
+                alert('Erro: ID da venda não encontrado.');
+                return;
+            }
+            
+            if (!motivo) {
+                alert('Por favor, informe o motivo da devolução.');
+                return;
+            }
+            
+            // Se quantidade estiver vazia, devolve tudo
+            if (!quantidade || quantidade === '') {
+                quantidade = null;
+            } else {
+                quantidade = parseInt(quantidade);
+                if (isNaN(quantidade) || quantidade <= 0) {
+                    alert('Por favor, informe uma quantidade válida.');
+                    return;
+                }
+            }
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processando...';
+            btn.disabled = true;
+            
+            fetch('{% url "registrar_devolucao" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    venda_id: vendaId,
+                    quantidade: quantidade,
+                    motivo: motivo,
+                    observacao: observacao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    bootstrap.Modal.getInstance(document.getElementById('devolucaoModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar devolução: ' + data.error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao registrar devolução. Tente novamente.');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });

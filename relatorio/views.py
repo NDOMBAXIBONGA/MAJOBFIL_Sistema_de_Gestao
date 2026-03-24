@@ -10,8 +10,7 @@ from decimal import Decimal
 from django.db.models import Q
 from conta.utils import registrar_atividade
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from datetime import datetime
 
 @login_required
 def lista_relatorios(request):
@@ -25,18 +24,35 @@ def lista_relatorios(request):
         relatorios = RelatorioDiario.objects.filter(loja__in=lojas_usuario).select_related('loja', 'usuario')
         lojas = lojas_usuario
 
-    # Aplicar filtros
-    data_inicial = request.GET.get('data_inicial')
-    data_final = request.GET.get('data_final')
-    loja_id = request.GET.get('loja')
-    status = request.GET.get('status')
+    # Aplicar filtros - TRATAMENTO CORRIGIDO
+    data_inicial = request.GET.get('data_inicial', '').strip()
+    data_final = request.GET.get('data_final', '').strip()
+    loja_id = request.GET.get('loja', '').strip()
+    status = request.GET.get('status', '').strip()
 
-    if data_inicial:
-        relatorios = relatorios.filter(data__gte=data_inicial)
-    if data_final:
-        relatorios = relatorios.filter(data__lte=data_final)
-    if loja_id:
-        relatorios = relatorios.filter(loja_id=loja_id)
+    # Aplicar filtro de data inicial
+    if data_inicial and data_inicial != '':
+        try:
+            data_inicial_obj = datetime.strptime(data_inicial, '%Y-%m-%d').date()
+            relatorios = relatorios.filter(data__gte=data_inicial_obj)
+        except (ValueError, TypeError):
+            pass  # Ignora se a data for inválida
+    
+    # Aplicar filtro de data final
+    if data_final and data_final != '':
+        try:
+            data_final_obj = datetime.strptime(data_final, '%Y-%m-%d').date()
+            relatorios = relatorios.filter(data__lte=data_final_obj)
+        except (ValueError, TypeError):
+            pass  # Ignora se a data for inválida
+    
+    # Aplicar filtro de loja
+    if loja_id and loja_id != '':
+        try:
+            loja_id_int = int(loja_id)
+            relatorios = relatorios.filter(loja_id=loja_id_int)
+        except (ValueError, TypeError):
+            pass  # Ignora se o ID da loja for inválido
 
     # Ordenação
     relatorios = relatorios.order_by('-data', 'loja__nome')
@@ -58,18 +74,23 @@ def lista_relatorios(request):
             
             # Determinar status
             if diferenca < 0:
-                completos += 1
                 status_relatorio = 'completo'
             elif diferenca > 0:
-                negativos += 1
                 status_relatorio = 'negativo'
             else:
-                pendentes += 1
                 status_relatorio = 'pendente'
 
             # Aplicar filtro de status se especificado
-            if status and status != status_relatorio:
+            if status and status != '' and status != status_relatorio:
                 continue
+
+            # Atualizar contadores
+            if status_relatorio == 'completo':
+                completos += 1
+            elif status_relatorio == 'negativo':
+                negativos += 1
+            else:
+                pendentes += 1
 
             # Adicionar atributos calculados ao relatório
             relatorio.total_arrecadado_calculado = total_arrecadado
@@ -82,24 +103,23 @@ def lista_relatorios(request):
             print(f"Erro ao calcular totais para relatório {relatorio.id}: {e}")
             continue
 
-    # Atualizar contadores após aplicar filtro de status
-    if status:
+    # Se houver filtro de status, os contadores já foram atualizados no loop
+    # Caso contrário, recalcular os contadores
+    if not status or status == '':
         completos = len([r for r in relatorios_com_calculos if r.status == 'completo'])
         negativos = len([r for r in relatorios_com_calculos if r.status == 'negativo'])
         pendentes = len([r for r in relatorios_com_calculos if r.status == 'pendente'])
         total_relatorios = len(relatorios_com_calculos)
 
     # --- PAGINAÇÃO ---
-    # Número de itens por página (pode ser configurável via GET)
     itens_por_pagina = request.GET.get('itens_por_pagina', 5)
     try:
         itens_por_pagina = int(itens_por_pagina)
         if itens_por_pagina not in [5, 10, 25, 50, 100]:
             itens_por_pagina = 5
-    except ValueError:
+    except (ValueError, TypeError):
         itens_por_pagina = 5
 
-    # Criar paginador
     paginator = Paginator(relatorios_com_calculos, itens_por_pagina)
     page = request.GET.get('page', 1)
 
@@ -110,24 +130,23 @@ def lista_relatorios(request):
     except EmptyPage:
         relatorios_paginados = paginator.page(paginator.num_pages)
 
-    # Criar range de páginas para exibição
+    # Criar range de páginas
     page_range = get_page_range(relatorios_paginados)
 
     context = {
-        'relatorios_recentes': relatorios_paginados,  # Agora é um objeto Page
+        'relatorios_recentes': relatorios_paginados,
         'total_relatorios': total_relatorios,
         'completos': completos,
         'negativos': negativos,
         'pendentes': pendentes,
         'lojas': lojas,
         'filtros': {
-            'data_inicial': data_inicial,
-            'data_final': data_final,
-            'loja_id': loja_id,
-            'status': status,
+            'data_inicial': data_inicial if data_inicial else '',
+            'data_final': data_final if data_final else '',
+            'loja_id': loja_id if loja_id else '',
+            'status': status if status else '',
             'itens_por_pagina': itens_por_pagina,
         },
-        # Dados de paginação
         'paginator': paginator,
         'page_obj': relatorios_paginados,
         'is_paginated': paginator.num_pages > 1,
@@ -147,7 +166,6 @@ def get_page_range(page_obj, max_pages=5):
     if num_pages <= max_pages:
         return range(1, num_pages + 1)
     
-    # Calcular o range de páginas
     half = max_pages // 2
     start = current_page - half
     end = current_page + half
@@ -161,7 +179,8 @@ def get_page_range(page_obj, max_pages=5):
     
     return range(start, end + 1)
 
-# Manter as outras views existentes (criar, editar, detalhes, deletar, etc.)
+# ==================== MANTER AS OUTRAS VIEWS EXISTENTES ====================
+
 @login_required
 def criar_relatorio_diario(request):
     if request.method == 'POST':
@@ -188,11 +207,10 @@ def criar_relatorio_diario(request):
                         relatorio.recargas = total_vendas_dia
                         messages.info(
                             request, 
-                            f'Campo RECARGAS preenchido automaticamente com vendas do dia: R$ {total_vendas_dia:.2f}'
+                            f'Campo RECARGAS preenchido automaticamente com vendas do dia: Kz {total_vendas_dia:.2f}'
                         )
                 except Exception as e:
                     print(f"Erro ao calcular vendas do dia: {e}")
-                    # Não impede o salvamento se houver erro no cálculo das vendas
                 
                 # Verifica se há falta de dinheiro e se observação foi preenchida
                 relatorio.calcular_total_geral()
@@ -202,10 +220,9 @@ def criar_relatorio_diario(request):
                 
                 relatorio.save()
 
-                # ADICIONE ESTA LINHA:
                 registrar_atividade(
                     request.user, 
-                    f"Criou relatório para {relatorio.loja.nome}"
+                    f"Criou relatório para {relatorio.loja.nome} - Data: {relatorio.data}"
                 )
 
                 messages.success(request, 'Relatório diário criado com sucesso!')
@@ -216,10 +233,8 @@ def criar_relatorio_diario(request):
         else:
             messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
-        # Preenche a data atual por padrão e tenta preencher a loja automaticamente
         initial_data = {'data': timezone.now().date()}
         
-        # Tenta preencher a loja do usuário automaticamente
         loja_usuario = request.user.lojas_gerenciadas.first()
         if loja_usuario:
             initial_data['loja'] = loja_usuario
@@ -232,7 +247,6 @@ def criar_relatorio_diario(request):
 def editar_relatorio_diario(request, pk):
     relatorio = get_object_or_404(RelatorioDiario, pk=pk)
     
-    # Verificar se o usuário tem permissão para editar este relatório
     if relatorio.usuario != request.user and not request.user.is_superuser:
         messages.error(request, 'Você não tem permissão para editar este relatório.')
         return redirect('listar_relatorios_diarios')
@@ -243,7 +257,6 @@ def editar_relatorio_diario(request, pk):
             try:
                 relatorio_editado = form.save(commit=False)
                 
-                # Verifica se há falta de dinheiro e se observação foi preenchida
                 relatorio_editado.calcular_total_geral()
                 if relatorio_editado.tem_falta_dinheiro() and not relatorio_editado.observacao_falta:
                     messages.error(request, 'É obrigatório preencher a observação da falta quando há diferença no caixa!')
@@ -253,6 +266,12 @@ def editar_relatorio_diario(request, pk):
                     })
                 
                 relatorio_editado.save()
+                
+                registrar_atividade(
+                    request.user,
+                    f"Editou relatório para {relatorio.loja.nome} - Data: {relatorio.data}"
+                )
+                
                 messages.success(request, 'Relatório diário atualizado com sucesso!')
                 return redirect('listar_relatorios_diarios')
                 
@@ -268,19 +287,6 @@ def editar_relatorio_diario(request, pk):
         'relatorio': relatorio
     })
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from .models import RelatorioDiario
-from lojas.models import Venda, EstoqueRecarga, Loja
-import requests
-import json
-from django.conf import settings
-from decimal import Decimal
-from datetime import datetime, date
-from django.db.models import Sum, Q
-
 @login_required
 def detalhes_relatorio(request, pk):
     """View para visualizar detalhes de um relatório"""
@@ -289,29 +295,22 @@ def detalhes_relatorio(request, pk):
         pk=pk
     )
     
-    # Verificar permissão
     if not request.user.is_superuser:
         lojas_usuario = request.user.lojas_gerenciadas.all()
         if relatorio.loja not in lojas_usuario:
             messages.error(request, 'Você não tem permissão para visualizar este relatório.')
             return redirect('listar_relatorios_diarios')
     
-    # Calcular todos os valores necessários
     calculos = calcular_todos_valores(relatorio)
-    
-    # Buscar dados das vendas
     dados_vendas = buscar_dados_vendas(relatorio)
-    
-    # Processar detalhes das recargas - AGORA COM DADOS REAIS
     detalhes_recargas, totais_recargas = processar_detalhes_recargas(relatorio)
     
-    # Preparar contexto
     context = {
         'relatorio': relatorio,
         'dados_vendas': dados_vendas,
         'detalhes_recargas': detalhes_recargas,
         'totais_recargas': totais_recargas,
-        **calculos  # Inclui todos os cálculos no contexto
+        **calculos
     }
     
     return render(request, 'detalhes_relatorio.html', context)
@@ -322,7 +321,6 @@ def calcular_todos_valores(relatorio):
     diferenca = relatorio.calcular_diferenca()
     total_vendas_dia = relatorio.calcular_total_vendas_dia()
     
-    # Calcular vendas DSTV
     vendas_dstv = Decimal('0.00')
     if relatorio.inicio_dstv and relatorio.resto_dstv:
         vendas_dstv = (relatorio.inicio_dstv or Decimal('0.00')) - (relatorio.resto_dstv or Decimal('0.00'))
@@ -339,7 +337,9 @@ def calcular_todos_valores(relatorio):
 def buscar_dados_vendas(relatorio):
     """Buscar dados das vendas da API ou calcular localmente"""
     try:
-        # Tentar buscar da API
+        import requests
+        from django.conf import settings
+        
         api_url = f"{getattr(settings, 'BASE_URL', 'http://localhost:8000')}/api/totais-vendas/"
         params = {
             'loja_id': relatorio.loja.id,
@@ -361,7 +361,6 @@ def buscar_dados_vendas(relatorio):
                     'count_recargas': data.get('count_recargas', 0),
                 }
                 
-                # Calcular percentuais
                 if dados['valor_total'] > Decimal('0.00'):
                     dados['percentual_produtos'] = (dados['valor_produtos'] / dados['valor_total']) * Decimal('100.00')
                     dados['percentual_recargas'] = (dados['valor_recargas'] / dados['valor_total']) * Decimal('100.00')
@@ -373,7 +372,6 @@ def buscar_dados_vendas(relatorio):
     except Exception as e:
         print(f"Erro ao buscar dados da API: {e}")
     
-    # Fallback: calcular localmente
     return calcular_dados_vendas_local(relatorio)
 
 def calcular_dados_vendas_local(relatorio):
@@ -381,7 +379,6 @@ def calcular_dados_vendas_local(relatorio):
     valor_recargas = relatorio.recargas or Decimal('0.00')
     acc_total = relatorio.acc or Decimal('0.00')
     
-    # Estimativa: 60% produtos, 40% recargas
     if acc_total > Decimal('0.00'):
         valor_produtos = acc_total - valor_recargas
         if valor_produtos < Decimal('0.00'):
@@ -401,7 +398,6 @@ def calcular_dados_vendas_local(relatorio):
         'count_recargas': int(valor_recargas / Decimal('100.00')) if valor_recargas > Decimal('100.00') else 0,
     }
 
-    # Calcular percentuais
     if dados['valor_total'] > Decimal('0.00'):
         dados['percentual_produtos'] = (dados['valor_produtos'] / dados['valor_total']) * Decimal('100.00')
         dados['percentual_recargas'] = (dados['valor_recargas'] / dados['valor_total']) * Decimal('100.00')
@@ -412,7 +408,7 @@ def calcular_dados_vendas_local(relatorio):
     return dados
 
 def processar_detalhes_recargas(relatorio):
-    """Processar detalhes das recargas do relatório usando dados reais da app lojas"""
+    """Processar detalhes das recargas do relatório"""
     detalhes_recargas = []
     totais = {
         'inicio': 0,
@@ -422,132 +418,71 @@ def processar_detalhes_recargas(relatorio):
     }
     
     try:
-        # Verificar se existem detalhes das recargas salvos no relatório
-        if relatorio.detalhes_recargas:
-            try:
-                detalhes_recargas = json.loads(relatorio.detalhes_recargas)
-                
-                # Calcular totais
-                for recarga in detalhes_recargas:
-                    totais['inicio'] += recarga.get('inicio', 0)
-                    totais['vendidas'] += recarga.get('vendidas', 0)
-                    totais['resto'] += recarga.get('resto', 0)
-                    totais['total_vendas'] += Decimal(str(recarga.get('total_vendas', 0)))
-            except json.JSONDecodeError:
-                # Se o JSON estiver inválido, buscar dados reais
-                detalhes_recargas = buscar_dados_recargas_reais(relatorio)
-        else:
-            # Buscar dados reais das recargas
-            detalhes_recargas = buscar_dados_recargas_reais(relatorio)
+        from lojas.models import EstoqueRecarga, Venda
         
-        # Recalcular totais se temos dados reais
-        if detalhes_recargas and not relatorio.detalhes_recargas:
-            for recarga in detalhes_recargas:
-                totais['inicio'] += recarga.get('inicio', 0)
-                totais['vendidas'] += recarga.get('vendidas', 0)
-                totais['resto'] += recarga.get('resto', 0)
-                totais['total_vendas'] += Decimal(str(recarga.get('total_vendas', 0)))
-                
-    except Exception as e:
-        print(f"Erro ao processar detalhes das recargas: {e}")
-        # Em caso de erro, tentar buscar dados reais
-        detalhes_recargas = buscar_dados_recargas_reais(relatorio)
-    
-    return detalhes_recargas, totais
-
-def buscar_dados_recargas_reais(relatorio):
-    """Buscar dados reais das recargas a partir dos modelos da app lojas"""
-    detalhes_recargas = []
-    
-    try:
-        # Verificar se a loja existe
         if not relatorio.loja:
-            print("Relatório não tem loja associada")
-            return []
+            return detalhes_recargas, totais
         
-        # Buscar estoque de recargas da loja
         estoques_recargas = EstoqueRecarga.objects.filter(loja=relatorio.loja)
         
-        if not estoques_recargas.exists():
-            print(f"Nenhum estoque de recarga encontrado para a loja {relatorio.loja.nome}")
-            return []
-        
-        # Buscar vendas de recargas do dia específico
-        vendas_recargas = Venda.objects.filter(
-            Q(estoque_recarga__loja=relatorio.loja),
-            item_type='recarga',
-            data_venda__date=relatorio.data
-        )
-        
-        print(f"Encontradas {vendas_recargas.count()} vendas de recargas para {relatorio.data}")
-        
-        # Para cada estoque de recarga, calcular os detalhes
-        for estoque in estoques_recargas:
-            try:
-                # Buscar vendas específicas desta recarga no dia
-                vendas_desta_recarga = vendas_recargas.filter(estoque_recarga=estoque)
-                total_vendido = vendas_desta_recarga.aggregate(total=Sum('quantidade'))['total'] or 0
-                valor_total_vendas = vendas_desta_recarga.aggregate(total=Sum('valor_total'))['total'] or Decimal('0.00')
-                
-                # Se não houve vendas, pular esta recarga
-                if total_vendido == 0:
+        if estoques_recargas.exists():
+            vendas_recargas = Venda.objects.filter(
+                Q(estoque_recarga__loja=relatorio.loja),
+                item_type='recarga',
+                data_venda__date=relatorio.data
+            )
+            
+            for estoque in estoques_recargas:
+                try:
+                    vendas_desta_recarga = vendas_recargas.filter(estoque_recarga=estoque)
+                    total_vendido = vendas_desta_recarga.aggregate(total=Sum('quantidade'))['total'] or 0
+                    valor_total_vendas = vendas_desta_recarga.aggregate(total=Sum('valor_total'))['total'] or Decimal('0.00')
+                    
+                    if total_vendido > 0:
+                        estoque_inicial = estoque.quantidade + total_vendido
+                        
+                        detalhes_recargas.append({
+                            'nome': estoque.recarga.nome,
+                            'preco': float(estoque.recarga.preco),
+                            'inicio': estoque_inicial,
+                            'vendidas': total_vendido,
+                            'total_vendas': float(valor_total_vendas),
+                            'resto': estoque.quantidade
+                        })
+                        
+                        totais['inicio'] += estoque_inicial
+                        totais['vendidas'] += total_vendido
+                        totais['resto'] += estoque.quantidade
+                        totais['total_vendas'] += valor_total_vendas
+                        
+                except Exception as e:
+                    print(f"Erro ao processar recarga {estoque.recarga.nome}: {e}")
                     continue
-                
-                # Calcular estoque inicial (estoque atual + vendas do dia)
-                # NOTA: Isso assume que não houve reposição de estoque durante o dia
-                estoque_inicial = estoque.quantidade + total_vendido
-                estoque_final = estoque.quantidade
-                
-                detalhes_recargas.append({
-                    'nome': estoque.recarga.nome,
-                    'preco': float(estoque.recarga.preco),
-                    'inicio': estoque_inicial,
-                    'vendidas': total_vendido,
-                    'total_vendas': float(valor_total_vendas),
-                    'resto': estoque_final
-                })
-                
-                print(f"Recarga: {estoque.recarga.nome}, Início: {estoque_inicial}, Vendidas: {total_vendido}, Resto: {estoque_final}")
-                
-            except Exception as e:
-                print(f"Erro ao processar estoque de recarga {estoque.recarga.nome}: {e}")
-                continue
         
-        # Se não encontramos dados reais, criar dados de exemplo baseados no valor total
         if not detalhes_recargas and relatorio.recargas and relatorio.recargas > Decimal('0.00'):
-            print("Criando dados de exemplo baseados no valor total de recargas")
             detalhes_recargas = criar_dados_recargas_exemplo(relatorio.recargas)
-        
+            
     except Exception as e:
-        print(f"Erro ao buscar dados reais das recargas: {e}")
-        # Em caso de erro, criar dados de exemplo
+        print(f"Erro ao processar detalhes das recargas: {e}")
         if relatorio.recargas and relatorio.recargas > Decimal('0.00'):
             detalhes_recargas = criar_dados_recargas_exemplo(relatorio.recargas)
     
-    return detalhes_recargas
+    return detalhes_recargas, totais
 
 def criar_dados_recargas_exemplo(valor_total_recargas):
     """Criar dados de exemplo para recargas baseado no valor total"""
     if not valor_total_recargas or valor_total_recargas <= Decimal('0.00'):
         return []
     
-    # Converter para float para cálculos
     total = float(valor_total_recargas)
     
-    # Definir tipos de recarga comuns baseados nos produtos existentes
     try:
         from produtos.models import Recarga
-        recargas_existentes = Recarga.objects.all()[:5]  # Pegar até 5 recargas existentes
+        recargas_existentes = Recarga.objects.all()[:5]
         
         if recargas_existentes.exists():
-            tipos_recarga = []
-            for recarga in recargas_existentes:
-                tipos_recarga.append({
-                    'nome': recarga.nome,
-                    'preco': float(recarga.preco)
-                })
+            tipos_recarga = [{'nome': r.nome, 'preco': float(r.preco)} for r in recargas_existentes]
         else:
-            # Fallback para tipos padrão se não houver recargas no banco
             tipos_recarga = [
                 {'nome': 'Recarga Unitel 100KZ', 'preco': 100.00},
                 {'nome': 'Recarga Unitel 200KZ', 'preco': 200.00},
@@ -555,8 +490,7 @@ def criar_dados_recargas_exemplo(valor_total_recargas):
                 {'nome': 'Recarga Africell 100KZ', 'preco': 100.00},
                 {'nome': 'Recarga Africell 200KZ', 'preco': 200.00},
             ]
-    except Exception as e:
-        print(f"Erro ao buscar recargas existentes: {e}")
+    except Exception:
         tipos_recarga = [
             {'nome': 'Recarga Unitel 100KZ', 'preco': 100.00},
             {'nome': 'Recarga Unitel 200KZ', 'preco': 200.00},
@@ -566,55 +500,31 @@ def criar_dados_recargas_exemplo(valor_total_recargas):
     detalhes_recargas = []
     valor_distribuido = Decimal('0.00')
     
-    # Distribuir o valor total entre os tipos de recarga
-    for i, tipo in enumerate(tipos_recarga):
+    for tipo in tipos_recarga:
         if valor_distribuido >= Decimal(str(total)):
             break
             
-        # Calcular quantas recargas deste tipo cabem no valor restante
         valor_restante = Decimal(str(total)) - valor_distribuido
         max_recargas = int(valor_restante / Decimal(str(tipo['preco'])))
         
         if max_recargas > 0:
-            # Usar entre 1 e max_recargas, mas não mais que 20
             quantidade = min(max(1, max_recargas // 2), 20)
             valor_tipo = Decimal(str(tipo['preco'])) * quantidade
             
-            # Ajustar para não ultrapassar o total
             if valor_distribuido + valor_tipo > Decimal(str(total)):
                 quantidade = int((Decimal(str(total)) - valor_distribuido) / Decimal(str(tipo['preco'])))
                 valor_tipo = Decimal(str(tipo['preco'])) * quantidade
             
             if quantidade > 0:
-                # Criar dados da recarga
-                inicio = quantidade + 5  # Estoque inicial
-                vendidas = quantidade
-                resto = 5  # Estoque final
-                
                 detalhes_recargas.append({
                     'nome': tipo['nome'],
                     'preco': tipo['preco'],
-                    'inicio': inicio,
-                    'vendidas': vendidas,
+                    'inicio': quantidade + 5,
+                    'vendidas': quantidade,
                     'total_vendas': float(valor_tipo),
-                    'resto': resto
+                    'resto': 5
                 })
-                
                 valor_distribuido += valor_tipo
-    
-    # Se ainda sobrou valor, adicionar mais recargas do primeiro tipo
-    if valor_distribuido < Decimal(str(total)) and detalhes_recargas:
-        valor_restante = Decimal(str(total)) - valor_distribuido
-        primeiro_tipo = detalhes_recargas[0]
-        preco = Decimal(str(primeiro_tipo['preco']))
-        
-        if preco > Decimal('0.00'):
-            quantidade_extra = int(valor_restante / preco)
-            if quantidade_extra > 0:
-                primeiro_tipo['vendidas'] += quantidade_extra
-                primeiro_tipo['inicio'] += quantidade_extra + 2
-                primeiro_tipo['resto'] += 2
-                primeiro_tipo['total_vendas'] += float(preco * quantidade_extra)
     
     return detalhes_recargas
 
@@ -623,13 +533,18 @@ def deletar_relatorio(request, pk):
     """View para deletar um relatório"""
     relatorio = get_object_or_404(RelatorioDiario, pk=pk)
     
-    # Verificar permissão
     if relatorio.usuario != request.user and not request.user.is_superuser:
         messages.error(request, 'Você não tem permissão para deletar este relatório.')
         return redirect('listar_relatorios_diarios')
     
     if request.method == 'POST':
         relatorio.delete()
+        
+        registrar_atividade(
+            request.user,
+            f"Deletou relatório para {relatorio.loja.nome} - Data: {relatorio.data}"
+        )
+        
         messages.success(request, 'Relatório deletado com sucesso!')
         return redirect('listar_relatorios_diarios')
     

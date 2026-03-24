@@ -569,6 +569,11 @@
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_devolucoes' %}">
+                        <i class="fas fa-undo-alt"></i><span>Devoluções</span>
+                    </a>
+                </li>
                 {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'listar_vendas' %}">
@@ -580,6 +585,13 @@
                         <i class="fas fa-chart-bar"></i><span>Relatórios</span>
                     </a>
                 </li>
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_movimentacoes_estoque' %}">
+                        <i class="fas fa-history"></i><span>Movimentações</span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>

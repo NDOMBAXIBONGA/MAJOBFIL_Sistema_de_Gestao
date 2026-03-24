@@ -177,6 +177,23 @@
             border: none;
         }
 
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            transform: translateY(-1px);
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(45deg, var(--success), #059669);
+            border: none;
+            color: white;
+        }
+
+        .btn-success-custom:hover {
+            background: linear-gradient(45deg, #059669, #047857);
+            transform: translateY(-1px);
+            color: white;
+        }
+
         .type-selector {
             display: flex;
             gap: 15px;
@@ -197,6 +214,7 @@
         .type-option:hover {
             border-color: var(--primary);
             background-color: #f8f9fa;
+            transform: translateY(-2px);
         }
         
         .type-option.selected {
@@ -228,6 +246,18 @@
         
         .item-field.active {
             display: block;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card i {
+            color: var(--info);
+            font-size: 1.5rem;
         }
 
         /* Animações */
@@ -384,6 +414,10 @@
             .type-option p {
                 font-size: 0.75rem;
             }
+            
+            .info-card {
+                padding: 10px;
+            }
         }
         
         @media (max-width: 400px) {
@@ -481,11 +515,18 @@
                         <i class="fas fa-store"></i><span>Lojas</span>
                     </a>
                 </li>
+                {% if user.is_superuser %}
                 <li class="nav-item">
                     <a class="nav-link active" href="{% url 'listar_estoque' %}">
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_devolucoes' %}">
+                        <i class="fas fa-undo-alt"></i><span>Devoluções</span>
+                    </a>
+                </li>
+                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'listar_vendas' %}">
                         <i class="fas fa-shopping-cart"></i><span>Vendas</span>
@@ -497,6 +538,11 @@
                         <i class="fas fa-chart-bar"></i><span>Relatórios</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listar_movimentacoes_estoque' %}">
+                        <i class="fas fa-history"></i><span>Movimentações</span>
+                    </a>
+                </li>
                 {% endif %}
             </ul>
         </div>
@@ -506,11 +552,14 @@
     <div class="main-content" id="mainContent">
         <!-- Top Bar -->
         <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <h3 class="mb-0">Adicionar Estoque</h3>
+            <div>
+                <h3 class="mb-0">Adicionar Estoque</h3>
+                <small class="text-muted">Registrar entrada de produtos ou recargas</small>
+            </div>
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <span class="text-muted">
                     <i class="fas fa-user me-2"></i>
-                    {{ user.nome|default:user.username }}
+                    {{ user.get_full_name|default:user.username }}
                 </span>
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" 
@@ -519,6 +568,9 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                        {% if user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'listar_movimentacoes_estoque' %}"><i class="fas fa-history me-2"></i>Movimentações</a></li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
                             <i class="fas fa-sign-out-alt me-2"></i>Sair
@@ -534,6 +586,7 @@
             <div class="col-12">
                 {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                 </div>
@@ -565,10 +618,10 @@
             <div class="col-12">
                 <div class="card form-card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Adicionar ao Estoque</h5>
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Registrar Entrada no Estoque</h5>
                     </div>
                     <div class="card-body">
-                        <form method="post" id="estoqueForm">
+                        <form method="post" id="estoqueForm" action="{% url 'registrar_entrada_estoque' %}">
                             {% csrf_token %}
                             <input type="hidden" id="tipoItem" name="tipo_item" value="produto">
                             
@@ -578,7 +631,7 @@
                                     <select class="form-select" id="loja" name="loja" required>
                                         <option value="">Selecione a loja</option>
                                         {% for loja in lojas %}
-                                        <option value="{{ loja.id }}">{{ loja.nome }} - {{ loja.cidade }}</option>
+                                        <option value="{{ loja.id }}">{{ loja.nome }} - {{ loja.cidade }}/{{ loja.provincia }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -589,9 +642,12 @@
                                     <select class="form-select" id="produto" name="produto">
                                         <option value="">Selecione o produto</option>
                                         {% for produto in produtos %}
-                                        <option value="{{ produto.id }}">{{ produto.nome }} - {{ produto.codigo }}</option>
+                                        <option value="{{ produto.id }}" data-preco="{{ produto.preco }}">
+                                            {{ produto.nome }} - {{ produto.codigo|default:"Sem código" }}
+                                        </option>
                                         {% endfor %}
                                     </select>
+                                    <small class="text-muted">Preço do produto: <span id="produto-preco">-</span> Kz</small>
                                 </div>
                                 
                                 <!-- Campo para Recargas -->
@@ -600,9 +656,12 @@
                                     <select class="form-select" id="recarga" name="recarga">
                                         <option value="">Selecione a recarga</option>
                                         {% for recarga in recargas %}
-                                        <option value="{{ recarga.id }}">{{ recarga.nome }} - {{ recarga.codigo }}</option>
+                                        <option value="{{ recarga.id }}" data-preco="{{ recarga.preco }}">
+                                            {{ recarga.nome }} - {{ recarga.codigo|default:"Sem código" }}
+                                        </option>
                                         {% endfor %}
                                     </select>
+                                    <small class="text-muted">Preço da recarga: <span id="recarga-preco">-</span> Kz</small>
                                 </div>
                             </div>
                             
@@ -613,20 +672,47 @@
                                            min="1" required placeholder="Quantidade a adicionar">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Preço Unitário</label>
-                                    <input type="text" class="form-control" id="preco-info" readonly 
-                                           placeholder="O preço será exibido após selecionar o item">
+                                    <label for="valor_unitario" class="form-label">Valor Unitário (opcional)</label>
+                                    <input type="number" class="form-control" id="valor_unitario" name="valor_unitario" 
+                                           step="0.01" min="0" placeholder="Deixe em branco para usar o preço padrão">
+                                    <small class="text-muted">Preço padrão: <span id="preco-padrao">-</span> Kz</small>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="observacao" class="form-label">Observação</label>
+                                    <textarea class="form-control" id="observacao" name="observacao" 
+                                              rows="3" placeholder="Informações adicionais sobre esta entrada..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Info Card -->
+                            <div class="info-card">
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted">
+                                            <strong>Informação:</strong> Esta entrada será registrada no histórico de movimentações 
+                                            com data e hora atuais. O estoque será atualizado automaticamente.
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="row mt-4">
                                 <div class="col-12 d-flex flex-wrap gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Adicionar ao Estoque
+                                    <button type="submit" class="btn btn-success-custom">
+                                        <i class="fas fa-save me-2"></i>Registrar Entrada
                                     </button>
                                     <a href="{% url 'listar_estoque' %}" class="btn btn-secondary">
                                         <i class="fas fa-arrow-left me-2"></i>Voltar
                                     </a>
+                                    <button type="button" class="btn btn-outline-info" onclick="limparFormulario()">
+                                        <i class="fas fa-eraser me-2"></i>Limpar
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -644,29 +730,22 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const overlay = document.getElementById('overlay');
         
-        // Estado da sidebar
         let isSidebarCollapsed = false;
         let isMobile = window.innerWidth <= 992;
         
-        // Função para alternar sidebar
         function toggleSidebar() {
             if (isMobile) {
-                // Em mobile, mostra/esconde a sidebar
                 sidebar.classList.toggle('active');
                 overlay.classList.toggle('active');
                 document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
             } else {
-                // Em desktop, colapsa/expande a sidebar
                 isSidebarCollapsed = !isSidebarCollapsed;
                 sidebar.classList.toggle('sidebar-collapsed');
                 mainContent.classList.toggle('main-content-expanded');
-                
-                // Salvar preferência no localStorage
                 localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
             }
         }
         
-        // Fechar sidebar no mobile ao clicar no overlay
         function closeSidebar() {
             if (isMobile) {
                 sidebar.classList.remove('active');
@@ -675,26 +754,20 @@
             }
         }
         
-        // Event listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', closeSidebar);
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
         
-        // Fechar sidebar ao clicar em um link (em mobile)
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.addEventListener('click', () => {
-                if (isMobile) {
-                    closeSidebar();
-                }
+                if (isMobile) closeSidebar();
             });
         });
         
-        // Ajustar ao redimensionar a janela
         window.addEventListener('resize', () => {
             const wasMobile = isMobile;
             isMobile = window.innerWidth <= 992;
             
             if (wasMobile !== isMobile) {
-                // Se mudou de mobile para desktop ou vice-versa, resetar estado
                 if (isMobile) {
                     sidebar.classList.remove('sidebar-collapsed');
                     mainContent.classList.remove('main-content-expanded');
@@ -702,7 +775,6 @@
                     overlay.classList.remove('active');
                     document.body.style.overflow = '';
                 } else {
-                    // Restaurar estado colapsado se estava salvo
                     const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
                     if (savedState) {
                         sidebar.classList.add('sidebar-collapsed');
@@ -712,7 +784,6 @@
             }
         });
         
-        // Restaurar estado da sidebar no desktop
         window.addEventListener('DOMContentLoaded', () => {
             if (!isMobile) {
                 const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -723,19 +794,10 @@
                 }
             }
             
-            // Dados de preços (você pode carregar isso dinamicamente se necessário)
-            const precosProdutos = {
-                {% for produto in produtos %}
-                '{{ produto.id }}': 'Kz {{ produto.preco }}',
-                {% endfor %}
-            };
-            
-            const precosRecargas = {
-                {% for recarga in recargas %}
-                '{{ recarga.id }}': 'Kz {{ recarga.preco }}',
-                {% endfor %}
-            };
-
+            inicializarFormulario();
+        });
+        
+        function inicializarFormulario() {
             // Selecionar tipo
             const typeOptions = document.querySelectorAll('.type-option');
             const tipoItemInput = document.getElementById('tipoItem');
@@ -743,65 +805,99 @@
             const recargaField = document.getElementById('recarga-field');
             const produtoSelect = document.getElementById('produto');
             const recargaSelect = document.getElementById('recarga');
-            const precoInfo = document.getElementById('preco-info');
-
+            const precoPadrao = document.getElementById('preco-padrao');
+            const valorUnitario = document.getElementById('valor_unitario');
+            
             typeOptions.forEach(option => {
                 option.addEventListener('click', function() {
                     const type = this.getAttribute('data-type');
                     
-                    // Remover seleção anterior
                     typeOptions.forEach(opt => opt.classList.remove('selected'));
-                    // Adicionar seleção atual
                     this.classList.add('selected');
-                    
-                    // Atualizar campo hidden
                     tipoItemInput.value = type;
                     
-                    // Mostrar/ocultar campos
                     if (type === 'produto') {
                         produtoField.classList.add('active');
                         recargaField.classList.remove('active');
                         produtoSelect.required = true;
                         recargaSelect.required = false;
                         recargaSelect.value = '';
+                        atualizarPrecoPadrao();
                     } else {
                         produtoField.classList.remove('active');
                         recargaField.classList.add('active');
                         produtoSelect.required = false;
                         recargaSelect.required = true;
                         produtoSelect.value = '';
+                        atualizarPrecoPadrao();
                     }
                     
-                    // Limpar informações de preço
-                    precoInfo.value = '';
+                    valorUnitario.value = '';
                 });
             });
-
-            // Atualizar preço quando selecionar produto
+            
+            // Atualizar preço ao selecionar produto
             produtoSelect.addEventListener('change', function() {
-                const produtoId = this.value;
-                if (produtoId && precosProdutos[produtoId]) {
-                    precoInfo.value = precosProdutos[produtoId];
+                const selectedOption = this.options[this.selectedIndex];
+                const preco = selectedOption.getAttribute('data-preco');
+                const precoSpan = document.getElementById('produto-preco');
+                
+                if (preco) {
+                    precoSpan.textContent = parseFloat(preco).toFixed(2);
                 } else {
-                    precoInfo.value = '';
+                    precoSpan.textContent = '-';
                 }
+                atualizarPrecoPadrao();
             });
-
-            // Atualizar preço quando selecionar recarga
+            
+            // Atualizar preço ao selecionar recarga
             recargaSelect.addEventListener('change', function() {
-                const recargaId = this.value;
-                if (recargaId && precosRecargas[recargaId]) {
-                    precoInfo.value = precosRecargas[recargaId];
+                const selectedOption = this.options[this.selectedIndex];
+                const preco = selectedOption.getAttribute('data-preco');
+                const precoSpan = document.getElementById('recarga-preco');
+                
+                if (preco) {
+                    precoSpan.textContent = parseFloat(preco).toFixed(2);
                 } else {
-                    precoInfo.value = '';
+                    precoSpan.textContent = '-';
                 }
+                atualizarPrecoPadrao();
             });
-
+            
+            function atualizarPrecoPadrao() {
+                const tipo = tipoItemInput.value;
+                let preco = null;
+                
+                if (tipo === 'produto' && produtoSelect.value) {
+                    const selectedOption = produtoSelect.options[produtoSelect.selectedIndex];
+                    preco = selectedOption.getAttribute('data-preco');
+                } else if (tipo === 'recarga' && recargaSelect.value) {
+                    const selectedOption = recargaSelect.options[recargaSelect.selectedIndex];
+                    preco = selectedOption.getAttribute('data-preco');
+                }
+                
+                if (preco) {
+                    precoPadrao.textContent = parseFloat(preco).toFixed(2);
+                    valorUnitario.placeholder = `Deixe em branco para usar ${parseFloat(preco).toFixed(2)} Kz`;
+                } else {
+                    precoPadrao.textContent = '-';
+                    valorUnitario.placeholder = 'Deixe em branco para usar o preço padrão';
+                }
+            }
+            
             // Validação do formulário
             document.getElementById('estoqueForm').addEventListener('submit', function(e) {
                 const tipo = tipoItemInput.value;
                 const produtoVal = produtoSelect.value;
                 const recargaVal = recargaSelect.value;
+                const lojaVal = document.getElementById('loja').value;
+                const quantidadeVal = document.getElementById('quantidade').value;
+                
+                if (!lojaVal) {
+                    e.preventDefault();
+                    showAlert('Por favor, selecione uma loja.', 'warning');
+                    return false;
+                }
                 
                 if (tipo === 'produto' && !produtoVal) {
                     e.preventDefault();
@@ -815,52 +911,49 @@
                     return false;
                 }
                 
-                if (!document.getElementById('loja').value) {
+                if (!quantidadeVal || quantidadeVal < 1) {
                     e.preventDefault();
-                    showAlert('Por favor, selecione uma loja.', 'warning');
+                    showAlert('Por favor, informe uma quantidade válida.', 'warning');
                     return false;
                 }
                 
-                if (!document.getElementById('quantidade').value) {
+                // Confirmar antes de enviar
+                const confirmMsg = `Confirmar entrada de ${quantidadeVal} unidade(s) no estoque?`;
+                if (!confirm(confirmMsg)) {
                     e.preventDefault();
-                    showAlert('Por favor, informe a quantidade.', 'warning');
                     return false;
                 }
             });
-        });
-
-        // Função para mostrar alertas
-        function showAlert(message, type) {
-            // Remover alertas existentes
-            const alertasExistentes = document.querySelectorAll('.alert-custom');
-            alertasExistentes.forEach(alerta => alerta.remove());
+        }
+        
+        function limparFormulario() {
+            document.getElementById('loja').value = '';
+            document.getElementById('produto').value = '';
+            document.getElementById('recarga').value = '';
+            document.getElementById('quantidade').value = '';
+            document.getElementById('valor_unitario').value = '';
+            document.getElementById('observacao').value = '';
             
+            showAlert('Formulário limpo com sucesso!', 'info');
+        }
+        
+        function showAlert(message, type) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type} alert-custom alert-dismissible fade show position-fixed`;
             alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             
             document.body.appendChild(alertDiv);
             
-            // Auto-remover após 5 segundos
             setTimeout(() => {
-                if (alertDiv.parentElement) {
-                    alertDiv.remove();
-                }
+                if (alertDiv.parentElement) alertDiv.remove();
             }, 5000);
         }
-
-        // Otimização para mobile
-        window.addEventListener('touchstart', (e) => {
-            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
-                e.target.style.fontSize = '16px';
-            }
-        }, { passive: true });
-
-        // Suporte para teclado
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSidebar();
@@ -871,6 +964,12 @@
                 });
             }
         });
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>

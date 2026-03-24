@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estoque - MAJOBFIL</title>
+    <title>Devoluções - MAJOBFIL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -180,92 +180,41 @@
             margin-bottom: 20px;
         }
         
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .card-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            transform: translateY(-1px);
+        }
+        
+        .devolucao-badge {
+            background: linear-gradient(45deg, var(--warning), #f59e0b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
         .btn-action {
             padding: 5px 10px;
             margin: 0 2px;
-        }
-        
-        .stock-low {
-            background-color: #fff3cd !important;
-        }
-        
-        .stock-out {
-            background-color: #f8d7da !important;
-        }
-
-        .type-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .type-option {
-            flex: 1;
-            text-align: center;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: white;
-        }
-        
-        .type-option:hover {
-            border-color: var(--primary);
-            background-color: #f8f9fa;
-            transform: translateY(-2px);
-        }
-        
-        .type-option.selected {
-            border-color: var(--primary);
-            background-color: rgba(102, 126, 234, 0.1);
-        }
-        
-        .type-option i {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-        
-        .type-option h6 {
-            margin-bottom: 5px;
-            color: #333;
-        }
-        
-        .type-option p {
-            color: #6c757d;
-            margin: 0;
-            font-size: 0.75rem;
-        }
-
-        .item-badge {
-            background: linear-gradient(45deg, var(--success), #059669);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-weight: 600;
-            font-size: 0.7rem;
-        }
-        
-        .produto-badge {
-            background: linear-gradient(45deg, var(--info), #3b82f6);
-        }
-        
-        .recarga-badge {
-            background: linear-gradient(45deg, var(--warning), #f59e0b);
-        }
-        
-        /* Cards de Estatísticas */
-        .stats-mini-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        
-        .stats-mini-card:hover {
-            transform: translateY(-2px);
         }
         
         /* Animações */
@@ -330,25 +279,21 @@
             .top-bar {
                 padding: 15px;
                 border-radius: 10px;
-            }
-            
-            .top-bar h3 {
-                font-size: 1.5rem;
-            }
-            
-            .type-selector {
                 flex-direction: column;
+                gap: 15px;
+                align-items: flex-start !important;
             }
             
-            .type-option {
+            .top-bar .d-flex {
                 width: 100%;
+                justify-content: space-between;
             }
             
             .filter-card .row {
                 flex-direction: column;
             }
             
-            .filter-card .col-md-4 {
+            .filter-card .col-md-3 {
                 width: 100%;
                 margin-bottom: 15px;
             }
@@ -370,10 +315,6 @@
             .table {
                 min-width: 800px;
             }
-            
-            .stats-mini-card {
-                margin-bottom: 15px;
-            }
         }
         
         @media (max-width: 768px) {
@@ -385,14 +326,6 @@
                 padding: 12px;
                 margin-bottom: 20px;
                 border-radius: 8px;
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start !important;
-            }
-            
-            .top-bar .d-flex {
-                width: 100%;
-                justify-content: space-between;
             }
             
             .table-card {
@@ -420,36 +353,15 @@
                 font-size: 0.9rem;
             }
             
-            .type-option {
-                padding: 12px;
-            }
-            
-            .type-option i {
-                font-size: 1.2rem;
-            }
-            
-            .type-option h6 {
-                font-size: 0.9rem;
-            }
-            
             .table th,
             .table td {
                 padding: 8px 6px;
                 font-size: 0.85rem;
             }
             
-            .item-badge {
-                font-size: 0.65rem;
-                padding: 3px 8px;
-            }
-            
             .btn-action {
                 padding: 4px 8px;
                 font-size: 0.8rem;
-            }
-            
-            .stats-mini-card h4 {
-                font-size: 1.2rem;
             }
         }
         
@@ -468,16 +380,6 @@
                 gap: 15px;
             }
             
-            .btn-group {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .btn-group .btn {
-                width: 100%;
-                margin: 0 !important;
-            }
-            
             .form-control, .form-select {
                 font-size: 0.9rem;
                 padding: 8px 12px;
@@ -485,11 +387,6 @@
             
             .table {
                 font-size: 0.8rem;
-            }
-            
-            .item-badge {
-                font-size: 0.6rem;
-                padding: 2px 6px;
             }
         }
         
@@ -501,18 +398,6 @@
             .btn {
                 padding: 5px 10px;
                 font-size: 0.85rem;
-            }
-            
-            .type-option i {
-                font-size: 1rem;
-            }
-            
-            .type-option h6 {
-                font-size: 0.8rem;
-            }
-            
-            .type-option p {
-                font-size: 0.65rem;
             }
             
             .table th,
@@ -554,7 +439,6 @@
             .dropdown,
             .modal,
             .overlay,
-            .type-selector,
             .filter-card,
             .btn-action {
                 display: none !important;
@@ -565,6 +449,7 @@
                 padding: 0 !important;
             }
             
+            .stats-card,
             .table-card {
                 box-shadow: none !important;
                 border: 1px solid #ddd !important;
@@ -607,12 +492,12 @@
                 </li>
                 {% if user.is_superuser %}
                 <li class="nav-item">
-                    <a class="nav-link active" href="{% url 'listar_estoque' %}">
+                    <a class="nav-link" href="{% url 'listar_estoque' %}">
                         <i class="fas fa-boxes"></i><span>Estoque</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listar_devolucoes' %}">
+                    <a class="nav-link active" href="{% url 'listar_devolucoes' %}">
                         <i class="fas fa-undo-alt"></i><span>Devoluções</span>
                     </a>
                 </li>
@@ -622,12 +507,12 @@
                         <i class="fas fa-shopping-cart"></i><span>Vendas</span>
                     </a>
                 </li>
-                {% if user.is_superuser %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'listar_relatorios_diarios' %}">
                         <i class="fas fa-chart-bar"></i><span>Relatórios</span>
                     </a>
                 </li>
+                {% if user.is_superuser %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'listar_movimentacoes_estoque' %}">
                         <i class="fas fa-history"></i><span>Movimentações</span>
@@ -643,8 +528,8 @@
         <!-- Top Bar -->
         <div class="top-bar d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h3 class="mb-0">Estoque</h3>
-                <small class="text-muted">Controle de produtos e recargas em estoque</small>
+                <h3 class="mb-0">Devoluções</h3>
+                <small class="text-muted">Histórico de devoluções de vendas</small>
             </div>
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <span class="text-muted">
@@ -658,9 +543,7 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
-                        {% if user.is_superuser %}
-                        <li><a class="dropdown-item" href="{% url 'listar_movimentacoes_estoque' %}"><i class="fas fa-history me-2"></i>Movimentações</a></li>
-                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'listar_vendas' %}"><i class="fas fa-shopping-cart me-2"></i>Vendas</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
                             <i class="fas fa-sign-out-alt me-2"></i>Sair
@@ -685,27 +568,50 @@
         </div>
         {% endif %}
 
-        <!-- Seletor de Tipo -->
+        <!-- Stats Cards -->
         <div class="row mb-4 fade-in">
-            <div class="col-12">
-                <div class="type-selector">
-                    <div class="type-option {% if tipo_selecionado == 'todos' %}selected{% endif %}" 
-                         data-type="todos" onclick="selectType('todos')">
-                        <i class="fas fa-th-list"></i>
-                        <h6>Todos os Itens</h6>
-                        <p>Produtos e Recargas</p>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card card-primary text-white">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-8">
+                                <h5>Total Devoluções</h5>
+                                <h2 class="mb-0">{{ total_devolucoes }}</h2>
+                            </div>
+                            <div class="col-4 text-end">
+                                <i class="fas fa-undo-alt fa-3x opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="type-option {% if tipo_selecionado == 'produtos' %}selected{% endif %}" 
-                         data-type="produtos" onclick="selectType('produtos')">
-                        <i class="fas fa-box"></i>
-                        <h6>Produtos</h6>
-                        <p>Apenas produtos físicos</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card" style="border-left: 4px solid var(--warning);">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-8">
+                                <h5 class="text-warning">Quantidade Devolvida</h5>
+                                <h2 class="mb-0 text-dark">{{ total_quantidade }}</h2>
+                            </div>
+                            <div class="col-4 text-end">
+                                <i class="fas fa-box fa-3x text-warning opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="type-option {% if tipo_selecionado == 'recargas' %}selected{% endif %}" 
-                         data-type="recargas" onclick="selectType('recargas')">
-                        <i class="fas fa-mobile-alt"></i>
-                        <h6>Recargas</h6>
-                        <p>Apenas recargas</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card stats-card" style="border-left: 4px solid var(--danger);">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-8">
+                                <h5 class="text-danger">Valor Devolvido</h5>
+                                <h2 class="mb-0 text-dark">Kz {{ total_valor|floatformat:2 }}</h2>
+                            </div>
+                            <div class="col-4 text-end">
+                                <i class="fas fa-money-bill-wave fa-3x text-danger opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -717,9 +623,8 @@
                 <div class="card filter-card">
                     <div class="card-body">
                         <form method="get" class="row g-3">
-                            <input type="hidden" name="tipo" id="tipoInput" value="{{ tipo_selecionado }}">
-                            <div class="col-md-4">
-                                <label for="loja" class="form-label">Filtrar por Loja</label>
+                            <div class="col-md-3">
+                                <label for="loja" class="form-label">Loja</label>
                                 <select name="loja" id="loja" class="form-select">
                                     <option value="">Todas as Lojas</option>
                                     {% for loja in lojas %}
@@ -729,16 +634,32 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label for="produto" class="form-label">Filtrar por Nome</label>
-                                <input type="text" name="produto" id="produto" class="form-control" 
-                                       placeholder="Nome do item" value="{{ request.GET.produto }}">
+                            <div class="col-md-3">
+                                <label for="tipo_item" class="form-label">Tipo de Item</label>
+                                <select name="tipo_item" id="tipo_item" class="form-select">
+                                    <option value="">Todos</option>
+                                    {% for tipo_valor, tipo_nome in tipos_item %}
+                                    <option value="{{ tipo_valor }}" {% if request.GET.tipo_item == tipo_valor %}selected{% endif %}>
+                                        {{ tipo_nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary me-2">
+                            <div class="col-md-3">
+                                <label for="data_inicio" class="form-label">Data Início</label>
+                                <input type="date" name="data_inicio" id="data_inicio" class="form-control" 
+                                       value="{{ request.GET.data_inicio }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="data_fim" class="form-label">Data Fim</label>
+                                <input type="date" name="data_fim" id="data_fim" class="form-control" 
+                                       value="{{ request.GET.data_fim }}">
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2">
+                                <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-filter me-2"></i>Filtrar
                                 </button>
-                                <a href="{% url 'listar_estoque' %}" class="btn btn-secondary">
+                                <a href="{% url 'listar_devolucoes' %}" class="btn btn-secondary">
                                     <i class="fas fa-times me-2"></i>Limpar
                                 </a>
                             </div>
@@ -752,25 +673,20 @@
         <div class="row mb-4 fade-in">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <h4 id="titulo-estoque">Controle de Estoque</h4>
-                    <div class="btn-group">
-                        <!--<a href="{% url 'adicionar_estoque' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Adicionar Estoque
-                        </a>-->
-                        <a href="{% url 'registrar_entrada_estoque' %}" class="btn btn-success">
-                            <i class="fas fa-arrow-down me-2"></i>Entrada de Estoque
+                    <h4>Histórico de Devoluções</h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted">
+                            Mostrando {{ devolucoes.start_index }} - {{ devolucoes.end_index }} de {{ devolucoes.paginator.count }} registros
+                        </span>
+                        <a href="{% url 'listar_vendas' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar às Vendas
                         </a>
-                        {% if user.is_superuser %}
-                        <a href="{% url 'listar_movimentacoes_estoque' %}" class="btn btn-info">
-                            <i class="fas fa-history me-2"></i>Histórico
-                        </a>
-                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Estoque Table -->
+        <!-- Devoluções Table -->
         <div class="row fade-in">
             <div class="col-12">
                 <div class="card table-card">
@@ -779,160 +695,156 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Tipo</th>
+                                        <th>Data/Hora</th>
                                         <th>Loja</th>
                                         <th>Item</th>
+                                        <th>Venda Original</th>
                                         <th>Quantidade</th>
-                                        <th>Total Vendido</th>
-                                        <th>Valor Vendido</th>
-                                        <th>Status</th>
+                                        <th>Valor</th>
+                                        <th>Motivo</th>
+                                        <th>Observação</th>
+                                        <th>Usuário</th>
                                         <th>Ações</th>
                                     </thead>
-                                <tbody id="tabela-estoque">
-                                    <!-- Produtos -->
-                                    {% for item in produtos_estoque %}
-                                    <tr class="item-row {% if item.quantidade == 0 %}stock-out{% elif item.quantidade < 10 %}stock-low{% endif %}" 
-                                        data-type="produto" data-id="{{ item.id }}">
-                                        <td>
-                                            <span class="item-badge produto-badge">Produto</span>
-                                        </td>
-                                        <td>
-                                            <strong>{{ item.loja.nome }}</strong><br>
-                                            <small class="text-muted">{{ item.loja.cidade }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                {% if item.produto.imagem %}
-                                                <img src="{{ item.produto.imagem.url }}" alt="{{ item.produto.nome }}" 
-                                                    class="rounded me-2" width="40" height="40">
-                                                {% else %}
-                                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
-                                                    style="width: 40px; height: 40px;">
-                                                    <i class="fas fa-box text-muted"></i>
-                                                </div>
-                                                {% endif %}
-                                                <div>
-                                                    <strong>{{ item.produto.nome }}</strong><br>
-                                                    <small class="text-muted">Kz {{ item.produto.preco|floatformat:2 }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold {% if item.quantidade == 0 %}text-danger{% elif item.quantidade < 10 %}text-warning{% else %}text-success{% endif %}">
-                                                {{ item.quantidade }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold">{{ item.total_vendido }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold text-success">{{ item.valor_total_vendas|floatformat:2 }} Kz</span>
-                                        </td>
-                                        <td>
-                                            {% if item.quantidade == 0 %}
-                                            <span class="badge bg-danger">Esgotado</span>
-                                            {% elif item.quantidade < 10 %}
-                                            <span class="badge bg-warning">Baixo</span>
-                                            {% else %}
-                                            <span class="badge bg-success">Normal</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'editar_estoque' item.id %}" class="btn btn-warning btn-action" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="{% url 'nova_venda' %}?loja_id={{ item.loja.id }}" class="btn btn-success btn-action" title="Vender">
-                                                    <i class="fas fa-cash-register"></i>
-                                                </a>
-                                                <a href="{% url 'registrar_entrada_estoque' %}?loja={{ item.loja.id }}&produto={{ item.produto.id }}" 
-                                                   class="btn btn-info btn-action" title="Adicionar Entrada">
-                                                    <i class="fas fa-arrow-down"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-
-                                    <!-- Recargas -->
-                                    {% for item in recargas_estoque %}
-                                    <tr class="item-row {% if item.quantidade == 0 %}stock-out{% elif item.quantidade < 10 %}stock-low{% endif %}" 
-                                        data-type="recarga" data-id="{{ item.id }}">
-                                        <td>
-                                            <span class="item-badge recarga-badge">Recarga</span>
-                                        </td>
-                                        <td>
-                                            <strong>{{ item.loja.nome }}</strong><br>
-                                            <small class="text-muted">{{ item.loja.cidade }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                {% if item.recarga.imagem %}
-                                                <img src="{{ item.recarga.imagem.url }}" alt="{{ item.recarga.nome }}" 
-                                                     class="rounded me-2" width="40" height="40">
-                                                {% else %}
-                                                <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
-                                                     style="width: 40px; height: 40px;">
-                                                    <i class="fas fa-mobile-alt text-muted"></i>
-                                                </div>
-                                                {% endif %}
-                                                <div>
-                                                    <strong>{{ item.recarga.nome }}</strong><br>
-                                                    <small class="text-muted">Kz {{ item.recarga.preco|floatformat:2 }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold {% if item.quantidade == 0 %}text-danger{% elif item.quantidade < 10 %}text-warning{% else %}text-success{% endif %}">
-                                                {{ item.quantidade }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold">{{ item.total_vendido }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="fw-bold text-success">{{ item.valor_total_vendas|floatformat:2 }} Kz</span>
-                                        </td>
-                                        <td>
-                                            {% if item.quantidade == 0 %}
-                                            <span class="badge bg-danger">Esgotado</span>
-                                            {% elif item.quantidade < 10 %}
-                                            <span class="badge bg-warning">Baixo</span>
-                                            {% else %}
-                                            <span class="badge bg-success">Normal</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'editar_estoque' item.id %}" class="btn btn-warning btn-action" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <a href="{% url 'nova_venda' %}?loja_id={{ item.loja.id }}" class="btn btn-success btn-action" title="Vender">
-                                                    <i class="fas fa-cash-register"></i>
-                                                </a>
-                                                <a href="{% url 'registrar_entrada_estoque' %}?loja={{ item.loja.id }}&recarga={{ item.recarga.id }}" 
-                                                   class="btn btn-info btn-action" title="Adicionar Entrada">
-                                                    <i class="fas fa-arrow-down"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-
-                                    {% if not produtos_estoque and not recargas_estoque %}
+                                <tbody>
+                                    {% for devolucao in devolucoes %}
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">
-                                            <i class="fas fa-boxes fa-3x mb-3"></i>
-                                            <p>Nenhum item em estoque encontrado</p>
-                                            <a href="{% url 'adicionar_estoque' %}" class="btn btn-primary btn-sm mt-2">
-                                                <i class="fas fa-plus me-1"></i>Adicionar Estoque
+                                        <td>
+                                            <small>{{ devolucao.data_movimentacao|date:"d/m/Y" }}</small><br>
+                                            <small class="text-muted">{{ devolucao.data_movimentacao|date:"H:i:s" }}</small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ devolucao.loja.nome }}</strong><br>
+                                            <small class="text-muted">{{ devolucao.loja.cidade }}</small>
+                                        </td>
+                                        <td>
+                                            {% if devolucao.tipo_item == 'produto' and devolucao.produto %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-box text-muted"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ devolucao.produto.nome }}</strong><br>
+                                                        <small class="text-muted">Produto</small>
+                                                    </div>
+                                                </div>
+                                            {% elif devolucao.tipo_item == 'recarga' and devolucao.recarga %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-mobile-alt text-muted"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>{{ devolucao.recarga.nome }}</strong><br>
+                                                        <small class="text-muted">Recarga</small>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Item não encontrado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if devolucao.venda %}
+                                                <a href="{% url 'detalhes_venda' devolucao.venda.id %}" class="text-decoration-none">
+                                                    <span class="badge bg-info">Venda #{{ devolucao.venda.id }}</span>
+                                                </a>
+                                                <br>
+                                                <small class="text-muted">{{ devolucao.venda.data_venda|date:"d/m/Y" }}</small>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong class="text-warning">{{ devolucao.quantidade }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                <span class="text-muted">{{ devolucao.quantidade_anterior }}</span>
+                                                <i class="fas fa-arrow-right mx-1"></i>
+                                                <span class="text-success">{{ devolucao.quantidade_nova }}</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong class="text-danger">Kz {{ devolucao.valor_total|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-warning text-dark">{{ devolucao.motivo|default:"-" }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted" title="{{ devolucao.observacao }}">
+                                                {{ devolucao.observacao|truncatechars:30|default:"-" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>{{ devolucao.usuario.get_full_name|default:devolucao.usuario.username }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if devolucao.venda %}
+                                                <a href="{% url 'detalhes_venda' devolucao.venda.id %}" class="btn btn-info btn-action" title="Ver Venda">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-undo-alt fa-3x mb-3"></i>
+                                            <p>Nenhuma devolução encontrada</p>
+                                            <a href="{% url 'listar_vendas' %}" class="btn btn-primary btn-sm mt-2">
+                                                <i class="fas fa-shopping-cart me-1"></i>Ir para Vendas
                                             </a>
                                         </td>
                                     </tr>
-                                    {% endif %}
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Paginação -->
+                        {% if devolucoes.has_other_pages %}
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if devolucoes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ devolucoes.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% for i in devolucoes.paginator.page_range %}
+                                    {% if devolucoes.number == i %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                    {% elif i > devolucoes.number|add:'-3' and i < devolucoes.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if devolucoes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ devolucoes.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -1010,106 +922,8 @@
                     isSidebarCollapsed = true;
                 }
             }
-            
-            const tipoSelecionado = '{{ tipo_selecionado }}' || 'todos';
-            filtrarItensPorTipo(tipoSelecionado);
         });
-
-        function selectType(type) {
-            document.getElementById('tipoInput').value = type;
-            
-            document.querySelectorAll('.type-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            document.querySelector(`.type-option[data-type="${type}"]`).classList.add('selected');
-            filtrarItensPorTipo(type);
-            atualizarTituloEstoque(type);
-        }
-
-        function filtrarItensPorTipo(type) {
-            const allItems = document.querySelectorAll('.item-row');
-            let visibleCount = 0;
-
-            allItems.forEach(item => {
-                const itemType = item.getAttribute('data-type');
-                
-                if (type === 'todos' || 
-                    (type === 'produtos' && itemType === 'produto') || 
-                    (type === 'recargas' && itemType === 'recarga')) {
-                    item.style.display = 'table-row';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            const emptyMessage = document.querySelector('#tabela-estoque tr:last-child');
-            if (emptyMessage && emptyMessage.cells && emptyMessage.cells.length === 1) {
-                if (visibleCount === 0 && !emptyMessage.querySelector('a')) {
-                    emptyMessage.style.display = 'table-row';
-                } else if (emptyMessage.cells[0].colSpan === 8) {
-                    emptyMessage.style.display = visibleCount === 0 ? 'table-row' : 'none';
-                }
-            }
-        }
-
-        function atualizarTituloEstoque(type) {
-            const titulo = document.getElementById('titulo-estoque');
-            
-            switch(type) {
-                case 'todos':
-                    titulo.textContent = 'Controle de Estoque - Todos os Itens';
-                    break;
-                case 'produtos':
-                    titulo.textContent = 'Controle de Estoque - Produtos';
-                    break;
-                case 'recargas':
-                    titulo.textContent = 'Controle de Estoque - Recargas';
-                    break;
-            }
-        }
-
-        function buscarItens() {
-            const termo = document.getElementById('produto').value.toLowerCase();
-            const tipoAtual = document.getElementById('tipoInput').value;
-            
-            const allItems = document.querySelectorAll('.item-row');
-            let visibleCount = 0;
-
-            allItems.forEach(item => {
-                const itemType = item.getAttribute('data-type');
-                const itemNameElement = item.querySelector('td:nth-child(3) strong');
-                if (!itemNameElement) return;
-                
-                const itemName = itemNameElement.textContent.toLowerCase();
-                
-                const typeMatch = tipoAtual === 'todos' || 
-                                 (tipoAtual === 'produtos' && itemType === 'produto') || 
-                                 (tipoAtual === 'recargas' && itemType === 'recarga');
-                
-                const nameMatch = itemName.includes(termo);
-                
-                if (typeMatch && nameMatch) {
-                    item.style.display = 'table-row';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
-        const produtoInput = document.getElementById('produto');
-        if (produtoInput) {
-            produtoInput.addEventListener('input', buscarItens);
-        }
-
-        window.addEventListener('touchstart', (e) => {
-            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
-                e.target.style.fontSize = '16px';
-            }
-        }, { passive: true });
-
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeSidebar();
@@ -1120,6 +934,12 @@
                 });
             }
         });
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
+                e.target.style.fontSize = '16px';
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>

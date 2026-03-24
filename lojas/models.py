@@ -167,7 +167,8 @@ class Loja(models.Model):
         # Filtra vendas de produtos desta loja
         vendas_query = Venda.objects.filter(
             estoque_loja__loja=self,
-            item_type='produto'
+            item_type='produto',
+            status='normal'
         )
         
         if data_inicio and data_fim:
@@ -192,7 +193,8 @@ class Loja(models.Model):
         # Filtra vendas de recargas desta loja
         vendas_query = Venda.objects.filter(
             estoque_recarga__loja=self,
-            item_type='recarga'
+            item_type='recarga',
+            status='normal'
         )
         
         if data_inicio and data_fim:
@@ -213,7 +215,8 @@ class Loja(models.Model):
         hoje = datetime.now().date()
         return Venda.objects.filter(
             Q(estoque_loja__loja=self) | Q(estoque_recarga__loja=self),
-            data_venda__date=hoje
+            data_venda__date=hoje,
+            status='normal'
         )
     
     def get_vendas_mes_atual(self):
@@ -222,7 +225,8 @@ class Loja(models.Model):
         primeiro_dia_mes = hoje.replace(day=1)
         return Venda.objects.filter(
             Q(estoque_loja__loja=self) | Q(estoque_recarga__loja=self),
-            data_venda__date__range=[primeiro_dia_mes, hoje]
+            data_venda__date__range=[primeiro_dia_mes, hoje],
+            status='normal'
         )
     
     def get_estoque_baixo(self):
@@ -249,6 +253,7 @@ class Loja(models.Model):
         verbose_name = 'Loja'
         verbose_name_plural = 'Lojas'
 
+
 class EstoqueLoja(models.Model):
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE)
     produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE)
@@ -266,7 +271,7 @@ class EstoqueLoja(models.Model):
     def total_vendido(self):
         """Calcula o total vendido para este produto usando o novo relacionamento"""
         from django.db.models import Sum
-        total = self.vendas_produto.aggregate(
+        total = self.vendas_produto.filter(status='normal').aggregate(
             total=Sum('quantidade')
         )['total']
         return total or 0
@@ -275,7 +280,7 @@ class EstoqueLoja(models.Model):
     def valor_total_vendas(self):
         """Calcula o valor total das vendas para este produto usando o novo relacionamento"""
         from django.db.models import Sum
-        total = self.vendas_produto.aggregate(
+        total = self.vendas_produto.filter(status='normal').aggregate(
             total=Sum('valor_total')
         )['total']
         return total or 0
@@ -290,7 +295,7 @@ class EstoqueLoja(models.Model):
         else:
             return 'normal'
 
-# models.py - adicione este modelo
+
 class EstoqueRecarga(models.Model):
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE, verbose_name='Loja')
     recarga = models.ForeignKey(Recarga, on_delete=models.CASCADE, verbose_name='Recarga')
@@ -314,7 +319,8 @@ class EstoqueRecarga(models.Model):
         from django.db.models import Sum
         total = Venda.objects.filter(
             estoque_recarga=self,
-            item_type='recarga'
+            item_type='recarga',
+            status='normal'
         ).aggregate(total=Sum('quantidade'))['total']
         return total or 0
     
@@ -324,7 +330,8 @@ class EstoqueRecarga(models.Model):
         from django.db.models import Sum
         total = Venda.objects.filter(
             estoque_recarga=self,
-            item_type='recarga'
+            item_type='recarga',
+            status='normal'
         ).aggregate(total=Sum('valor_total'))['total']
         return total or 0
     
@@ -338,10 +345,17 @@ class EstoqueRecarga(models.Model):
         else:
             return 'normal'
 
+
 class Venda(models.Model):
     ITEM_TYPE_CHOICES = [
         ('produto', 'Produto'),
         ('recarga', 'Recarga'),
+    ]
+    
+    STATUS_VENDA = [
+        ('normal', 'Normal'),
+        ('parcial', 'Devolução Parcial'),
+        ('devolvida', 'Totalmente Devolvida'),
     ]
 
     # Para produtos
@@ -385,6 +399,14 @@ class Venda(models.Model):
     data_venda = models.DateTimeField(auto_now_add=True, verbose_name='Data da Venda')
     observacao = models.TextField(blank=True, verbose_name='Observações')
     
+    # Novo campo para status da venda
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_VENDA, 
+        default='normal',
+        verbose_name='Status da Venda'
+    )
+    
     class Meta:
         verbose_name = 'Venda'
         verbose_name_plural = 'Vendas'
@@ -393,6 +415,7 @@ class Venda(models.Model):
             models.Index(fields=['estoque_loja', 'data_venda']),
             models.Index(fields=['estoque_recarga', 'data_venda']),
             models.Index(fields=['data_venda']),
+            models.Index(fields=['status']),
         ]
     
     def __str__(self):
@@ -442,3 +465,80 @@ class Venda(models.Model):
         elif self.item_type == 'recarga' and self.estoque_recarga:
             return self.estoque_recarga.recarga.preco
         return 0
+    
+    @property
+    def quantidade_devolvida(self):
+        """Retorna a quantidade total já devolvida"""
+        from django.db.models import Sum
+        total = MovimentacaoEstoque.objects.filter(
+            venda=self,
+            tipo_movimentacao='devolucao'
+        ).aggregate(total=Sum('quantidade'))['total']
+        return total or 0
+    
+    @property
+    def quantidade_restante(self):
+        """Retorna a quantidade que ainda pode ser devolvida"""
+        return self.quantidade - self.quantidade_devolvida
+    
+    @property
+    def pode_devolver(self):
+        """Verifica se ainda pode fazer devolução"""
+        return self.status != 'devolvida' and self.quantidade_restante > 0
+
+
+class MovimentacaoEstoque(models.Model):
+    TIPO_MOVIMENTACAO = (
+        ('entrada', 'Entrada'),
+        ('saida', 'Saída'),
+        ('devolucao', 'Devolução'),
+    )
+    
+    TIPO_ITEM = (
+        ('produto', 'Produto'),
+        ('recarga', 'Recarga'),
+    )
+    
+    loja = models.ForeignKey(Loja, on_delete=models.CASCADE, related_name='movimentacoes')
+    tipo_movimentacao = models.CharField('Tipo', max_length=20, choices=TIPO_MOVIMENTACAO)
+    tipo_item = models.CharField('Tipo de Item', max_length=20, choices=TIPO_ITEM)
+    
+    # Campos para produto
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, null=True, blank=True)
+    # Campos para recarga
+    recarga = models.ForeignKey(Recarga, on_delete=models.CASCADE, null=True, blank=True)
+    
+    quantidade = models.PositiveIntegerField('Quantidade')
+    quantidade_anterior = models.PositiveIntegerField('Quantidade Anterior', default=0)
+    quantidade_nova = models.PositiveIntegerField('Quantidade Nova', default=0)
+    
+    valor_unitario = models.DecimalField('Valor Unitário', max_digits=10, decimal_places=2, default=0)
+    valor_total = models.DecimalField('Valor Total', max_digits=10, decimal_places=2, default=0)
+    
+    observacao = models.TextField('Observação', blank=True)
+    motivo = models.CharField('Motivo', max_length=200, blank=True)
+    
+    # Relacionamento com venda (para devoluções)
+    venda = models.ForeignKey(Venda, on_delete=models.SET_NULL, null=True, blank=True, related_name='devolucoes')
+    
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='movimentacoes_estoque')
+    data_movimentacao = models.DateTimeField('Data da Movimentação', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Movimentação de Estoque'
+        verbose_name_plural = 'Movimentações de Estoque'
+        ordering = ['-data_movimentacao']
+        indexes = [
+            models.Index(fields=['loja', 'tipo_movimentacao']),
+            models.Index(fields=['data_movimentacao']),
+            models.Index(fields=['venda']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_tipo_movimentacao_display()} - {self.loja.nome} - {self.quantidade} - {self.data_movimentacao.strftime('%d/%m/%Y %H:%M')}"
+    
+    def save(self, *args, **kwargs):
+        # Garantir que valor_total seja calculado se não foi fornecido
+        if self.valor_total == 0 and self.valor_unitario > 0:
+            self.valor_total = self.quantidade * self.valor_unitario
+        super().save(*args, **kwargs)

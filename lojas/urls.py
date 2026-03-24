@@ -24,4 +24,13 @@ urlpatterns = [
     path('vendas/registrar-retroativa/', views.registrar_venda_retroativa, name='registrar_venda_retroativa'),
     path('vendas/retroativas/', views.listar_vendas_retroativas, name='listar_vendas_retroativas'),
     path('vendas/<int:venda_id>/editar-data/', views.editar_data_venda, name='editar_data_venda'),
+
+    # Entradas de estoque
+    path('estoque/entrada/', views.registrar_entrada_estoque, name='registrar_entrada_estoque'),
+    path('estoque/movimentacoes/', views.listar_movimentacoes_estoque, name='listar_movimentacoes_estoque'),
+    
+    # Devoluções
+    path('vendas/devolucoes/', views.listar_devolucoes, name='listar_devolucoes'),
+    path('vendas/devolucao/', views.registrar_devolucao, name='registrar_devolucao'),
+    path('vendas/<int:venda_id>/detalhes-devolucao/', views.detalhes_venda_com_devolucao, name='detalhes_venda_com_devolucao'),
 ]
