@@ -5,11 +5,6 @@ from django.db.models import Sum, Q
 from datetime import datetime, date
 from produtos.models import Recarga
 
-from django.db import models
-from django.conf import settings
-from django.db.models import Sum, Q, Count
-from datetime import datetime
-
 class Loja(models.Model):
     PROVINCIAS = [
         ('Bengo', 'Bengo'),

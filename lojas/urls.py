@@ -23,7 +23,7 @@ urlpatterns = [
     path('vendas/<int:venda_id>/detalhes/', views.detalhes_venda, name='detalhes_venda'),
     path('vendas/registrar-retroativa/', views.registrar_venda_retroativa, name='registrar_venda_retroativa'),
     path('vendas/retroativas/', views.listar_vendas_retroativas, name='listar_vendas_retroativas'),
-    path('vendas/<int:venda_id>/editar-data/', views.editar_data_venda, name='editar_data_venda'),
+    
 
     # Entradas de estoque
     path('estoque/entrada/', views.registrar_entrada_estoque, name='registrar_entrada_estoque'),
