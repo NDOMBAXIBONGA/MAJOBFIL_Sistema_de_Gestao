@@ -90,20 +90,20 @@ WSGI_APPLICATION = 'majobfil.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
+"""DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}"""
 
 
 DATABASES = {
     'default': dj_database_url.config(
      default='postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@nozomi.proxy.rlwy.net:41455/railway',
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+       conn_max_age=600,
+       conn_health_checks=True,
+   )
 }
 
 # Password validation
@@ -142,7 +142,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' # comentar em produao
+#STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' # comentar em produao
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
