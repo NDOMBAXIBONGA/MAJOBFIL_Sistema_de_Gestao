@@ -1,11 +1,6 @@
 import os
 from pathlib import Path
 import dj_database_url
-from dotenv import load_dotenv
-
-# Carrega as variáveis de ambiente do arquivo .env se ele existir
-load_dotenv()
-
 # Configurações de segurança
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 DEBUG = True
