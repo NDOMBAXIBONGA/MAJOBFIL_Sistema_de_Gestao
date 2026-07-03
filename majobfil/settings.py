@@ -1,6 +1,11 @@
 import os
 from pathlib import Path
 import dj_database_url
+from dotenv import load_dotenv
+
+# Carrega as variáveis de ambiente do arquivo .env se ele existir
+load_dotenv()
+
 # Configurações de segurança
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 DEBUG = True
@@ -100,7 +105,7 @@ WSGI_APPLICATION = 'majobfil.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-     default=os.environ.get('postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@nozomi.proxy.rlwy.net:41455/railway'),
+     default='postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@nozomi.proxy.rlwy.net:41455/railway',
        conn_max_age=600,
        conn_health_checks=True,
    )
