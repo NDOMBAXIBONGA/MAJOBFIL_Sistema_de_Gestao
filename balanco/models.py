@@ -493,6 +493,37 @@ class Balanco(models.Model):
        return reverse('detalhe_balanco', args=[str(self.id)])
 
     @property
+    def data(self):
+        return self.data_inicio
+
+    @property
+    def total_esperado(self):
+        return self.total_geral_relatorios or Decimal('0.00')
+
+    @property
+    def total_real(self):
+        return self.total_arrecadado or Decimal('0.00')
+
+    @property
+    def diferenca(self):
+        if hasattr(self, '_diferenca'):
+            return self._diferenca
+        return (self.total_esperado or Decimal('0.00')) - (self.total_real or Decimal('0.00') )
+
+    @diferenca.setter
+    def diferenca(self, value):
+        self._diferenca = value
+
+    @property
+    def fechado(self):
+        from django.utils import timezone
+        return self.data_fim < timezone.now().date()
+
+    @property
+    def responsavel(self):
+        return self.criado_por
+
+    @property
     def total_servicos_tv(self):
         """Total de serviços de TV"""
         return self.total_dstv + self.total_zap

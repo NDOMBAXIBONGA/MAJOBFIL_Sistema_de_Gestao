@@ -1,1238 +1,487 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Perfil - MAJOBFIL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 70px;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            overflow-x: hidden;
-            transition: all 0.3s;
-        }
-        
-        /* Sidebar Responsiva - IDÊNTICA AO ARQUIVO ORIGINAL */
-        .sidebar {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            min-height: 100vh;
-            color: white;
-            position: fixed;
-            width: var(--sidebar-width);
-            transition: all 0.3s;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        
-        .sidebar-collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-collapsed .logo h4,
-        .sidebar-collapsed .logo small,
-        .sidebar-collapsed .nav-link span {
-            display: none;
-        }
-        
-        .sidebar-collapsed .logo {
-            padding: 15px 5px;
-        }
-        
-        .sidebar-collapsed .nav-link {
-            text-align: center;
-            padding: 12px 5px;
-            margin: 5px;
-            justify-content: center;
-        }
-        
-        .sidebar-collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.2rem;
-        }
-        
-        .sidebar .logo {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        .sidebar .logo h4 {
-            transition: all 0.3s;
-            margin: 10px 0 5px;
-        }
-        
-        .sidebar .logo small {
-            transition: all 0.3s;
-            font-size: 0.75rem;
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 12px 20px;
-            margin: 5px 15px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            transform: translateX(5px);
-        }
-        
-        .sidebar .nav-link i {
-            width: 24px;
-            min-width: 24px;
-            margin-right: 10px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 20px;
-            transition: all 0.3s;
-            min-height: 100vh;
-        }
-        
-        .main-content-expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        .overlay.active {
-            display: block;
-        }
-        
-        /* Estilos específicos da página de perfil (MANTIDOS ORIGINAIS) */
-        .profile-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            border: 4px solid white;
-        }
-        
-        .info-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-        
-        .info-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .info-item {
-            border-bottom: 1px solid #e9ecef;
-            padding: 15px 0;
-        }
-        
-        .info-item:last-child {
-            border-bottom: none;
-        }
-        
-        .stats-card {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 15px;
-        }
-        
-        .edit-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-        }
-        
-        .badge-status {
-            font-size: 0.8em;
-            padding: 5px 10px;
-            border-radius: 20px;
-        }
-        
-        /* Media Queries - IDÊNTICAS AO ARQUIVO ORIGINAL */
-        @media (max-width: 1400px) {
-            .loja-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            }
-        }
-        
-        @media (max-width: 1200px) {
-            :root {
-                --sidebar-width: 220px;
-            }
-            
-            .main-content {
-                margin-left: 220px;
-            }
-            
-            .loja-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-        }
-        
-        @media (max-width: 992px) {
-            .sidebar {
-                margin-left: -250px;
-            }
-            
-            .sidebar.active {
-                margin-left: 0;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 80px 15px 20px;
-            }
-            
-            .sidebar-toggle {
-                display: flex;
-            }
-            
-            .profile-header {
-                padding: 20px;
-                border-radius: 10px;
-            }
-            
-            .profile-avatar {
-                width: 100px;
-                height: 100px;
-                font-size: 2.5rem;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .profile-header {
-                padding: 15px;
-            }
-            
-            .profile-avatar {
-                width: 80px;
-                height: 80px;
-                font-size: 2rem;
-            }
-            
-            .edit-btn {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin-top: 15px;
-                width: 100%;
-            }
-            
-            .card-body {
-                padding: 15px;
-            }
-            
-            .info-item {
-                padding: 10px 0;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .main-content {
-                padding: 70px 10px 15px;
-            }
-            
-            .profile-header {
-                padding: 12px;
-                margin-bottom: 20px;
-                border-radius: 8px;
-            }
-            
-            .profile-avatar {
-                width: 70px;
-                height: 70px;
-                font-size: 1.8rem;
-            }
-            
-            .card {
-                border-radius: 10px;
-            }
-            
-            .card-header {
-                padding: 12px 15px;
-            }
-            
-            .card-header h5 {
-                font-size: 1.1rem;
-            }
-            
-            .btn {
-                padding: 6px 12px;
-                font-size: 0.9rem;
-            }
-            
-            .badge {
-                font-size: 0.75rem;
-            }
-            
-            h2 {
-                font-size: 1.8rem;
-            }
-            
-            h3 {
-                font-size: 1.3rem;
-            }
-            
-            .modal-dialog {
-                margin: 10px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .top-bar-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .top-bar-actions .btn,
-            .top-bar-actions span {
-                width: 100%;
-                text-align: center;
-                margin: 5px 0;
-            }
-            
-            .stats-grid .text-center {
-                padding: 10px;
-            }
-            
-            .stats-grid h2 {
-                font-size: 1.5rem;
-            }
-            
-            .profile-header .row {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .profile-header .col-auto {
-                margin-bottom: 15px;
-            }
-        }
-        
-        /* Animações - IDÊNTICAS AO ARQUIVO ORIGINAL */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        /* Scrollbar personalizada - IDÊNTICA AO ARQUIVO ORIGINAL */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary);
-        }
-        
-        /* Acessibilidade - IDÊNTICA AO ARQUIVO ORIGINAL */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-        
-        /* Focus styles para acessibilidade - IDÊNTICA AO ARQUIVO ORIGINAL */
-        a:focus,
-        button:focus,
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: 2px solid var(--primary);
-            outline-offset: 2px;
-        }
-        
-        /* Print styles - IDÊNTICA AO ARQUIVO ORIGINAL */
-        @media print {
-            .sidebar,
-            .sidebar-toggle,
-            .top-bar-actions,
-            .btn,
-            .dropdown,
-            .modal {
-                display: none !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                padding: 0 !important;
-            }
-            
-            .stats-card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-            
-            .table {
-                min-width: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Botão para toggle da sidebar - IDÊNTICO AO ARQUIVO ORIGINAL -->
-    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
-        <i class="fas fa-bars"></i>
-    </button>
-    
-    <!-- Overlay para fechar sidebar em mobile - IDÊNTICO AO ARQUIVO ORIGINAL -->
-    <div class="overlay" id="overlay"></div>
-    
-    <!-- Sidebar - IDÊNTICA AO ARQUIVO ORIGINAL -->
-    <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <i class="fas fa-chart-line fa-2x mb-2"></i>
-            <h4 class="mb-0">MAJOBFIL</h4>
-            <small>Sistema de Gestão</small>
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+{% block page_subtitle %}Gerir informações da conta{% endblock %}
+{% block nav_perfil %}active{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn-glass btn-primary btn-sm" onclick="openModal('editarPerfilModal')">
+    <i class="fas fa-pen"></i> Editar Perfil
+</button>
+{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="glass-card mb-4 fade-up">
+    <div class="profile-hero">
+        <div class="profile-bg-gradient"></div>
+        <div class="profile-hero-content">
+            <div class="profile-avatar-lg">
+                {{ user.nome|first|upper|default:user.username|first|upper }}
+            </div>
+            <div class="profile-hero-info">
+                <h2 data-field="nome">{{ user.nome|default:user.username }}</h2>
+                <p data-field="email">{{ user.email }}</p>
+                <div class="profile-badges">
+                    {% if user.is_superuser %}
+                    <span class="badge-glass violet"><i class="fas fa-crown"></i> Super Admin</span>
+                    {% elif user.is_staff %}
+                    <span class="badge-glass info"><i class="fas fa-shield-halved"></i> Staff</span>
+                    {% else %}
+                    <span class="badge-glass muted"><i class="fas fa-user"></i> Utilizador</span>
+                    {% endif %}
+                    {% if user.is_active %}
+                    <span class="badge-glass success"><i class="fas fa-circle-check"></i> Activo</span>
+                    {% else %}
+                    <span class="badge-glass warning"><i class="fas fa-circle-pause"></i> Inactivo</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        
-        <div class="mt-4">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard' %}">
-                        <i class="fas fa-home"></i><span>Dashboard</span>
-                    </a>
-                </li>
-                {% if user.is_superuser %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'lista_balancos' %}">
-                        <i class="fas fa-balance-scale"></i><span>Gerenciar Balanços</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listar_todos_itens' %}">
-                        <i class="fas fa-box"></i><span>Gerenciar Produtos</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listar_usuarios' %}">
-                        <i class="fas fa-users"></i><span>Gerenciar Usuários</span>
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'listar_lojas' %}">
-                        <i class="fas fa-store"></i><span>Lojas</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{% url 'perfil' %}">
-                        <i class="fas fa-user"></i><span>Meu Perfil</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-question-circle"></i><span>Ajuda</span>
-                    </a>
-                </li>
-            </ul>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="grid grid-4 mb-4 fade-up fade-up-1">
+    <div class="stat-card accent-violet">
+        <div class="stat-icon violet"><i class="fas fa-cart-shopping"></i></div>
+        <div class="stat-data">
+            <div class="stat-label">Vendas</div>
+            <div class="stat-value">{{ user.numero_vendas_realizadas|default:"0" }}</div>
+        </div>
+    </div>
+    <div class="stat-card accent-cyan">
+        <div class="stat-icon cyan"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="stat-data">
+            <div class="stat-label">Produtos Vendidos</div>
+            <div class="stat-value">{{ user.total_quantidade_vendida|default:"0" }}</div>
+        </div>
+    </div>
+    <div class="stat-card accent-green">
+        <div class="stat-icon green"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-data">
+            <div class="stat-label">Últimos 30 dias</div>
+            <div class="stat-value" style="font-size: 18px;">{{ user.vendas_ultimos_30_dias|default:"0"|floatformat:0 }}
+                Kz</div>
+        </div>
+    </div>
+    <div class="stat-card accent-amber">
+        <div class="stat-icon amber"><i class="fas fa-coins"></i></div>
+        <div class="stat-data">
+            <div class="stat-label">Total Geral</div>
+            <div class="stat-value" style="font-size: 18px;">{{ user.total_vendas_usuario|default:"0"|floatformat:0 }}
+                Kz</div>
+        </div>
+    </div>
+</div>
+
+<!-- Info + Account -->
+<div class="grid grid-2 mb-4 fade-up fade-up-2">
+    <!-- Personal Info -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <div class="glass-card-title">
+                <div class="card-icon" style="background: rgba(139,92,246,0.2); color: var(--accent-1);">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                Informações Pessoais
+            </div>
+        </div>
+        <div class="glass-card-body" style="padding: 0;">
+            <div class="info-table">
+                <div class="info-row"><span class="info-label"><i class="fas fa-signature"></i> Nome
+                        Completo</span><span class="info-value" data-field="nome">{{ user.nome|default:"Não informado" }}</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-at"></i> Username</span><span
+                        class="info-value" data-field="username">{{ user.username }}</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-envelope"></i> Email</span><span
+                        class="info-value" data-field="email">{{ user.email }}</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-phone"></i> Telemóvel</span><span
+                        class="info-value" data-field="telemovel">{{ user.telemovel|default:"Não informado" }}</span>
+                </div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-cake-candles"></i>
+                        Nascimento</span><span class="info-value" data-field="data_nascimento">{{ user.data_nascimento|date:"d/m/Y"|default:"Não informado" }}</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-id-badge"></i> Bilhete</span><span
+                        class="info-value" data-field="bilhete_identidade">{{ user.bilhete_identidade|default:"Não informado" }}</span></div>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent">
-        <!-- Header do Perfil -->
-        <div class="profile-header position-relative fade-in">
-            <div class="row align-items-center">
-                <div class="col-auto">
-                    <div class="profile-avatar">
-                        <i class="fas fa-user"></i>
+    <!-- Location + Account -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <div class="glass-card-title">
+                    <div class="card-icon" style="background: rgba(52,211,153,0.2); color: var(--accent-4);">
+                        <i class="fas fa-location-dot"></i>
                     </div>
+                    Localização
                 </div>
-                <div class="col">
-                    <h1 class="h2 mb-1" data-field="nome">{{ user.nome|default:user.username }}</h1>
-                    <p class="mb-2 opacity-75" data-field="email">{{ user.email }}</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% if user.is_superuser %}
-                        <span class="badge-status bg-danger">
-                            <i class="fas fa-crown me-1"></i>Super Admin
+            </div>
+            <div class="glass-card-body" style="padding: 0;">
+                <div class="info-table">
+                    <div class="info-row"><span class="info-label"><i class="fas fa-map-pin"></i> Bairro</span><span
+                            class="info-value" data-field="bairro">{{ user.bairro|default:"—" }}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-city"></i> Cidade</span><span
+                            class="info-value" data-field="cidade">{{ user.cidade|default:"—" }}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-building"></i> Município</span><span
+                            class="info-value" data-field="municipio">{{ user.municipio|default:"—" }}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-flag"></i> Província</span><span
+                            class="info-value" data-field="provincia">{{ user.provincia|default:"—" }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <div class="glass-card-title">
+                    <div class="card-icon" style="background: rgba(56,189,248,0.2); color: var(--accent-2);">
+                        <i class="fas fa-circle-info"></i>
+                    </div>
+                    Conta
+                </div>
+            </div>
+            <div class="glass-card-body" style="padding: 0;">
+                <div class="info-table">
+                    <div class="info-row"><span class="info-label"><i class="fas fa-calendar-plus"></i>
+                            Registo</span><span class="info-value">{{ user.date_joined|date:"d/m/Y H:i" }}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-right-to-bracket"></i> Último
+                            Login</span><span class="info-value">{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</span></div>
+                    <div class="info-row">
+                        <span class="info-label"><i class="fas fa-shield-halved"></i> Permissões</span>
+                        <span class="info-value">
+                            {% if user.is_superuser %}<span class="badge-glass violet">Superuser</span>{% endif %}
+                            {% if user.is_staff %}<span class="badge-glass info">Staff</span>{% endif %}
+                            <span class="badge-glass muted">Utilizador</span>
                         </span>
-                        {% elif user.is_staff %}
-                        <span class="badge-status bg-info">
-                            <i class="fas fa-user-shield me-1"></i>Staff
-                        </span>
-                        {% else %}
-                        <span class="badge-status bg-success">
-                            <i class="fas fa-user me-1"></i>Usuário
-                        </span>
-                        {% endif %}
-                        
-                        {% if user.is_active %}
-                        <span class="badge-status bg-success">
-                            <i class="fas fa-check-circle me-1"></i>Ativo
-                        </span>
-                        {% else %}
-                        <span class="badge-status bg-warning">
-                            <i class="fas fa-clock me-1"></i>Inativo
-                        </span>
-                        {% endif %}
                     </div>
                 </div>
             </div>
-            
-            <!-- Botão Editar Perfil -->
-            <button class="btn btn-light edit-btn" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
-                <i class="fas fa-edit me-1"></i>Editar Perfil
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="glass-card fade-up fade-up-3">
+    <div class="glass-card-header">
+        <div class="glass-card-title">
+            <div class="card-icon" style="background: rgba(251,191,36,0.2); color: var(--accent-5);">
+                <i class="fas fa-bolt"></i>
+            </div>
+            Acções
+        </div>
+    </div>
+    <div class="glass-card-body">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-glass btn-primary" onclick="openModal('editarPerfilModal')">
+                <i class="fas fa-pen"></i> Editar Perfil
+            </button>
+            <button class="btn-glass btn-warning" onclick="openModal('alterarSenhaModal')">
+                <i class="fas fa-key"></i> Alterar Senha
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn-glass">
+                <i class="fas fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modals ─────────────────────────────────────────────── -->
+<!-- Edit Profile Modal -->
+<div class="lg-modal" id="editarPerfilModal" role="dialog" aria-labelledby="editPerfilTitle" aria-modal="true">
+    <div class="lg-modal-backdrop" onclick="closeModal('editarPerfilModal')"></div>
+    <div class="lg-modal-box lg-modal-lg">
+        <div class="lg-modal-header">
+            <h5 id="editPerfilTitle"><i class="fas fa-pen" style="color:var(--accent-1); margin-right:8px;"></i> Editar
+                Perfil</h5>
+            <button class="lg-modal-close" onclick="closeModal('editarPerfilModal')" aria-label="Fechar"><i
+                    class="fas fa-xmark"></i></button>
+        </div>
+        <div class="lg-modal-body">
+            <form id="formEditarPerfil">
+                {% csrf_token %}
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Nome de Utilizador</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fas fa-at"></i></span>
+                            <input type="text" class="form-input" name="username" value="{{ user.username }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-input" name="email" value="{{ user.email }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nome Completo</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-input" name="nome" value="{{ user.nome }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telemóvel</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon"><i class="fas fa-phone"></i></span>
+                            <input type="tel" class="form-input" name="telemovel"
+                                value="{{ user.telemovel|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data de Nascimento</label>
+                        <input type="date" class="form-input" name="data_nascimento"
+                            value="{{ user.data_nascimento|date:'Y-m-d'|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bilhete de Identidade</label>
+                        <input type="text" class="form-input" name="bilhete_identidade"
+                            value="{{ user.bilhete_identidade|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bairro</label>
+                        <input type="text" class="form-input" name="bairro" value="{{ user.bairro|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cidade</label>
+                        <input type="text" class="form-input" name="cidade" value="{{ user.cidade|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Município</label>
+                        <input type="text" class="form-input" name="municipio" value="{{ user.municipio|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Província</label>
+                        <input type="text" class="form-input" name="provincia" value="{{ user.provincia|default:'' }}">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="lg-modal-footer">
+            <button class="btn-glass" onclick="closeModal('editarPerfilModal')">Cancelar</button>
+            <button class="btn-glass btn-primary" onclick="salvarPerfil()" id="btnSalvarPerfil">
+                <i class="fas fa-floppy-disk"></i> Guardar Alterações
             </button>
         </div>
+    </div>
+</div>
 
-        <div class="row">
-            <!-- Informações Pessoais -->
-            <div class="col-lg-8">
-                <div class="card info-card mb-4 fade-in">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-id-card me-2 text-primary"></i>
-                            Informações Pessoais
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-signature me-2 text-muted"></i>Nome Completo:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="nome">
-                                    {{ user.nome|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-envelope me-2 text-muted"></i>Email:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="email">
-                                    {{ user.email }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-user me-2 text-muted"></i>Username:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="username">
-                                    {{ user.username }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-phone me-2 text-muted"></i>Telemóvel:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="telemovel">
-                                    {{ user.telemovel|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-calendar me-2 text-muted"></i>Data de Nascimento:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="data_nascimento">
-                                    {{ user.data_nascimento|date:"d/m/Y"|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-id-card me-2 text-muted"></i>Bilhete de Identidade:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="bilhete_identidade">
-                                    {{ user.bilhete_identidade|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
+<!-- Change Password Modal -->
+<div class="lg-modal" id="alterarSenhaModal" role="dialog" aria-labelledby="alterarSenhaTitle" aria-modal="true">
+    <div class="lg-modal-backdrop" onclick="closeModal('alterarSenhaModal')"></div>
+    <div class="lg-modal-box">
+        <div class="lg-modal-header">
+            <h5 id="alterarSenhaTitle"><i class="fas fa-key" style="color:var(--accent-5); margin-right:8px;"></i>
+                Alterar Senha</h5>
+            <button class="lg-modal-close" onclick="closeModal('alterarSenhaModal')" aria-label="Fechar"><i
+                    class="fas fa-xmark"></i></button>
+        </div>
+        <div class="lg-modal-body">
+            <form id="formAlterarSenha" method="post" action="{% url 'alterar_senha' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Senha Actual</label>
+                    <div class="input-with-icon">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-input" name="old_password" required placeholder="••••••••">
                     </div>
                 </div>
-
-                <!-- Informações de Localização -->
-                <div class="card info-card mb-4 fade-in">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-map-marker-alt me-2 text-success"></i>
-                            Informações de Localização
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-map-pin me-2 text-muted"></i>Bairro:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="bairro">
-                                    {{ user.bairro|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-city me-2 text-muted"></i>Cidade:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="cidade">
-                                    {{ user.cidade|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-flag me-2 text-muted"></i>Província:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="provincia">
-                                    {{ user.provincia|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="row">
-                                <div class="col-sm-4">
-                                    <strong><i class="fas fa-building me-2 text-muted"></i>Município:</strong>
-                                </div>
-                                <div class="col-sm-8" data-field="municipio">
-                                    {{ user.municipio|default:"Não informado" }}
-                                </div>
-                            </div>
-                        </div>
+                <div class="form-group">
+                    <label class="form-label">Nova Senha</label>
+                    <div class="input-with-icon">
+                        <span class="input-icon"><i class="fas fa-lock-open"></i></span>
+                        <input type="password" class="form-input" name="new_password1" required placeholder="••••••••">
                     </div>
                 </div>
-            </div>
-
-            <!-- Sidebar Direita - Estatísticas e Ações -->
-            <div class="col-lg-4">
-                <!-- Estatísticas do Usuário -->
-                <div class="card stats-card text-white mb-4 fade-in">
-                    <div class="card-body text-center">
-                        <i class="fas fa-chart-bar fa-3x mb-3 opacity-50"></i>
-                        <h3>Estatísticas</h3>
-                        
-                        <div class="row mt-4">
-                            <div class="col-6">
-                                <h4>{{ user.numero_vendas_realizadas }}</h4>
-                                <small>Vendas</small>
-                            </div>
-                            <div class="col-6">
-                                <h4>{{ user.total_quantidade_vendida }}</h4>
-                                <small>Produtos</small>
-                            </div>
-                        </div>
-                        
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <h4>{{ user.vendas_ultimos_30_dias|floatformat:2 }} Kz</h4>
-                                <small>Últimos 30 dias</small>
-                            </div>
-                            <div class="col-6">
-                                <h4>{{ user.total_vendas_usuario|floatformat:2 }} Kz</h4>
-                                <small>Total Geral</small>
-                            </div>
-                        </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmar Nova Senha</label>
+                    <div class="input-with-icon">
+                        <span class="input-icon"><i class="fas fa-lock-open"></i></span>
+                        <input type="password" class="form-input" name="new_password2" required placeholder="••••••••">
                     </div>
                 </div>
-
-                <!-- Informações da Conta -->
-                <div class="card info-card mb-4 fade-in">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-info-circle me-2 text-info"></i>
-                            Informações da Conta
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-item">
-                            <strong>Data de Registo:</strong><br>
-                            <span class="text-muted">{{ user.date_joined|date:"d/m/Y H:i" }}</span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <strong>Último Login:</strong><br>
-                            <span class="text-muted">{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</span>
-                        </div>
-                        
-                        <div class="info-item">
-                            <strong>Estado da Conta:</strong><br>
-                            {% if user.is_active %}
-                            <span class="badge bg-success">Ativa</span>
-                            {% else %}
-                            <span class="badge bg-danger">Inativa</span>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="info-item">
-                            <strong>Permissões:</strong><br>
-                            <div class="mt-1">
-                                {% if user.is_superuser %}
-                                <span class="badge bg-danger me-1">Superuser</span>
-                                {% endif %}
-                                {% if user.is_staff %}
-                                <span class="badge bg-info me-1">Staff</span>
-                                {% endif %}
-                                <span class="badge bg-secondary">Usuário</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Ações Rápidas -->
-                <div class="card info-card fade-in">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-bolt me-2 text-warning"></i>
-                            Ações Rápidas
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
-                                <i class="fas fa-edit me-2"></i>Editar Perfil
-                            </button>
-                            
-                            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#alterarSenhaModal">
-                                <i class="fas fa-key me-2"></i>Alterar Senha
-                            </button>
-                            
-                            <a href="{% url 'dashboard' %}" class="btn btn-outline-info">
-                                <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </form>
+        </div>
+        <div class="lg-modal-footer">
+            <button class="btn-glass" onclick="closeModal('alterarSenhaModal')">Cancelar</button>
+            <button class="btn-glass btn-warning" onclick="alterarSenha()" id="btnAlterarSenha">
+                <i class="fas fa-key"></i> Alterar Senha
+            </button>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Modal Editar Perfil -->
-    <div class="modal fade" id="editarPerfilModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Perfil</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditarPerfil">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nome de Usuário</label>
-                                <input type="text" class="form-control" name="username" value="{{ user.username }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" value="{{ user.email }}">
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nome Completo</label>
-                                <input type="text" class="form-control" name="nome" value="{{ user.nome }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Telemóvel</label>
-                                <input type="tel" class="form-control" name="telemovel" value="{{ user.telemovel|default:'' }}">
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Data de Nascimento</label>
-                                <input type="date" class="form-control" name="data_nascimento" 
-                                       value="{{ user.data_nascimento|date:'Y-m-d'|default:'' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Bilhete de Identidade</label>
-                                <input type="text" class="form-control" name="bilhete_identidade" 
-                                       value="{{ user.bilhete_identidade|default:'' }}">
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Bairro</label>
-                                <input type="text" class="form-control" name="bairro" value="{{ user.bairro|default:'' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Cidade</label>
-                                <input type="text" class="form-control" name="cidade" value="{{ user.cidade|default:'' }}">
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Província</label>
-                                <input type="text" class="form-control" name="provincia" value="{{ user.provincia|default:'' }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Município</label>
-                                <input type="text" class="form-control" name="municipio" value="{{ user.municipio|default:'' }}">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="salvarPerfil()">Guardar Alterações</button>
-                </div>
-            </div>
-        </div>
-    </div>
+{% block extra_css %}
+/* Profile Hero */
+.profile-hero {
+position: relative;
+border-radius: var(--radius-lg);
+overflow: hidden;
+}
+.profile-bg-gradient {
+position: absolute; inset: 0;
+background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(56,189,248,0.2));
+z-index: 0;
+}
+.profile-hero-content {
+position: relative; z-index: 1;
+display: flex; align-items: center; gap: 24px;
+padding: 32px;
+}
+.profile-avatar-lg {
+width: 80px; height: 80px;
+border-radius: 50%;
+background: linear-gradient(135deg, var(--accent-1), var(--accent-3));
+display: flex; align-items: center; justify-content: center;
+font-size: 32px; font-weight: 800; color: white;
+flex-shrink: 0;
+box-shadow: 0 8px 32px rgba(139,92,246,0.5);
+border: 3px solid rgba(255,255,255,0.15);
+}
+.profile-hero-info h2 { font-size: 22px; font-weight: 800; color: var(--text-primary); }
+.profile-hero-info p { font-size: 14px; color: var(--text-secondary); margin: 4px 0 12px; }
+.profile-badges { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    <!-- Modal Alterar Senha -->
-    <div class="modal fade" id="alterarSenhaModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Alterar Senha</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formAlterarSenha" method="post" action="{% url 'alterar_senha' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Senha Atual</label>
-                            <input type="password" class="form-control" name="old_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nova Senha</label>
-                            <input type="password" class="form-control" name="new_password1" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirmar Nova Senha</label>
-                            <input type="password" class="form-control" name="new_password2" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" onclick="alterarSenha()">Alterar Senha</button>
-                </div>
-            </div>
-        </div>
-    </div>
+/* Info Table */
+.info-table { padding: 4px 0; }
+.info-row {
+display: flex; align-items: flex-start; gap: 16px;
+padding: 13px 24px;
+border-bottom: 1px solid rgba(255,255,255,0.04);
+transition: background 0.15s;
+}
+.info-row:last-child { border-bottom: none; }
+.info-row:hover { background: var(--glass-bg-subtle); }
+.info-label {
+font-size: 11px; font-weight: 700;
+color: var(--text-muted); text-transform: uppercase;
+letter-spacing: 0.5px; min-width: 130px; flex-shrink: 0;
+display: flex; align-items: center; gap: 7px;
+padding-top: 2px;
+}
+.info-value { font-size: 14px; color: var(--text-secondary); font-weight: 500; flex: 1; }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- JavaScript IDÊNTICO AO ARQUIVO ORIGINAL para gerenciar a sidebar -->
-    <script>
-        // Gerenciamento da sidebar responsiva - IDÊNTICO AO ARQUIVO ORIGINAL
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('overlay');
-        
-        // Estado da sidebar
-        let isSidebarCollapsed = false;
-        let isMobile = window.innerWidth <= 992;
-        
-        // Função para alternar sidebar
-        function toggleSidebar() {
-            if (isMobile) {
-                // Em mobile, mostra/esconde a sidebar
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
-            } else {
-                // Em desktop, colapsa/expande a sidebar
-                isSidebarCollapsed = !isSidebarCollapsed;
-                sidebar.classList.toggle('sidebar-collapsed');
-                mainContent.classList.toggle('main-content-expanded');
-                
-                // Salvar preferência no localStorage
-                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
-            }
+/* Form Grid */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Modal */
+.lg-modal {
+display: none;
+position: fixed; inset: 0;
+z-index: 2000;
+align-items: center; justify-content: center;
+padding: 20px;
+}
+.lg-modal.show { display: flex; }
+.lg-modal-backdrop {
+position: absolute; inset: 0;
+background: rgba(0,0,0,0.65);
+backdrop-filter: blur(8px);
+}
+.lg-modal-box {
+position: relative; z-index: 1;
+background: rgba(12,12,32,0.92);
+backdrop-filter: var(--blur);
+-webkit-backdrop-filter: var(--blur);
+border: 1px solid var(--glass-border);
+border-radius: var(--radius-xl);
+box-shadow: var(--glass-shadow-lg);
+width: 100%; max-width: 480px;
+animation: modal-in 0.25s cubic-bezier(0.2,0,0,1);
+max-height: 90vh; overflow-y: auto;
+}
+.lg-modal-lg { max-width: 720px; }
+@keyframes modal-in {
+from { opacity: 0; transform: scale(0.93) translateY(20px); }
+to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.lg-modal-header {
+display: flex; align-items: center; justify-content: space-between;
+padding: 20px 24px;
+border-bottom: 1px solid var(--glass-border);
+}
+.lg-modal-header h5 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; display: flex;
+align-items: center; }
+.lg-modal-close {
+width: 30px; height: 30px;
+border: 1px solid var(--glass-border);
+background: var(--glass-bg);
+border-radius: 8px;
+color: var(--text-muted); cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+font-size: 13px; transition: var(--transition-fast);
+}
+.lg-modal-close:hover { background: var(--glass-bg-strong); color: var(--text-primary); }
+.lg-modal-body { padding: 24px; }
+.lg-modal-footer {
+display: flex; justify-content: flex-end; gap: 10px;
+padding: 16px 24px;
+border-top: 1px solid var(--glass-border);
+}
+
+@media (max-width: 600px) {
+.form-grid-2 { grid-template-columns: 1fr; }
+.profile-hero-content { flex-direction: column; text-align: center; }
+}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal(id) { document.getElementById(id).classList.add('show'); document.body.style.overflow = 'hidden'; }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow = ''; }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.lg-modal.show').forEach(m => closeModal(m.id));
         }
-        
-        // Fechar sidebar no mobile ao clicar no overlay
-        function closeSidebar() {
-            if (isMobile) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-        
-        // Event listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', closeSidebar);
-        
-        // Fechar sidebar ao clicar em um link (em mobile)
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                if (isMobile) {
-                    closeSidebar();
-                }
-            });
-        });
-        
-        // Ajustar ao redimensionar a janela
-        window.addEventListener('resize', () => {
-            const wasMobile = isMobile;
-            isMobile = window.innerWidth <= 992;
-            
-            if (wasMobile !== isMobile) {
-                // Se mudou de mobile para desktop ou vice-versa, resetar estado
-                if (isMobile) {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    mainContent.classList.remove('main-content-expanded');
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                } else {
-                    // Restaurar estado colapsado se estava salvo
-                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
-                    if (savedState) {
-                        sidebar.classList.add('sidebar-collapsed');
-                        mainContent.classList.add('main-content-expanded');
-                    }
-                }
-            }
-        });
-        
-        // Restaurar estado da sidebar no desktop
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!isMobile) {
-                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
-                if (savedState) {
-                    sidebar.classList.add('sidebar-collapsed');
-                    mainContent.classList.add('main-content-expanded');
-                    isSidebarCollapsed = true;
-                }
-            }
-        });
-        
-        // Suporte para teclado nos dropdowns
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeSidebar();
-                const modals = document.querySelectorAll('.modal.show');
-                modals.forEach(modal => {
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                });
-            }
-        });
-        
-        // Otimização de performance para animações
-        let lastScrollTop = 0;
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollingDown = scrollTop > lastScrollTop;
-            
-            // Otimizar animações durante scroll
-            document.body.classList.toggle('scrolling', true);
-            
-            lastScrollTop = scrollTop;
-            
-            // Limpar classe após scroll
-            clearTimeout(window.scrollTimer);
-            window.scrollTimer = setTimeout(() => {
-                document.body.classList.remove('scrolling');
-            }, 100);
-        });
-        
-        // Prevenir zoom em inputs em mobile (exceto textarea)
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
-                e.target.style.fontSize = '16px';
-            }
-        }, { passive: true });
-    </script>
-    
-    <!-- JavaScript específico do perfil (MANTIDO ORIGINAL) -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Página de perfil carregada');
-            
-            // Inicializar tooltips do Bootstrap
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
-        });
+    });
 
-        // Função para salvar perfil via AJAX
-        function salvarPerfil() {
-            const form = document.getElementById('formEditarPerfil');
-            const formData = new FormData(form);
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editarPerfilModal'));
-            
-            // Mostrar loading
-            const btnSalvar = document.querySelector('#editarPerfilModal .btn-primary');
-            const originalText = btnSalvar.innerHTML;
-            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
-            btnSalvar.disabled = true;
-            
-            fetch("{% url 'editar_perfil_ajax' %}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
+    function getCookie(name) {
+        const val = `; ${document.cookie}`;
+        const parts = val.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function salvarPerfil() {
+        const form = document.getElementById('formEditarPerfil');
+        const formData = new FormData(form);
+        const btn = document.getElementById('btnSalvarPerfil');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        btn.disabled = true;
+
+        fetch("{% url 'editar_perfil_ajax' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCookie('csrftoken') }
+        })
+            .then(r => r.json())
             .then(data => {
-                // Restaurar botão
-                btnSalvar.innerHTML = originalText;
-                btnSalvar.disabled = false;
-                
+                btn.innerHTML = orig; btn.disabled = false;
                 if (data.success) {
-                    // Atualizar os dados na página
-                    atualizarDadosPerfil(data.dados);
-                    
-                    // Fechar modal
-                    modal.hide();
-                    
-                    // Mostrar mensagem de sucesso
-                    showAlert('Perfil atualizado com sucesso!', 'success');
+                    closeModal('editarPerfilModal');
+                    const d = data.dados;
+                    document.querySelectorAll('[data-field="nome"]').forEach(el => el.textContent = d.nome);
+                    document.querySelectorAll('[data-field="email"]').forEach(el => el.textContent = d.email);
+                    document.querySelectorAll('[data-field="username"]').forEach(el => el.textContent = d.username);
+                    document.querySelectorAll('[data-field="telemovel"]').forEach(el => el.textContent = d.telemovel);
+                    document.querySelectorAll('[data-field="bairro"]').forEach(el => el.textContent = d.bairro);
+                    document.querySelectorAll('[data-field="cidade"]').forEach(el => el.textContent = d.cidade);
+                    document.querySelectorAll('[data-field="municipio"]').forEach(el => el.textContent = d.municipio);
+                    document.querySelectorAll('[data-field="provincia"]').forEach(el => el.textContent = d.provincia);
                 } else {
-                    // Mostrar erros
-                    if (data.errors) {
-                        let errorMessages = [];
-                        for (let field in data.errors) {
-                            errorMessages = errorMessages.concat(data.errors[field]);
-                        }
-                        showAlert('Erro: ' + errorMessages.join(', '), 'danger');
-                    } else {
-                        showAlert('Erro ao atualizar perfil.', 'danger');
-                    }
+                    alert('Erro ao guardar perfil.');
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                // Restaurar botão
-                btnSalvar.innerHTML = originalText;
-                btnSalvar.disabled = false;
-                showAlert('Erro de conexão.', 'danger');
-            });
-        }
+            .catch(() => { btn.innerHTML = orig; btn.disabled = false; });
+    }
 
-        // Função para alterar senha
-        function alterarSenha() {
-            const form = document.getElementById('formAlterarSenha');
-            const formData = new FormData(form);
-            const modal = bootstrap.Modal.getInstance(document.getElementById('alterarSenhaModal'));
-            
-            // Mostrar loading
-            const btnAlterar = document.querySelector('#alterarSenhaModal .btn-warning');
-            const originalText = btnAlterar.innerHTML;
-            btnAlterar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Alterando...';
-            btnAlterar.disabled = true;
-            
-            fetch("{% url 'alterar_senha' %}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => {
-                if (response.redirected) {
-                    // Se houve redirecionamento, recarregar a página
-                    window.location.href = response.url;
-                } else {
-                    return response.text().then(html => {
-                        // Verificar se há erros no HTML retornado
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const errorElements = doc.querySelector('.alert-danger');
-                        
-                        // Restaurar botão
-                        btnAlterar.innerHTML = originalText;
-                        btnAlterar.disabled = false;
-                        
-                        if (errorElements) {
-                            showAlert('Erro ao alterar senha. Verifique os dados.', 'danger');
-                        } else {
-                            // Fechar modal e mostrar sucesso
-                            modal.hide();
-                            form.reset();
-                            showAlert('Senha alterada com sucesso!', 'success');
-                        }
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Restaurar botão
-                btnAlterar.innerHTML = originalText;
-                btnAlterar.disabled = false;
-                showAlert('Erro de conexão.', 'danger');
-            });
-        }
-
-        // Função para atualizar dados do perfil na página
-        function atualizarDadosPerfil(dados) {
-            // Atualizar header
-            document.querySelector('.profile-header h1').textContent = dados.nome;
-            document.querySelector('.profile-header p').textContent = dados.email;
-            
-            // Atualizar informações pessoais
-            atualizarCampoPerfil('username', dados.username);
-            atualizarCampoPerfil('nome', dados.nome);
-            atualizarCampoPerfil('email', dados.email);
-            atualizarCampoPerfil('telemovel', dados.telemovel);
-            atualizarCampoPerfil('data_nascimento', dados.data_nascimento);
-            atualizarCampoPerfil('bilhete_identidade', dados.bilhete_identidade);
-            
-            // Atualizar localização
-            atualizarCampoPerfil('bairro', dados.bairro);
-            atualizarCampoPerfil('cidade', dados.cidade);
-            atualizarCampoPerfil('provincia', dados.provincia);
-            atualizarCampoPerfil('municipio', dados.municipio);
-        }
-
-        // Função auxiliar para atualizar campos específicos
-        function atualizarCampoPerfil(campo, valor) {
-            const elementos = document.querySelectorAll(`[data-field="${campo}"]`);
-            elementos.forEach(elemento => {
-                elemento.textContent = valor;
-            });
-        }
-
-        // Função para mostrar alertas
-        function showAlert(message, type) {
-            // Remover alertas existentes
-            const alertasExistentes = document.querySelectorAll('.alert');
-            alertasExistentes.forEach(alerta => alerta.remove());
-            
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(alertDiv);
-            
-            // Auto-remover após 5 segundos
-            setTimeout(() => {
-                if (alertDiv.parentElement) {
-                    alertDiv.remove();
-                }
-            }, 5000);
-        }
-
-        // Função para obter cookie CSRF
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    </script>
-</body>
-</html>
+    function alterarSenha() {
+        const form = document.getElementById('formAlterarSenha');
+        form.submit();
+    }
+</script>
+{% endblock %}

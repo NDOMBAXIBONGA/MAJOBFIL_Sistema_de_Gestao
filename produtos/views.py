@@ -15,7 +15,7 @@ def cadastrar_item(request):
     if request.method == 'POST':
         form = ItemForm(request.POST, request.FILES)
         if form.is_valid():
-            tipo_item = form.cleaned_data['tipo_item']
+            tipo_item = form.cleaned_data['tipo']
             nome = form.cleaned_data['nome']
             preco = form.cleaned_data['preco']
             imagem = form.cleaned_data['imagem']
@@ -61,12 +61,35 @@ def cadastrar_item(request):
 @login_required
 def listar_todos_itens(request):
     """View para listar todos os itens (produtos e recargas) juntos"""
+    q = request.GET.get('q', '').strip()
+    tipo = request.GET.get('tipo', '').strip()
+    
     produtos = Produto.objects.all().order_by('nome')
     recargas = Recarga.objects.all().order_by('nome')
     
+    if q:
+        produtos = produtos.filter(nome__icontains=q)
+        recargas = recargas.filter(nome__icontains=q)
+        
+    itens = []
+    
+    # Adicionar tipo aos produtos
+    if not tipo or tipo == 'produto':
+        for prod in produtos:
+            prod.tipo = 'produto'
+            itens.append(prod)
+            
+    # Adicionar tipo às recargas
+    if not tipo or tipo == 'recarga':
+        for rec in recargas:
+            rec.tipo = 'recarga'
+            itens.append(rec)
+            
+    # Ordenar itens por nome
+    itens.sort(key=lambda x: x.nome.lower())
+    
     context = {
-        'produtos': produtos,
-        'recargas': recargas,
+        'itens': itens,
         'user': request.user
     }
     return render(request, 'listar_todos_itens.html', context)

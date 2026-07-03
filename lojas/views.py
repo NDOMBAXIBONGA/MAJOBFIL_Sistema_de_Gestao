@@ -652,6 +652,10 @@ def listar_movimentacoes_estoque(request):
     """
     Lista todas as movimentações de estoque (entradas, saídas, devoluções)
     """
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Você não tem permissão para acessar esta página.')
+        return redirect('dashboard')
+
     if request.user.is_superuser:
         movimentacoes = MovimentacaoEstoque.objects.all()
         lojas = Loja.objects.all()
@@ -1291,6 +1295,10 @@ def detalhes_loja(request, loja_id):
 
 @login_required
 def listar_estoque(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        messages.error(request, 'Você não tem permissão para acessar esta página.')
+        return redirect('dashboard')
+        
     tipo_selecionado = request.GET.get('tipo', 'todos')
     
     if request.user.is_superuser:

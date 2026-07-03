@@ -4,283 +4,277 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página Não Encontrada - MAJOBFIL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --warning: #f59e0b;
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 70px;
+            --bg-color: #0b0f19;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg-subtle: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-strong: rgba(255, 255, 255, 0.16);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-1: #8b5cf6;
+            --accent-2: #38bdf8;
+            --accent-amber: #f59e0b;
+            --accent-danger: #ef4444;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            margin: 0;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        /* Background Glow (Aurora) */
+        body::before, body::after {
+            content: "";
+            position: absolute;
+            width: 45vw;
+            height: 45vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before {
+            background: radial-gradient(circle, var(--accent-1) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: aurora 20s infinite alternate;
+        }
+        body::after {
+            background: radial-gradient(circle, var(--accent-2) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation: aurora 25s infinite alternate-reverse;
+        }
+        @keyframes aurora {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(4vw, 4vh) scale(1.15); }
+        }
+
         .error-container {
-            max-width: 800px;
+            max-width: 580px;
             width: 100%;
-            animation: fadeIn 0.8s ease-out;
+            z-index: 10;
         }
-        
-        .error-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: none;
-        }
-        
-        .error-header {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-        
-        .error-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .error-body {
-            padding: 40px 30px;
-        }
-        
-        .error-code {
-            font-size: 6rem;
-            font-weight: 800;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            line-height: 1;
-        }
-        
-        .error-title {
-            font-size: 2.2rem;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .error-message {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        
-        .error-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-        
-        .btn-error {
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-        
-        .btn-error:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-error-primary {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-        }
-        
-        .btn-error-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-        
-        .error-details {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            border-left: 4px solid var(--warning);
-            margin-bottom: 30px;
-        }
-        
-        .error-details-title {
-            color: var(--warning);
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .error-info {
-            color: #666;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            margin: 0;
-        }
-        
-        .error-info ul {
-            padding-left: 20px;
-            margin-top: 10px;
-        }
-        
-        .error-info li {
-            margin-bottom: 5px;
-            font-family: monospace;
-            background: #fff;
-            padding: 3px 8px;
-            border-radius: 4px;
-            border: 1px solid #e9ecef;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .error-header {
-                padding: 30px 20px;
-            }
-            
-            .error-body {
-                padding: 30px 20px;
-            }
-            
-            .error-code {
-                font-size: 4rem;
-            }
-            
-            .error-title {
-                font-size: 1.8rem;
-            }
-            
-            .error-actions {
-                flex-direction: column;
-            }
-            
-            .btn-error {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .error-details {
-                padding: 20px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            body {
-                padding: 15px;
-            }
-            
-            .error-code {
-                font-size: 3rem;
-            }
-            
-            .error-title {
-                font-size: 1.5rem;
-            }
-            
-            .error-message {
-                font-size: 1rem;
-            }
-            
-            .error-icon {
-                font-size: 3rem;
-            }
-        }
-        
-        /* Logo styling */
+
         .logo-container {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        
+
         .logo {
             display: inline-flex;
             align-items: center;
-            gap: 15px;
-            color: var(--primary);
+            gap: 10px;
+            color: var(--text-primary);
             text-decoration: none;
             font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .logo i {
+            color: var(--accent-1);
+            text-shadow: 0 0 10px rgba(139,92,246,0.4);
+        }
+
+        .error-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-header {
+            padding: 40px 32px 20px;
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(245,158,11,0.12);
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 28px;
+            color: var(--accent-amber);
+            box-shadow: 0 0 20px rgba(245,158,11,0.15);
+            animation: bounce 1.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+
+        .error-code {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffe08a, var(--accent-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .error-title {
+            font-size: 1.6rem;
             font-weight: 700;
+            color: var(--text-primary);
         }
-        
-        .logo-icon {
-            font-size: 2rem;
+
+        .error-body {
+            padding: 0 32px 40px;
         }
-        
-        /* Security message */
+
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
         .security-message {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 15px;
+            background: rgba(245,158,11,0.06);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: var(--radius);
+            padding: 14px;
             margin-bottom: 20px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
         }
-        
+
         .security-message i {
-            color: #f39c12;
-            margin-right: 10px;
+            color: var(--accent-amber);
+            font-size: 14px;
+            margin-top: 2px;
         }
-        
-        /* Footer */
+
+        .error-details {
+            background: var(--glass-bg-subtle);
+            border: 1px solid var(--glass-border);
+            border-left: 3px solid var(--accent-1);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .error-details h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-details h3 i {
+            color: var(--accent-1);
+        }
+
+        .error-details ul {
+            margin-left: 18px;
+            margin-top: 8px;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .btn-glass {
+            padding: 11px 22px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-1.5px);
+        }
+
+        .btn-glass.btn-primary {
+            background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(56,189,248,0.2) 100%);
+            border-color: rgba(139,92,246,0.4);
+            box-shadow: 0 4px 15px rgba(139,92,246,0.15);
+        }
+
+        .btn-glass.btn-primary:hover {
+            border-color: rgba(139,92,246,0.6);
+            background: linear-gradient(135deg, rgba(139,92,246,0.4) 0%, rgba(56,189,248,0.3) 100%);
+            box-shadow: 0 6px 20px rgba(139,92,246,0.25);
+        }
+
         .error-footer {
             text-align: center;
-            margin-top: 40px;
-            color: #999;
-            font-size: 0.9rem;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            line-height: 1.5;
         }
-        
-        .error-footer a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-        
-        .error-footer a:hover {
-            text-decoration: underline;
+
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .error-card { padding: 0px; }
+            .error-header { padding: 32px 20px 16px; }
+            .error-body { padding: 0 20px 32px; }
+            .btn-glass { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -288,7 +282,7 @@
     <div class="error-container">
         <div class="logo-container">
             <a href="{% url 'dashboard' %}" class="logo">
-                <i class="fas fa-chart-line logo-icon"></i>
+                <i class="fas fa-chart-line"></i>
                 <span>MAJOBFIL</span>
             </a>
         </div>
@@ -304,77 +298,67 @@
             
             <div class="error-body">
                 <p class="error-message">
-                    A página que você está tentando acessar não existe ou não está disponível.
-                    Verifique se a URL está correta ou contate o administrador do sistema.
+                    A página ou recurso que você está tentando acessar não existe, foi removido ou está temporariamente indisponível.
                 </p>
-                
+
                 <div class="security-message">
-                    <p>
-                        <i class="fas fa-shield-alt"></i>
-                        <strong>Atenção:</strong> O acesso a URLs não autorizadas é monitorado pelo sistema de segurança.
-                    </p>
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <strong>Segurança:</strong> O acesso a caminhos e rotas não registradas é monitorado eletronicamente para fins de auditoria.
+                    </div>
                 </div>
                 
                 <div class="error-details">
-                    <h3 class="error-details-title">
-                        <i class="fas fa-info-circle"></i>
+                    <h3>
+                        <i class="fas fa-circle-info"></i>
                         Informações do Erro
                     </h3>
-                    <p class="error-info">
-                        <strong>URL solicitada:</strong> {{ request_path|default:request.path }}<br>
+                    <p>
+                        <strong>URL Solicitada:</strong> {{ request_path|default:request.path }}<br>
                         <strong>Data/Hora:</strong> {% now "d/m/Y H:i:s" %}<br>
-                        <strong>Status do Usuário:</strong> 
+                        <strong>Autenticação:</strong> 
                         {% if request.user.is_authenticated %}
-                            Autenticado ({{ user.nome|default:user.username }})
+                            Conectado como <strong>{{ user.nome|default:user.username }}</strong>
                         {% else %}
-                            Não autenticado
+                            Visitante Não Autenticado
                         {% endif %}
                     </p>
                     
                     {% if request.user.is_authenticated %}
-                    <p class="error-info mt-3">
-                        <strong>Suas Permissões:</strong>
-                        <ul>
-                            <li>Dashboard: Acesso permitido</li>
-                            <li>Perfil: Acesso permitido</li>
-                            {% if user.is_superuser %}
-                            <li>Administração: Acesso total</li>
-                            {% elif user.is_staff %}
-                            <li>Funcionário: Acesso limitado</li>
-                            {% else %}
-                            <li>Usuário: Acesso básico</li>
-                            {% endif %}
-                        </ul>
-                    </p>
+                    <ul style="margin-top: 8px;">
+                        <li>Acesso ao Dashboard: Permitido</li>
+                        <li>Acesso ao Perfil: Permitido</li>
+                        {% if user.is_superuser %}
+                        <li>Painel Administrativo: Liberado</li>
+                        {% elif user.is_staff %}
+                        <li>Operações de Gerência: Limitado</li>
+                        {% else %}
+                        <li>Operações Padrão: Limitado</li>
+                        {% endif %}
+                    </ul>
                     {% endif %}
                 </div>
                 
                 <div class="error-actions">
                     {% if request.user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="btn btn-error btn-error-primary">
-                            <i class="fas fa-home"></i>
-                            Voltar ao Dashboard
+                        <a href="{% url 'dashboard' %}" class="btn-glass btn-primary">
+                            <i class="fas fa-house"></i>
+                            Dashboard
                         </a>
-                        <a href="javascript:history.back()" class="btn btn-error btn-error-outline">
+                        <a href="javascript:history.back()" class="btn-glass">
                             <i class="fas fa-arrow-left"></i>
-                            Voltar à Página Anterior
+                            Voltar
                         </a>
-                        
                         {% if user.is_superuser or user.is_staff %}
-                        <a href="{% url 'listar_produtos_estoque' %}" class="btn btn-error btn-error-outline">
-                            <i class="fas fa-box"></i>
+                        <a href="{% url 'listar_estoque' %}" class="btn-glass">
+                            <i class="fas fa-boxes"></i>
                             Ver Estoque
                         </a>
                         {% endif %}
-                        
                     {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-error btn-error-primary">
+                        <a href="{% url 'login' %}" class="btn-glass btn-primary">
                             <i class="fas fa-sign-in-alt"></i>
                             Fazer Login
-                        </a>
-                        <a href="/" class="btn btn-error btn-error-outline">
-                            <i class="fas fa-home"></i>
-                            Página Inicial
                         </a>
                     {% endif %}
                 </div>
@@ -382,98 +366,35 @@
         </div>
         
         <div class="error-footer">
-            <p>
-                &copy; 2024 MAJOBFIL - Sistema de Gestão. 
-                <span id="error-id">Erro ID: {% now "U" %}</span>
-            </p>
-            <p>
-                Este incidente foi registrado para fins de auditoria de segurança.
-            </p>
+            <p>&copy; 2026 MAJOBFIL — Sistema de Gestão.</p>
+            <p id="error-id">Erro ID: ...</p>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Registrar erro 404 no console (apenas para debug)
-            console.warn('Erro 404 registrado:', {
-                path: window.location.pathname,
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            });
+            // Gerar ID de erro
+            const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            document.getElementById('error-id').textContent = `Erro ID: ${errorId.toUpperCase()}`;
             
-            // Prevenir inspeção de código (proteção básica)
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
+            // Console debug logs
+            console.warn('Erro 404 detectado no sistema MAJOBFIL:', {
+                url: window.location.pathname,
+                time: new Date().toISOString(),
+                id: errorId
             });
-            
-            // Prevenir F12, Ctrl+Shift+I, Ctrl+U
+
+            // Prevenir inspeção e clique direito por segurança
+            document.addEventListener('contextmenu', e => e.preventDefault());
             document.addEventListener('keydown', function(e) {
-                if (e.keyCode === 123 || // F12
-                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
-                    (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
+                if (e.keyCode === 123 || 
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || 
+                    (e.ctrlKey && e.keyCode === 85)) {
                     e.preventDefault();
-                    alert('Esta ação está desabilitada por questões de segurança.');
                     return false;
                 }
             });
-            
-            // Adicionar ID de erro único
-            const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-            document.getElementById('error-id').textContent = `Erro ID: ${errorId}`;
-            
-            // Log do erro no localStorage (apenas para debug local)
-            try {
-                const errorLog = {
-                    id: errorId,
-                    path: window.location.pathname,
-                    time: new Date().toISOString(),
-                    type: '404'
-                };
-                
-                // Armazenar apenas os últimos 10 erros
-                let errorHistory = JSON.parse(localStorage.getItem('majobfil_error_history') || '[]');
-                errorHistory.unshift(errorLog);
-                if (errorHistory.length > 10) errorHistory = errorHistory.slice(0, 10);
-                localStorage.setItem('majobfil_error_history', JSON.stringify(errorHistory));
-            } catch (e) {
-                // Ignorar erros de localStorage
-            }
-            
-            // Auto-redirecionamento após 30 segundos (opcional)
-            setTimeout(function() {
-                if (document.hasFocus()) {
-                    if (window.location.pathname !== window.location.pathname) {
-                        window.location.href = "{% url 'dashboard' %}";
-                    }
-                }
-            }, 30000);
         });
-        
-        // Função para gerar mensagem de segurança
-        function getSecurityMessage() {
-            const messages = [
-                "Acesso a URLs não autorizadas é registrado para auditoria de segurança.",
-                "Tentativas de acesso a áreas restritas são monitoradas pelo sistema.",
-                "Para acessar áreas administrativas, faça login como administrador.",
-                "A segurança do sistema é prioridade. Ações suspeitas são registradas.",
-                "Use apenas os links fornecidos pela aplicação para navegação segura."
-            ];
-            return messages[Math.floor(Math.random() * messages.length)];
-        }
-        
-        // Atualizar mensagem de segurança periodicamente
-        setInterval(function() {
-            const securityMsg = document.querySelector('.security-message p');
-            if (securityMsg) {
-                const originalText = securityMsg.innerHTML;
-                const newMsg = getSecurityMessage();
-                if (!originalText.includes(newMsg)) {
-                    securityMsg.innerHTML = `<i class="fas fa-shield-alt"></i> <strong>Atenção:</strong> ${newMsg}`;
-                }
-            }
-        }, 10000);
     </script>
 </body>
 </html>

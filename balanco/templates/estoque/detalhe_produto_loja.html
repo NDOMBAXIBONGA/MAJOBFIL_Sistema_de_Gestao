@@ -1,1242 +1,352 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ produto.nome }} - {% if loja_selecionada %}{{ loja_selecionada.nome }}{% else %}Todas as Lojas{% endif %} - MAJOBFIL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 70px;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            overflow-x: hidden;
-            transition: all 0.3s;
-        }
-        
-        /* Sidebar Responsiva */
-        .sidebar {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            min-height: 100vh;
-            color: white;
-            position: fixed;
-            width: var(--sidebar-width);
-            transition: all 0.3s;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        }
-        
-        .sidebar-collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-collapsed .logo h4,
-        .sidebar-collapsed .logo small,
-        .sidebar-collapsed .nav-link span {
-            display: none;
-        }
-        
-        .sidebar-collapsed .logo {
-            padding: 15px 5px;
-        }
-        
-        .sidebar-collapsed .nav-link {
-            text-align: center;
-            padding: 12px 5px;
-            margin: 5px;
-            justify-content: center;
-        }
-        
-        .sidebar-collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.2rem;
-        }
-        
-        .sidebar .logo {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        .sidebar .logo h4 {
-            transition: all 0.3s;
-            margin: 10px 0 5px;
-        }
-        
-        .sidebar .logo small {
-            transition: all 0.3s;
-            font-size: 0.75rem;
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 12px 20px;
-            margin: 5px 15px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            transform: translateX(5px);
-        }
-        
-        .sidebar .nav-link i {
-            width: 24px;
-            min-width: 24px;
-            margin-right: 10px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 20px;
-            transition: all 0.3s;
-            min-height: 100vh;
-        }
-        
-        .main-content-expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-        
-        .sidebar-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-        }
-        
-        .overlay.active {
-            display: block;
-        }
-        
-        /* Top Bar */
-        .top-bar {
-            background: white;
-            border-radius: 15px;
-            padding: 15px 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .top-bar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .top-bar-actions {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        /* Cards */
-        .stats-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            overflow: hidden;
-            height: 100%;
-        }
-        
-        .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .product-header {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-            border-radius: 15px 15px 0 0;
-        }
-        
-        .badge-estoque {
-            font-size: 0.85rem;
-            padding: 5px 10px;
-        }
-        
-        /* Gráficos */
-        .chart-container {
-            position: relative;
-            height: 250px;
-            width: 100%;
-        }
-        
-        /* Cards de Loja */
-        .loja-card {
-            border-left: 4px solid var(--primary);
-            transition: all 0.3s;
-            height: 100%;
-        }
-        
-        .loja-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .loja-card.esgotado {
-            border-left-color: var(--danger);
-        }
-        
-        .loja-card.baixo {
-            border-left-color: var(--warning);
-        }
-        
-        .loja-card.normal {
-            border-left-color: var(--success);
-        }
-        
-        /* Tabela Responsiva */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .table {
-            min-width: 800px;
-        }
-        
-        /* Grid System Ajustado */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .loja-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-        
-        /* Media Queries */
-        @media (max-width: 1400px) {
-            .loja-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            }
-        }
-        
-        @media (max-width: 1200px) {
-            :root {
-                --sidebar-width: 220px;
-            }
-            
-            .main-content {
-                margin-left: 220px;
-            }
-            
-            .loja-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-        }
-        
-        @media (max-width: 992px) {
-            .sidebar {
-                margin-left: -250px;
-            }
-            
-            .sidebar.active {
-                margin-left: 0;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 80px 15px 20px;
-            }
-            
-            .sidebar-toggle {
-                display: flex;
-            }
-            
-            .top-bar {
-                padding: 15px;
-                border-radius: 10px;
-            }
-            
-            .top-bar-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .top-bar-actions {
-                justify-content: space-between;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            }
-            
-            .loja-grid {
-                grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
-            }
-            
-            .product-header {
-                padding: 15px;
-            }
-            
-            .chart-container {
-                height: 200px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .loja-grid {
-                gap: 15px;
-            }
-            
-            .card-body {
-                padding: 15px;
-            }
-            
-            .table {
-                font-size: 0.9rem;
-            }
-            
-            .table th,
-            .table td {
-                padding: 8px 10px;
-            }
-            
-            .chart-container {
-                height: 180px;
-            }
-            
-            .top-bar h3 {
-                font-size: 1.5rem;
-            }
-            
-            .modal-dialog {
-                margin: 10px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .main-content {
-                padding: 70px 10px 15px;
-            }
-            
-            .top-bar {
-                padding: 12px;
-                margin-bottom: 20px;
-                border-radius: 8px;
-            }
-            
-            .stats-card {
-                border-radius: 10px;
-            }
-            
-            .product-header {
-                border-radius: 10px 10px 0 0;
-                padding: 12px;
-            }
-            
-            .card-header {
-                padding: 12px 15px;
-            }
-            
-            .card-header h5 {
-                font-size: 1.1rem;
-            }
-            
-            .btn {
-                padding: 6px 12px;
-                font-size: 0.9rem;
-            }
-            
-            .badge {
-                font-size: 0.75rem;
-            }
-            
-            h2 {
-                font-size: 1.8rem;
-            }
-            
-            h3 {
-                font-size: 1.3rem;
-            }
-            
-            .chart-container {
-                height: 160px;
-            }
-            
-            .dropdown-menu {
-                font-size: 0.9rem;
-            }
-            
-            /* Ajustes para botões em cards de loja */
-            .loja-card .btn-sm {
-                padding: 4px 8px;
-                font-size: 0.8rem;
-            }
-            
-            /* Ajustes para modais em telas pequenas */
-            .modal-content {
-                border-radius: 8px;
-            }
-            
-            .modal-header, .modal-body, .modal-footer {
-                padding: 15px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .top-bar-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .top-bar-actions .btn,
-            .top-bar-actions span {
-                width: 100%;
-                text-align: center;
-                margin: 5px 0;
-            }
-            
-            .stats-grid .text-center {
-                padding: 10px;
-            }
-            
-            .stats-grid h2 {
-                font-size: 1.5rem;
-            }
-            
-            .loja-card .d-flex {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .loja-card .text-end {
-                text-align: left !important;
-            }
-        }
-        
-        /* Animações */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        /* Scrollbar personalizada */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary);
-        }
-        
-        /* Acessibilidade */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-        
-        /* Focus styles para acessibilidade */
-        a:focus,
-        button:focus,
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: 2px solid var(--primary);
-            outline-offset: 2px;
-        }
-        
-        /* Print styles */
-        @media print {
-            .sidebar,
-            .sidebar-toggle,
-            .top-bar-actions,
-            .btn,
-            .dropdown,
-            .modal {
-                display: none !important;
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-                padding: 0 !important;
-            }
-            
-            .stats-card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-            
-            .table {
-                min-width: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Botão para toggle da sidebar -->
-    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Alternar menu">
-        <i class="fas fa-bars"></i>
-    </button>
-    
-    <!-- Overlay para fechar sidebar em mobile -->
-    <div class="overlay" id="overlay"></div>
-    
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <i class="fas fa-chart-line fa-2x mb-2"></i>
-            <h4 class="mb-0">MAJOBFIL</h4>
-            <small>Sistema de Gestão</small>
+{% extends 'base.html' %}
+
+{% block title %}{{ produto.nome }} — Estoque{% endblock %}
+{% block page_title %}{{ produto.nome }}{% endblock %}
+{% block page_subtitle %}Detalhe e histórico de estoque{% endblock %}
+{% block nav_lojas %}active{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'listar_produtos_estoque' %}" class="btn-glass btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
+{% endblock %}
+
+{% block content %}
+<div class="lg-breadcrumb fade-up">
+    <a href="{% url 'dashboard' %}"><i class="fas fa-house"></i> Dashboard</a>
+    <span class="sep">/</span>
+    <a href="{% url 'listar_produtos_estoque' %}">Estoque</a>
+    <span class="sep">/</span>
+    <span class="current">{{ produto.nome }}</span>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-4 mb-4 fade-up fade-up-1">
+    <div class="stat-card accent-violet">
+        <div class="stat-icon violet"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="stat-data"><div class="stat-label">Estoque Total</div><div class="stat-value">{{ estatisticas.total_estoque }}<span class="stat-unit"> un.</span></div></div>
+    </div>
+    <div class="stat-card accent-green">
+        <div class="stat-icon green"><i class="fas fa-coins"></i></div>
+        <div class="stat-data"><div class="stat-label">Valor em Estoque</div><div class="stat-value" style="font-size:16px;">{{ estatisticas.total_valor_estoque|floatformat:0 }} Kz</div></div>
+    </div>
+    <div class="stat-card accent-amber">
+        <div class="stat-icon amber"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-data"><div class="stat-label">Total Vendido</div><div class="stat-value">{{ estatisticas.total_vendido }}<span class="stat-unit"> un.</span></div></div>
+    </div>
+    <div class="stat-card accent-cyan">
+        <div class="stat-icon cyan"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-data"><div class="stat-label">Receita Total</div><div class="stat-value" style="font-size:16px;">{{ estatisticas.valor_total_vendido|default:0|floatformat:0 }} Kz</div></div>
+    </div>
+</div>
+
+<!-- Product Header + Lojas Grid -->
+<div class="grid grid-2 mb-4 fade-up fade-up-2">
+    <!-- Product Info -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <div class="glass-card-title">
+                <div class="card-icon" style="background:rgba(139,92,246,0.2);color:var(--accent-1);"><i class="fas fa-box"></i></div>
+                Informações do Produto
+            </div>
         </div>
-        
-        <div class="mt-4">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard' %}">
-                        <i class="fas fa-home"></i><span>Dashboard</span>
-                    </a>
-                </li>
-                {% if user.is_superuser %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'lista_balancos' %}">
-                        <i class="fas fa-balance-scale"></i><span>Gerenciar Balanços</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{% url 'listar_produtos_estoque' %}">
-                        <i class="fas fa-box"></i><span>Gerenciar Estoque</span>
-                    </a>
-                </li>
+        <div class="glass-card-body">
+            {% if produto.imagem %}
+            <img src="{{ produto.imagem.url }}" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius);margin-bottom:16px;border:1px solid var(--glass-border);">
+            {% endif %}
+            <div class="info-table" style="padding:0;">
+                <div class="info-row"><span class="info-label"><i class="fas fa-tag"></i> Nome</span><span class="info-value fw-bold">{{ produto.nome }}</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-coins"></i> Preço</span><span class="info-value" style="color:var(--accent-4);font-weight:800;">{{ produto.preco|floatformat:2 }} Kz</span></div>
+                <div class="info-row"><span class="info-label"><i class="fas fa-hashtag"></i> ID</span><span class="info-value">PROD{{ produto.id|stringformat:"04d" }}</span></div>
+                {% if produto.descricao %}
+                <div class="info-row"><span class="info-label"><i class="fas fa-note-sticky"></i> Descrição</span><span class="info-value">{{ produto.descricao }}</span></div>
                 {% endif %}
-            </ul>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="top-bar-header">
-                <div>
-                    <h3 class="mb-0">
-                        <i class="fas fa-box me-2"></i>{{ produto.nome }}
-                    </h3>
-                    <small class="text-muted">
-                        Código: PROD{{ produto.id|stringformat:"04d" }}
-                        {% if loja_selecionada %}
-                        | Loja: {{ loja_selecionada.nome }}
-                        {% else %}
-                        | Todas as Lojas
-                        {% endif %}
-                    </small>
-                </div>
-                <div class="top-bar-actions">
-                    <a href="{% url 'listar_produtos_estoque' %}" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Voltar
+    <!-- Lojas -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <div class="glass-card-title">
+                <div class="card-icon" style="background:rgba(56,189,248,0.2);color:var(--accent-2);"><i class="fas fa-store"></i></div>
+                {% if loja_selecionada %}
+                    Estoque — {{ loja_selecionada.nome }}
+                {% else %}
+                    Estoque por Loja ({{ estatisticas.lojas_com_estoque }}/{{ estatisticas.total_lojas }})
+                {% endif %}
+            </div>
+            {% if not loja_selecionada %}
+            <div style="position:relative;" id="lojaFilter">
+                <button class="btn-glass btn-sm" onclick="toggleLojaDropdown()"><i class="fas fa-filter"></i> Filtrar</button>
+                <div id="lojaDropdown" class="loja-dropdown-menu" style="display:none;">
+                    <a href="{% url 'detalhe_produto_loja' produto.id %}" class="loja-dropdown-item">Todas as lojas</a>
+                    <div style="height:1px;background:var(--glass-border);margin:4px 0;"></div>
+                    {% for estoque in estoques_lojas %}
+                    <a href="{% url 'detalhe_produto_loja' produto.id estoque.loja.id %}" class="loja-dropdown-item">
+                        {{ estoque.loja.nome }} <span style="opacity:0.6;">({{ estoque.quantidade }})</span>
                     </a>
-                    <span class="text-muted">
-                        <i class="fas fa-user me-2"></i>
-                        {{ user.nome|default:user.username }}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="loja-cards-wrap">
+            {% if estoques_lojas %}
+            {% for estoque in estoques_lojas %}
+            <div class="loja-estoque-card {% if estoque.status == 'esgotado' %}esgotado{% elif estoque.status == 'baixo' %}baixo{% else %}ok{% endif %}">
+                <div class="loja-estoque-top">
+                    <div>
+                        <div class="loja-estoque-name">{{ estoque.loja.nome }}</div>
+                        <div class="loja-estoque-loc">{{ estoque.loja.bairro }}, {{ estoque.loja.cidade }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:13px;color:var(--text-muted);">Vendas</div>
+                        <div style="font-weight:800;font-size:16px;color:var(--accent-4);">{{ estoque.total_vendas }}</div>
+                        <div style="font-size:11px;color:var(--text-muted);">{{ estoque.quantidade_vendida }} un.</div>
+                    </div>
+                </div>
+                <div class="loja-estoque-badges">
+                    <span class="estoque-qty {% if estoque.status == 'esgotado' %}danger{% elif estoque.status == 'baixo' %}warning{% else %}success{% endif %}">
+                        {{ estoque.quantidade }} un.
                     </span>
+                    <span class="estoque-valor">{{ estoque.valor_estoque|floatformat:0 }} Kz</span>
                 </div>
+                {% if loja_selecionada and estoque.loja.id == loja_selecionada.id %}
+                <div class="loja-estoque-actions">
+                    <button class="btn-glass btn-sm flex-1" onclick="criarEntrada('{{ produto.id }}', '{{ estoque.loja.id }}')">
+                        <i class="fas fa-arrow-down"></i> Entrada
+                    </button>
+                    <button class="btn-glass btn-danger btn-sm flex-1" onclick="criarSaida('{{ produto.id }}', '{{ estoque.loja.id }}')">
+                        <i class="fas fa-arrow-up"></i> Saída
+                    </button>
+                </div>
+                {% endif %}
             </div>
+            {% endfor %}
+            {% else %}
+            <div class="lg-empty" style="padding:32px;">
+                <div class="lg-empty-icon" style="width:48px;height:48px;font-size:20px;"><i class="fas fa-store-slash"></i></div>
+                <p>Nenhuma loja com estoque</p>
+            </div>
+            {% endif %}
         </div>
+    </div>
+</div>
 
-        <!-- Mensagens -->
-        {% if messages %}
-        <div class="row mb-4">
-            <div class="col-12">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
+<!-- Chart -->
+<div class="glass-card mb-4 fade-up fade-up-3">
+    <div class="glass-card-header">
+        <div class="glass-card-title">
+            <div class="card-icon" style="background:rgba(52,211,153,0.2);color:var(--accent-4);"><i class="fas fa-chart-line"></i></div>
+            Vendas por Mês (Últimos 6 meses)
+        </div>
+    </div>
+    <div class="glass-card-body">
+        <div style="position:relative; height:220px;">
+            <canvas id="vendasChart" aria-label="Gráfico de vendas mensais" role="img"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Sales History -->
+<div class="glass-card fade-up fade-up-4">
+    <div class="glass-card-header">
+        <div class="glass-card-title">
+            <div class="card-icon" style="background:rgba(251,191,36,0.2);color:var(--accent-5);"><i class="fas fa-clock-rotate-left"></i></div>
+            Histórico de Vendas
+        </div>
+        <span class="badge-glass muted">{{ estatisticas.total_vendas }} vendas</span>
+    </div>
+    <div class="lg-table-wrap">
+        <table class="lg-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Data</th>
+                    <th>Loja</th>
+                    <th>Quantidade</th>
+                    <th>Valor Total</th>
+                    <th>Vendedor</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venda in vendas %}
+                <tr>
+                    <td><span class="badge-glass muted">#{{ venda.id }}</span></td>
+                    <td style="font-weight:600; color:var(--text-primary);">
+                        {{ venda.data_venda|date:"d/m/Y" }}
+                        <span style="font-size:11px; display:block; color:var(--text-muted);">{{ venda.data_venda|date:"H:i" }}</span>
+                    </td>
+                    <td>{{ venda.estoque_loja.loja.nome|default:"—" }}</td>
+                    <td style="font-weight:700;">{{ venda.quantidade }}</td>
+                    <td style="color:var(--accent-4);font-weight:700;">{{ venda.valor_total|floatformat:2 }} Kz</td>
+                    <td>{{ venda.vendedor.nome|default:venda.vendedor.username|default:"—" }}</td>
+                    <td style="color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ venda.observacao|truncatechars:30|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="lg-empty"><div class="lg-empty-icon" style="width:48px;height:48px;font-size:20px;"><i class="fas fa-cart-shopping"></i></div><p>Nenhuma venda registrada</p></div>
+                    </td>
+                </tr>
                 {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Cabeçalho do Produto -->
-        <div class="stats-grid fade-in">
-            <div class="card stats-card">
-                <div class="product-header">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <h4 class="mb-1">{{ produto.nome }}</h4>
-                            <p class="mb-0 opacity-75">
-                                Preço: {{ produto.preco|floatformat:2 }} Kz
-                                {% if produto.imagem %}
-                                | Com imagem
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="text-end">
-                            <h2 class="mb-1">{{ produto.preco|floatformat:2 }} Kz</h2>
-                            <small>Preço de Venda</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3 mb-md-0">
-                            <div class="text-center p-3">
-                                <h6 class="text-muted">Estoque Total</h6>
-                                <h2 class="text-primary">{{ estatisticas.total_estoque }}</h2>
-                                <small class="text-muted">unidades</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3 mb-md-0">
-                            <div class="text-center p-3">
-                                <h6 class="text-muted">Valor Total Estoque</h6>
-                                <h2 class="text-success">{{ estatisticas.total_valor_estoque|floatformat:2 }} Kz</h2>
-                                <small class="text-muted">valor em estoque</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center p-3">
-                                <h6 class="text-muted">Total Vendido</h6>
-                                <h2 class="text-warning">{{ estatisticas.total_vendido }}</h2>
-                                <small class="text-muted">{{ estatisticas.valor_total_vendido|floatformat:2 }} Kz</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Estoque por Loja -->
-        <div class="row mb-4 fade-in">
-            <div class="col-12">
-                <div class="card stats-card">
-                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-store me-2"></i>
-                            {% if loja_selecionada %}
-                                Estoque na Loja {{ loja_selecionada.nome }}
-                            {% else %}
-                                Estoque por Loja ({{ estatisticas.lojas_com_estoque }}/{{ estatisticas.total_lojas }})
-                            {% endif %}
-                        </h5>
-                        {% if not loja_selecionada %}
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" 
-                                    type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                                    aria-expanded="false" aria-label="Filtrar por loja">
-                                <i class="fas fa-filter me-1"></i>Filtrar Loja
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="filterDropdown">
-                                <li><a class="dropdown-item" href="{% url 'detalhe_produto_loja' produto.id %}">
-                                    Todas as Lojas
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                {% for estoque in estoques_lojas %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'detalhe_produto_loja' produto.id estoque.loja.id %}">
-                                        {{ estoque.loja.nome }} ({{ estoque.quantidade }})
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-body">
-                        {% if estoques_lojas %}
-                        <div class="loja-grid">
-                            {% for estoque in estoques_lojas %}
-                            <div class="card loja-card {{ estoque.status }}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start flex-wrap">
-                                        <div class="mb-2">
-                                            <h6 class="mb-1">{{ estoque.loja.nome }}</h6>
-                                            <p class="mb-1 text-muted">
-                                                <small>
-                                                    {{ estoque.loja.bairro }}, {{ estoque.loja.cidade }}
-                                                </small>
-                                            </p>
-                                            <div class="mt-2">
-                                                <span class="badge 
-                                                    {% if estoque.status == 'esgotado' %}bg-danger
-                                                    {% elif estoque.status == 'baixo' %}bg-warning
-                                                    {% else %}bg-success
-                                                    {% endif %}">
-                                                    {{ estoque.quantidade }} unidades
-                                                </span>
-                                                <span class="badge bg-light text-dark ms-1">
-                                                    {{ estoque.valor_estoque|floatformat:2 }} Kz
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <small class="text-muted d-block">Vendas</small>
-                                            <h6 class="mb-0">{{ estoque.total_vendas }}</h6>
-                                            <small class="text-muted">{{ estoque.quantidade_vendida }} un.</small>
-                                        </div>
-                                    </div>
-                                    
-                                    {% if loja_selecionada and estoque.loja.id == loja_selecionada.id %}
-                                    <div class="mt-3 pt-3 border-top">
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <button class="btn btn-sm btn-success w-100" 
-                                                        onclick="criarEntrada({{ produto.id }}, {{ estoque.loja.id }})"
-                                                        aria-label="Registrar entrada de estoque">
-                                                    <i class="fas fa-arrow-down me-1"></i>Entrada
-                                                </button>
-                                            </div>
-                                            <div class="col-6">
-                                                <button class="btn btn-sm btn-danger w-100"
-                                                        onclick="criarSaida({{ produto.id }}, {{ estoque.loja.id }})"
-                                                        aria-label="Registrar saída de estoque">
-                                                    <i class="fas fa-arrow-up me-1"></i>Saída
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-store-slash fa-3x text-muted mb-3"></i>
-                            <h5>Nenhuma loja com estoque</h5>
-                            <p class="text-muted">Este produto não está disponível em nenhuma loja.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico de Vendas -->
-        <div class="row mb-4 fade-in">
-            <div class="col-12">
-                <div class="card stats-card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-chart-line me-2"></i>Vendas por Mês (Últimos 6 meses)
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="vendasChart" aria-label="Gráfico de vendas mensais" role="img"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Histórico de Vendas -->
-        <div class="row fade-in">
-            <div class="col-12">
-                <div class="card stats-card">
-                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-history me-2"></i>Histórico de Vendas
-                            <small class="text-muted">(Últimas 50 vendas)</small>
-                        </h5>
-                        <span class="badge bg-primary">
-                            Total: {{ estatisticas.total_vendas }}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">ID</th>
-                                        <th scope="col">Data</th>
-                                        <th scope="col">Loja</th>
-                                        <th scope="col">Quantidade</th>
-                                        <th scope="col">Valor Total</th>
-                                        <th scope="col">Vendedor</th>
-                                        <th scope="col">Observação</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for venda in vendas %}
-                                    <tr>
-                                        <td><span class="badge bg-secondary">#{{ venda.id }}</span></td>
-                                        <td>{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
-                                        <td>
-                                            {% if venda.estoque_loja and venda.estoque_loja.loja %}
-                                                {{ venda.estoque_loja.loja.nome }}
-                                            {% else %}
-                                                <span class="text-danger">Loja não encontrada</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ venda.quantidade }}</td>
-                                        <td><strong>{{ venda.valor_total|floatformat:2 }} Kz</strong></td>
-                                        <td>
-                                            {% if venda.vendedor %}
-                                                {% if venda.vendedor.nome %}
-                                                    {{ venda.vendedor.nome }}
-                                                {% else %}
-                                                    {{ venda.vendedor.username }}
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="text-muted">Sistema</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ venda.observacao|truncatechars:30|default:"-" }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="7" class="text-center py-4">
-                                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
-                                            <h5>Nenhuma venda registrada</h5>
-                                            <p class="text-muted">Não há histórico de vendas para este produto.</p>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <!-- Modal para criar entrada -->
-    <div class="modal fade" id="modalEntrada" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form method="post" action="{% url 'criar_entrada_estoque' %}">
-                    {% csrf_token %}
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Entrada de Estoque</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="produto_id" id="produto_id">
-                        <input type="hidden" name="loja_id" id="loja_id">
-                        
-                        <div class="mb-3">
-                            <label for="quantidadeEntrada" class="form-label">Quantidade</label>
-                            <input type="number" id="quantidadeEntrada" name="quantidade" class="form-control" min="1" value="1" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="custoUnitario" class="form-label">Custo Unitário (Kz)</label>
-                            <input type="number" id="custoUnitario" name="custo_unitario" class="form-control" step="0.01" min="0" value="0">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="motivoEntrada" class="form-label">Motivo</label>
-                            <textarea id="motivoEntrada" name="motivo" class="form-control" rows="3" 
-                                      placeholder="Compra, reposição, etc."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Registrar Entrada</button>
-                    </div>
-                </form>
+<!-- Modal Entrada -->
+<div class="lg-modal" id="modalEntrada">
+    <div class="lg-modal-backdrop" onclick="closeModal('modalEntrada')"></div>
+    <div class="lg-modal-box" style="max-width:440px;">
+        <form method="post" action="{% url 'criar_entrada_estoque' %}">
+            {% csrf_token %}
+            <div class="lg-modal-header">
+                <h5><i class="fas fa-arrow-down" style="color:var(--accent-4);margin-right:8px;"></i> Registar Entrada</h5>
+                <button type="button" class="lg-modal-close" onclick="closeModal('modalEntrada')"><i class="fas fa-xmark"></i></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal para criar saída -->
-    <div class="modal fade" id="modalSaida" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form method="post" action="{% url 'criar_saida_estoque' %}">
-                    {% csrf_token %}
-                    <div class="modal-header">
-                        <h5 class="modal-title">Registrar Saída de Estoque (Venda)</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="produto_id" id="saida_produto_id">
-                        <input type="hidden" name="loja_id" id="saida_loja_id">
-                        
-                        <div class="mb-3">
-                            <label for="quantidadeSaida" class="form-label">Quantidade</label>
-                            <input type="number" id="quantidadeSaida" name="quantidade" class="form-control" min="1" value="1" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="vendedorSelect" class="form-label">Vendedor</label>
-                            <select id="vendedorSelect" name="vendedor_id" class="form-select" required>
-                                <option value="{{ user.id }}" selected>{{ user.nome|default:user.username }}</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="motivoSaida" class="form-label">Motivo/Observação</label>
-                            <textarea id="motivoSaida" name="motivo" class="form-control" rows="3" 
-                                      placeholder="Venda para cliente, perda, etc."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Registrar Saída</button>
-                    </div>
-                </form>
+            <div class="lg-modal-body">
+                <input type="hidden" name="produto_id" id="produto_id">
+                <input type="hidden" name="loja_id" id="loja_id">
+                <div class="form-group"><label class="form-label">Quantidade *</label><input type="number" id="quantidadeEntrada" name="quantidade" class="form-input" min="1" value="1" required></div>
+                <div class="form-group"><label class="form-label">Custo Unitário (Kz)</label><input type="number" id="custoUnitario" name="custo_unitario" class="form-input" step="0.01" min="0" value="0"></div>
+                <div class="form-group"><label class="form-label">Motivo</label><textarea id="motivoEntrada" name="motivo" class="form-input" rows="2" placeholder="Compra, reposição, etc."></textarea></div>
             </div>
-        </div>
+            <div class="lg-modal-footer">
+                <button type="button" class="btn-glass" onclick="closeModal('modalEntrada')">Cancelar</button>
+                <button type="submit" class="btn-glass btn-primary"><i class="fas fa-check"></i> Registar Entrada</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Gerenciamento da sidebar responsiva
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('overlay');
-        
-        // Estado da sidebar
-        let isSidebarCollapsed = false;
-        let isMobile = window.innerWidth <= 992;
-        
-        // Função para alternar sidebar
-        function toggleSidebar() {
-            if (isMobile) {
-                // Em mobile, mostra/esconde a sidebar
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('active');
-                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
-            } else {
-                // Em desktop, colapsa/expande a sidebar
-                isSidebarCollapsed = !isSidebarCollapsed;
-                sidebar.classList.toggle('sidebar-collapsed');
-                mainContent.classList.toggle('main-content-expanded');
-                
-                // Salvar preferência no localStorage
-                localStorage.setItem('sidebarCollapsed', isSidebarCollapsed);
+<!-- Modal Saída -->
+<div class="lg-modal" id="modalSaida">
+    <div class="lg-modal-backdrop" onclick="closeModal('modalSaida')"></div>
+    <div class="lg-modal-box" style="max-width:440px;">
+        <form method="post" action="{% url 'criar_saida_estoque' %}">
+            {% csrf_token %}
+            <div class="lg-modal-header">
+                <h5><i class="fas fa-arrow-up" style="color:var(--accent-danger);margin-right:8px;"></i> Registar Saída</h5>
+                <button type="button" class="lg-modal-close" onclick="closeModal('modalSaida')"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="lg-modal-body">
+                <input type="hidden" name="produto_id" id="saida_produto_id">
+                <input type="hidden" name="loja_id" id="saida_loja_id">
+                <div class="form-group"><label class="form-label">Quantidade *</label><input type="number" id="quantidadeSaida" name="quantidade" class="form-input" min="1" value="1" required></div>
+                <div class="form-group">
+                    <label class="form-label">Vendedor</label>
+                    <select name="vendedor_id" class="form-input form-select" required>
+                        <option value="{{ user.id }}">{{ user.nome|default:user.username }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Motivo/Observação</label><textarea id="motivoSaida" name="motivo" class="form-input" rows="2" placeholder="Venda para cliente, perda, etc."></textarea></div>
+            </div>
+            <div class="lg-modal-footer">
+                <button type="button" class="btn-glass" onclick="closeModal('modalSaida')">Cancelar</button>
+                <button type="submit" class="btn-glass btn-danger"><i class="fas fa-check"></i> Registar Saída</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+.info-table { padding: 4px 0; }
+.info-row { display: flex; align-items: flex-start; gap: 16px; padding: 13px 24px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; min-width: 90px; flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding-top: 2px; }
+.info-value { font-size: 14px; color: var(--text-secondary); font-weight: 500; flex: 1; }
+.fw-bold { font-weight: 700 !important; }
+
+.loja-cards-wrap { padding: 12px; display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+.loja-estoque-card { background: var(--glass-bg-subtle); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 14px 16px; transition: var(--transition-fast); }
+.loja-estoque-card.esgotado { border-color: rgba(239,68,68,0.3); }
+.loja-estoque-card.baixo { border-color: rgba(251,191,36,0.3); }
+.loja-estoque-card.ok { border-color: rgba(52,211,153,0.2); }
+.loja-estoque-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.loja-estoque-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.loja-estoque-loc { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.loja-estoque-badges { display: flex; gap: 8px; }
+.estoque-qty { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.estoque-qty.success { background: rgba(52,211,153,0.2); color: var(--accent-4); border: 1px solid rgba(52,211,153,0.3); }
+.estoque-qty.warning { background: rgba(251,191,36,0.2); color: var(--accent-5); border: 1px solid rgba(251,191,36,0.3); }
+.estoque-qty.danger  { background: rgba(239,68,68,0.15); color: var(--accent-danger); border: 1px solid rgba(239,68,68,0.3); }
+.estoque-valor { font-size: 12px; color: var(--text-muted); border: 1px solid var(--glass-border); border-radius: 999px; padding: 3px 10px; }
+.loja-estoque-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+.loja-dropdown-menu { position: absolute; right: 0; top: calc(100% + 8px); background: rgba(12,12,32,0.95); border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 8px; min-width: 200px; z-index: 100; backdrop-filter: var(--blur); }
+.loja-dropdown-item { display: block; padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none; font-size: 13px; transition: var(--transition-fast); }
+.loja-dropdown-item:hover { background: var(--glass-bg); color: var(--text-primary); }
+
+.lg-modal .lg-modal-header { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; }
+.lg-modal .lg-modal-header h5 { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; }
+.lg-modal .lg-modal-close { width: 30px; height: 30px; border: 1px solid var(--glass-border); background: var(--glass-bg); border-radius: 8px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.lg-modal .lg-modal-body { padding: 24px; }
+.lg-modal .lg-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--glass-border); }
+.lg-modal { display: none; position: fixed; inset: 0; z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
+.lg-modal.show { display: flex; }
+.lg-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); }
+.lg-modal-box { position: relative; z-index: 1; background: rgba(12,12,32,0.92); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); width: 100%; animation: modal-in 0.25s ease; }
+@keyframes modal-in { from { opacity:0; transform:scale(0.95) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.flex-1 { flex: 1; }
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
+document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.lg-modal.show').forEach(m=>closeModal(m.id)); });
+
+function toggleLojaDropdown() {
+    const d = document.getElementById('lojaDropdown');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+    const f = document.getElementById('lojaFilter');
+    if(f && !f.contains(e.target)) document.getElementById('lojaDropdown').style.display = 'none';
+});
+
+function criarEntrada(produtoId, lojaId) {
+    document.getElementById('produto_id').value = produtoId;
+    document.getElementById('loja_id').value = lojaId;
+    openModal('modalEntrada');
+}
+
+function criarSaida(produtoId, lojaId) {
+    document.getElementById('saida_produto_id').value = produtoId;
+    document.getElementById('saida_loja_id').value = lojaId;
+    openModal('modalSaida');
+}
+
+// Chart
+const ctx = document.getElementById('vendasChart');
+if(ctx) {
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ grafico_meses|escapejs }}'),
+            datasets: [{
+                label: 'Vendas',
+                data: JSON.parse('{{ grafico_vendas|escapejs }}'),
+                backgroundColor: 'rgba(139,92,246,0.5)',
+                borderColor: 'rgba(139,92,246,0.9)',
+                borderWidth: 2,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { family: 'Inter' } } }
+            },
+            scales: {
+                x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
             }
         }
-        
-        // Fechar sidebar no mobile ao clicar no overlay
-        function closeSidebar() {
-            if (isMobile) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-        
-        // Event listeners
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', closeSidebar);
-        
-        // Fechar sidebar ao clicar em um link (em mobile)
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                if (isMobile) {
-                    closeSidebar();
-                }
-            });
-        });
-        
-        // Ajustar ao redimensionar a janela
-        window.addEventListener('resize', () => {
-            const wasMobile = isMobile;
-            isMobile = window.innerWidth <= 992;
-            
-            if (wasMobile !== isMobile) {
-                // Se mudou de mobile para desktop ou vice-versa, resetar estado
-                if (isMobile) {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    mainContent.classList.remove('main-content-expanded');
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = '';
-                } else {
-                    // Restaurar estado colapsado se estava salvo
-                    const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
-                    if (savedState) {
-                        sidebar.classList.add('sidebar-collapsed');
-                        mainContent.classList.add('main-content-expanded');
-                    }
-                }
-            }
-        });
-        
-        // Restaurar estado da sidebar no desktop
-        window.addEventListener('DOMContentLoaded', () => {
-            if (!isMobile) {
-                const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
-                if (savedState) {
-                    sidebar.classList.add('sidebar-collapsed');
-                    mainContent.classList.add('main-content-expanded');
-                    isSidebarCollapsed = true;
-                }
-            }
-        });
-        
-        // Funções para modais
-        function criarEntrada(produtoId, lojaId) {
-            document.getElementById('produto_id').value = produtoId;
-            document.getElementById('loja_id').value = lojaId;
-            
-            const modal = new bootstrap.Modal(document.getElementById('modalEntrada'));
-            modal.show();
-            
-            // Focar no primeiro campo
-            setTimeout(() => {
-                document.getElementById('quantidadeEntrada').focus();
-            }, 500);
-        }
-        
-        function criarSaida(produtoId, lojaId) {
-            document.getElementById('saida_produto_id').value = produtoId;
-            document.getElementById('saida_loja_id').value = lojaId;
-            
-            const modal = new bootstrap.Modal(document.getElementById('modalSaida'));
-            modal.show();
-            
-            // Focar no primeiro campo
-            setTimeout(() => {
-                document.getElementById('quantidadeSaida').focus();
-            }, 500);
-        }
-        
-        // Gráfico de vendas responsivo
-        let vendasChart = null;
-        
-        function initChart() {
-            const ctx = document.getElementById('vendasChart');
-            if (!ctx) return;
-            
-            const meses = {{ grafico_meses|safe }};
-            const vendas = {{ grafico_vendas|safe }};
-            
-            // Destruir gráfico anterior se existir
-            if (vendasChart) {
-                vendasChart.destroy();
-            }
-            
-            // Criar novo gráfico com configurações responsivas
-            vendasChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: meses,
-                    datasets: [{
-                        label: 'Quantidade Vendida',
-                        data: vendas,
-                        backgroundColor: 'rgba(102, 126, 234, 0.5)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 10,
-                                font: {
-                                    size: window.innerWidth < 576 ? 10 : 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                            padding: 10,
-                            titleFont: {
-                                size: window.innerWidth < 576 ? 11 : 12
-                            },
-                            bodyFont: {
-                                size: window.innerWidth < 576 ? 11 : 12
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                maxRotation: 45,
-                                minRotation: 0,
-                                font: {
-                                    size: window.innerWidth < 576 ? 9 : 11
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Unidades',
-                                font: {
-                                    size: window.innerWidth < 576 ? 10 : 12
-                                }
-                            },
-                            ticks: {
-                                font: {
-                                    size: window.innerWidth < 576 ? 9 : 11
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
-        }
-        
-        // Inicializar gráfico
-        document.addEventListener('DOMContentLoaded', initChart);
-        
-        // Redesenhar gráfico ao redimensionar a janela
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (vendasChart) {
-                    vendasChart.resize();
-                    vendasChart.update('none');
-                }
-            }, 250);
-        });
-        
-        // Suporte para teclado nos dropdowns
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeSidebar();
-                const modals = document.querySelectorAll('.modal.show');
-                modals.forEach(modal => {
-                    const bsModal = bootstrap.Modal.getInstance(modal);
-                    if (bsModal) bsModal.hide();
-                });
-            }
-        });
-        
-        // Otimização de performance para animações
-        let lastScrollTop = 0;
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollingDown = scrollTop > lastScrollTop;
-            
-            // Otimizar animações durante scroll
-            document.body.classList.toggle('scrolling', true);
-            
-            lastScrollTop = scrollTop;
-            
-            // Limpar classe após scroll
-            clearTimeout(window.scrollTimer);
-            window.scrollTimer = setTimeout(() => {
-                document.body.classList.remove('scrolling');
-            }, 100);
-        });
-        
-        // Prevenir zoom em inputs em mobile (exceto textarea)
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.tagName === 'INPUT' && e.target.type !== 'textarea') {
-                e.target.style.fontSize = '16px';
-            }
-        }, { passive: true });
-        
-        // Suporte para impressão
-        window.addEventListener('beforeprint', () => {
-            if (vendasChart) {
-                vendasChart.resize(800, 400);
-            }
-        });
-        
-        window.addEventListener('afterprint', () => {
-            if (vendasChart) {
-                vendasChart.resize();
-            }
-        });
-    </script>
-</body>
-</html>
+    });
+}
+</script>
+{% endblock %}

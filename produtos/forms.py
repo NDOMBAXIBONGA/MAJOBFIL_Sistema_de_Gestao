@@ -54,7 +54,7 @@ class ItemForm(forms.Form):
         ('recarga', 'Recarga'),
     ]
     
-    tipo_item = forms.ChoiceField(
+    tipo = forms.ChoiceField(
         choices=TIPO_CHOICES,
         required=True,
         widget=forms.HiddenInput(attrs={'id': 'tipo_item'})

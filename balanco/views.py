@@ -2,18 +2,20 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse, HttpResponse
 import csv
+# pyrefly: ignore [missing-import]  
 from django.db.models import Q, Sum, Avg
 from django.contrib import messages
 from datetime import datetime, timedelta
 from decimal import Decimal
 import json
+# pyrefly: ignore [missing-import]
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Balanco, MovimentoEstoque
 from produtos.models import Produto
 from lojas.models import Venda, Loja, EstoqueLoja
 
 @login_required
-@permission_required('balanco.views', raise_exception=True)
+@permission_required('balanco.view_balanco', raise_exception=True)
 def lista_balancos(request):
     """Lista todos os balanços com filtros e paginação"""
     # SEMPRE buscar todas as lojas para o modal de criação
@@ -106,7 +108,7 @@ def detalhe_balanco(request, balanco_id):
     # Verificar permissão
     if not request.user.is_superuser and balanco.loja not in request.user.lojas_gerenciadas.all():
         messages.error(request, 'Sem permissão para visualizar este balanço.')
-        return redirect('balancos:lista_balancos')
+        return redirect('lista_balancos')
     
     # FORÇAR recálculo completo dos dados
     try:

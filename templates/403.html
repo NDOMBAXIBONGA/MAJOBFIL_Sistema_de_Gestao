@@ -4,261 +4,310 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Negado - MAJOBFIL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --danger: #ef4444;
-            --sidebar-width: 250px;
-            --sidebar-collapsed-width: 70px;
+            --bg-color: #0b0f19;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-bg-subtle: rgba(255, 255, 255, 0.015);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-strong: rgba(255, 255, 255, 0.16);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-1: #8b5cf6;
+            --accent-2: #38bdf8;
+            --accent-danger: #ef4444;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            margin: 0;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
         }
-        
+
+        /* Background Glow (Aurora) */
+        body::before, body::after {
+            content: "";
+            position: absolute;
+            width: 45vw;
+            height: 45vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before {
+            background: radial-gradient(circle, var(--accent-1) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: aurora 20s infinite alternate;
+        }
+        body::after {
+            background: radial-gradient(circle, var(--accent-2) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation: aurora 25s infinite alternate-reverse;
+        }
+        @keyframes aurora {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(4vw, 4vh) scale(1.15); }
+        }
+
         .error-container {
-            max-width: 800px;
+            max-width: 580px;
             width: 100%;
-            animation: fadeIn 0.8s ease-out;
+            z-index: 10;
         }
-        
-        .error-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: none;
-        }
-        
-        .error-header {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
-        
-        .error-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: bounce 1s infinite alternate;
-        }
-        
-        .error-body {
-            padding: 40px 30px;
-        }
-        
-        .error-code {
-            font-size: 6rem;
-            font-weight: 800;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            line-height: 1;
-        }
-        
-        .error-title {
-            font-size: 2.2rem;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .error-message {
-            color: #666;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-        
-        .error-actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .btn-error {
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-        
-        .btn-error:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-error-primary {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-        }
-        
-        .btn-error-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-        
-        .error-details {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid var(--danger);
-        }
-        
-        .error-details-title {
-            color: var(--danger);
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .error-info {
-            color: #666;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            margin: 0;
-        }
-        
-        .login-form {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 15px;
-            margin-top: 30px;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes bounce {
-            from {
-                transform: translateY(0);
-            }
-            to {
-                transform: translateY(-10px);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .error-header {
-                padding: 30px 20px;
-            }
-            
-            .error-body {
-                padding: 30px 20px;
-            }
-            
-            .error-code {
-                font-size: 4rem;
-            }
-            
-            .error-title {
-                font-size: 1.8rem;
-            }
-            
-            .error-actions {
-                flex-direction: column;
-            }
-            
-            .btn-error {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .login-form {
-                padding: 20px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            body {
-                padding: 15px;
-            }
-            
-            .error-code {
-                font-size: 3rem;
-            }
-            
-            .error-title {
-                font-size: 1.5rem;
-            }
-            
-            .error-message {
-                font-size: 1rem;
-            }
-            
-            .error-icon {
-                font-size: 3rem;
-            }
-        }
-        
-        /* Logo styling */
+
         .logo-container {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        
+
         .logo {
             display: inline-flex;
             align-items: center;
-            gap: 15px;
-            color: var(--primary);
+            gap: 10px;
+            color: var(--text-primary);
             text-decoration: none;
             font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .logo i {
+            color: var(--accent-1);
+            text-shadow: 0 0 10px rgba(139,92,246,0.4);
+        }
+
+        .error-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-header {
+            padding: 40px 32px 20px;
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 28px;
+            color: var(--accent-danger);
+            box-shadow: 0 0 20px rgba(239,68,68,0.15);
+            animation: pulseDanger 2s infinite;
+        }
+
+        @keyframes pulseDanger {
+            0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+
+        .error-code {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff8a8a, var(--accent-danger));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .error-title {
+            font-size: 1.6rem;
             font-weight: 700;
+            color: var(--text-primary);
         }
-        
-        .logo-icon {
-            font-size: 2rem;
+
+        .error-body {
+            padding: 0 32px 40px;
         }
-        
-        /* Footer */
+
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .error-details {
+            background: var(--glass-bg-subtle);
+            border: 1px solid var(--glass-border);
+            border-left: 3px solid var(--accent-danger);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .error-details h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-details h3 i {
+            color: var(--accent-danger);
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .btn-glass {
+            padding: 11px 22px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            color: var(--text-primary);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-1.5px);
+        }
+
+        .btn-glass.btn-primary {
+            background: linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(56,189,248,0.2) 100%);
+            border-color: rgba(139,92,246,0.4);
+            box-shadow: 0 4px 15px rgba(139,92,246,0.15);
+        }
+
+        .btn-glass.btn-primary:hover {
+            border-color: rgba(139,92,246,0.6);
+            background: linear-gradient(135deg, rgba(139,92,246,0.4) 0%, rgba(56,189,248,0.3) 100%);
+            box-shadow: 0 6px 20px rgba(139,92,246,0.25);
+        }
+
+        .login-form {
+            background: var(--glass-bg-subtle);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .login-form h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid var(--glass-border) !important;
+            border-radius: var(--radius) !important;
+            color: var(--text-primary) !important;
+            padding: 10px 14px !important;
+            transition: var(--transition-fast) !important;
+            outline: none !important;
+            width: 100%;
+            font-size: 13.5px;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            border-color: var(--glass-border-strong) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
         .error-footer {
             text-align: center;
-            margin-top: 40px;
-            color: #999;
-            font-size: 0.9rem;
+            margin-top: 32px;
+            color: var(--text-muted);
+            font-size: 11.5px;
+            line-height: 1.5;
         }
-        
+
         .error-footer a {
-            color: var(--primary);
+            color: var(--accent-2);
             text-decoration: none;
         }
-        
+
         .error-footer a:hover {
             text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 16px; }
+            .error-card { padding: 0px; }
+            .error-header { padding: 32px 20px 16px; }
+            .error-body { padding: 0 20px 32px; }
+            .btn-glass { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -266,7 +315,7 @@
     <div class="error-container">
         <div class="logo-container">
             <a href="{% url 'login' %}" class="logo">
-                <i class="fas fa-chart-line logo-icon"></i>
+                <i class="fas fa-chart-line"></i>
                 <span>MAJOBFIL</span>
             </a>
         </div>
@@ -283,75 +332,67 @@
             <div class="error-body">
                 <p class="error-message">
                     Você não tem permissão para acessar esta página ou recurso. 
-                    Esta ação requer privilégios específicos que não estão disponíveis na sua conta atual.
+                    Esta ação requer privilégios específicos que não estão associados à sua conta atual.
                 </p>
                 
                 <div class="error-details">
-                    <h3 class="error-details-title">
-                        <i class="fas fa-exclamation-triangle"></i>
+                    <h3>
+                        <i class="fas fa-circle-info"></i>
                         Informações do Erro
                     </h3>
-                    <p class="error-info">
+                    <p>
                         {% if request.user.is_authenticated %}
-                            Usuário: {{ user.nome|default:user.username }}<br>
-                            Permissões: 
-                            {% if user.is_superuser %}
-                                Administrador
-                            {% elif user.is_staff %}
-                                Funcionário
-                            {% else %}
-                                Usuário Padrão
-                            {% endif %}
+                            Usuário: <strong>{{ user.nome|default:user.username }}</strong><br>
+                            Nível de Permissão: 
+                            <strong>
+                                {% if user.is_superuser %}
+                                    Administrador Geral
+                                {% elif user.is_staff %}
+                                    Gerente de Equipe
+                                {% else %}
+                                    Usuário Padrão
+                                {% endif %}
+                            </strong>
                         {% else %}
-                            Você não está autenticado. Faça login para continuar.
+                            Você não está autenticado. Por favor, realize o login abaixo para acessar o sistema.
                         {% endif %}
                     </p>
                 </div>
                 
                 <div class="error-actions">
                     {% if request.user.is_authenticated %}
-                        <a href="{% url 'dashboard' %}" class="btn btn-error btn-error-primary">
-                            <i class="fas fa-home"></i>
+                        <a href="{% url 'dashboard' %}" class="btn-glass btn-primary">
+                            <i class="fas fa-house"></i>
                             Voltar ao Dashboard
                         </a>
-                        <a href="javascript:history.back()" class="btn btn-error btn-error-outline">
+                        <a href="javascript:history.back()" class="btn-glass">
                             <i class="fas fa-arrow-left"></i>
-                            Voltar à Página Anterior
+                            Voltar
                         </a>
-                        {% if user.is_superuser %}
-                            <a href="/admin/" class="btn btn-error btn-error-outline">
-                                <i class="fas fa-cog"></i>
-                                Painel Administrativo
-                            </a>
-                        {% endif %}
                     {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-error btn-error-primary">
+                        <a href="{% url 'login' %}" class="btn-glass btn-primary">
                             <i class="fas fa-sign-in-alt"></i>
-                            Fazer Login
-                        </a>
-                        <a href="{% url 'home' %}" class="btn btn-error btn-error-outline">
-                            <i class="fas fa-home"></i>
-                            Página Inicial
+                            Ir para Login
                         </a>
                     {% endif %}
                 </div>
                 
                 {% if not request.user.is_authenticated %}
                 <div class="login-form">
-                    <h4 class="mb-3">Faça login para continuar</h4>
+                    <h4>Faça login para continuar</h4>
                     <form method="post" action="{% url 'login' %}">
                         {% csrf_token %}
-                        <div class="mb-3">
+                        <div class="form-group">
                             <label for="username" class="form-label">Usuário</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <input type="text" class="form-input" id="username" name="username" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="form-group" style="margin-bottom: 20px;">
                             <label for="password" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <input type="password" class="form-input" id="password" name="password" required>
                         </div>
-                        <button type="submit" class="btn btn-error btn-error-primary w-100">
+                        <button type="submit" class="btn-glass btn-primary" style="width: 100%; justify-content: center;">
                             <i class="fas fa-sign-in-alt"></i>
-                            Entrar
+                            Autenticar
                         </button>
                     </form>
                 </div>
@@ -360,51 +401,9 @@
         </div>
         
         <div class="error-footer">
-            <p>
-                &copy; 2024 MAJOBFIL - Sistema de Gestão. 
-                <a href="mailto:suporte@majobfil.com">Contate o suporte</a> se precisar de assistência.
-            </p>
-            <p>
-                Erro 403: Permissão Negada | IP: {{ request.META.REMOTE_ADDR }}
-            </p>
+            <p>&copy; 2026 MAJOBFIL — Sistema de Gestão.</p>
+            <p>Precisa de ajuda? <a href="mailto:suporte@majobfil.com">Contate o suporte técnico</a>.</p>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-focus no campo de usuário se houver formulário de login
-        document.addEventListener('DOMContentLoaded', function() {
-            const usernameField = document.getElementById('username');
-            if (usernameField) {
-                setTimeout(() => {
-                    usernameField.focus();
-                }, 500);
-            }
-            
-            // Registrar tentativa de acesso
-            console.warn('Tentativa de acesso negada (403):', {
-                path: window.location.pathname,
-                userAgent: navigator.userAgent,
-                timestamp: new Date().toISOString()
-            });
-        });
-        
-        // Previne o clique direito para inspeção (opcional)
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            alert('Acesso ao menu de contexto está restrito nesta página.');
-            return false;
-        });
-        
-        // Previne F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode === 123 || // F12
-                (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
-                (e.ctrlKey && e.keyCode === 85)) { // Ctrl+U
-                e.preventDefault();
-                return false;
-            }
-        });
-    </script>
 </body>
 </html>
