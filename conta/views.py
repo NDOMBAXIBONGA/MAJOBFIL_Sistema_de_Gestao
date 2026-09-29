@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from .forms import ContaCreationForm
@@ -38,53 +39,61 @@ class CustomLoginView(LoginView):
 @login_required
 def dashboard(request):
     """
-    View para o dashboard principal
+    View para o dashboard principal com dados analíticos e gráficos dinâmicos
     """
+    import json
+    from datetime import date, timedelta
+    from django.db.models import Sum, Q
+    from lojas.models import Venda, Loja
+    from faturacao.models import Fatura
+    from .models import Atividade
+    
     user = request.user
+    hoje = date.today()
     
-    # Estatísticas fictícias para o dashboard
-    stats = {
-        'total_documentos': 15,
-        'documentos_concluidos': 8,
-        'documentos_progresso': 4,
-        'documentos_pendentes': 3,
-    }
+    # 1. Gráfico dos últimos 7 dias (faturamento diário)
+    dias_labels = []
+    valores_dias = []
+    for i in range(6, -1, -1):
+        dia = hoje - timedelta(days=i)
+        dias_labels.append(dia.strftime('%d/%m'))
+        tot = Venda.objects.filter(data_venda__date=dia).aggregate(total=Sum('valor_total'))['total'] or 0
+        valores_dias.append(float(tot))
+        
+    # 2. Vendas por Loja (mês atual)
+    lojas = Loja.objects.filter(ativo=True)[:6]
+    lojas_labels = []
+    lojas_valores = []
+    primeiro_dia_mes = hoje.replace(day=1)
     
-    # Atividades recentes fictícias
-    atividades_recentes = [
-        {
-            'icone': 'fa-file-upload',
-            'cor': 'primary',
-            'texto': 'Novo documento enviado',
-            'tempo': '2 horas atrás'
-        },
-        {
-            'icone': 'fa-user-edit',
-            'cor': 'success',
-            'texto': 'Perfil atualizado',
-            'tempo': '1 dia atrás'
-        },
-        {
-            'icone': 'fa-check-circle',
-            'cor': 'info',
-            'texto': 'Tarefa concluída',
-            'tempo': '2 dias atrás'
-        },
-        {
-            'icone': 'fa-bell',
-            'cor': 'warning',
-            'texto': 'Novo alerta do sistema',
-            'tempo': '3 dias atrás'
-        }
-    ]
+    for l in lojas:
+        tot_loja = Venda.objects.filter(
+            Q(estoque_loja__loja=l) | Q(estoque_recarga__loja=l),
+            data_venda__date__gte=primeiro_dia_mes
+        ).aggregate(total=Sum('valor_total'))['total'] or 0
+        lojas_labels.append(l.nome)
+        lojas_valores.append(float(tot_loja))
+        
+    # 3. Estatísticas fiscais
+    total_faturas = Fatura.objects.count()
+    faturas_mes = Fatura.objects.filter(data_emissao__gte=primeiro_dia_mes).count()
+    
+    # Atividades recentes do utilizador
+    atividades_recentes = Atividade.objects.filter(usuario=user)[:6]
     
     context = {
         'user': user,
-        'stats': stats,
+        'dias_labels': json.dumps(dias_labels),
+        'valores_dias': json.dumps(valores_dias),
+        'lojas_labels': json.dumps(lojas_labels),
+        'lojas_valores': json.dumps(lojas_valores),
+        'total_faturas': total_faturas,
+        'faturas_mes': faturas_mes,
         'atividades_recentes': atividades_recentes,
     }
     
     return render(request, 'index.html', context)
+
 
 @login_required
 def perfil_usuario(request):
@@ -261,6 +270,7 @@ def deletar_usuario(request, user_id):
 
 @login_required
 @user_passes_test(is_superuser)
+@require_POST
 def toggle_usuario_status(request, user_id):
     usuario = get_object_or_404(Conta, id=user_id)
     
@@ -370,6 +380,8 @@ def editar_perfil_ajax(request):
 # views.py
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from .models import Conta
@@ -398,12 +410,6 @@ def redefinir_senha_admin(request):
                 'errors': ['As senhas não coincidem.']
             })
         
-        if len(nova_senha) < 8:
-            return JsonResponse({
-                'success': False,
-                'errors': ['A senha deve ter pelo menos 8 caracteres.']
-            })
-        
         # Buscar usuário
         try:
             usuario = Conta.objects.get(id=user_id)
@@ -411,6 +417,15 @@ def redefinir_senha_admin(request):
             return JsonResponse({
                 'success': False,
                 'errors': ['Usuário não encontrado.']
+            })
+        
+        # Validação oficial de segurança da senha
+        try:
+            validate_password(nova_senha, user=usuario)
+        except ValidationError as e:
+            return JsonResponse({
+                'success': False,
+                'errors': list(e.messages)
             })
         
         # Redefinir senha

@@ -275,37 +275,29 @@ class RelatorioDiario(models.Model):
     
     def calcular_total_vendas_dia(self):
         """Calcula o total de vendas do dia baseado nas vendas registradas para a loja"""
-        from django.db.models import Sum
+        from django.db.models import Sum, Q
         
         try:
             if not self.loja:
                 return Decimal('0.00')
                 
-            # Buscar vendas do dia e da loja específica
+            # Buscar vendas do dia e da loja específica (tanto produtos quanto recargas)
             from lojas.models import Venda
             vendas_dia = Venda.objects.filter(
-                data_venda__date=self.data,
-                estoque__loja=self.loja
+                data_venda__date=self.data
+            ).filter(
+                Q(estoque_loja__loja=self.loja) | Q(estoque_recarga__loja=self.loja)
+            ).exclude(
+                status='devolvida'
             ).aggregate(total=Sum('valor_total'))
             
             return vendas_dia['total'] or Decimal('0.00')
-        except:
+        except Exception:
             return Decimal('0.00')
     
-    def calcular_total_arrecadado(self):
-        """Calcula o total arrecadado (DM + Moedas + TPA + Gastos)"""
-        return (self.dm or Decimal('0.00')) + \
-               (self.moedas or Decimal('0.00')) + \
-               (self.tpa or Decimal('0.00')) + \
-               (self.gastos or Decimal('0.00'))
-    
-    def calcular_diferenca(self):
-        """Calcula a diferença entre total geral e total arrecadado"""
-        return self.total_geral - self.calcular_total_arrecadado()
-    
     def tem_falta_dinheiro(self):
-        """Verifica se há falta de dinheiro no caixa"""
-        return self.calcular_diferenca() > Decimal('0.00')
+        """Verifica se há falta de dinheiro no caixa (arrecadado menor que total geral)"""
+        return self.calcular_diferenca() < Decimal('0.00')
     
     def get_loja_display(self):
         """Retorna o nome da loja ou uma string padrão se não tiver loja"""

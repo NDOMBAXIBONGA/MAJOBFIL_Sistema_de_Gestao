@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Fatura {{ fatura.numero_fatura }}{% endblock %}
+{% block page_title %}{{ fatura.numero_fatura }}{% endblock %}
+{% block page_subtitle %}Documento Certificado nos termos do Regime Jurídico das Faturas{% endblock %}
+
+{% block content %}
+<style>
+@media print {
+    body * { visibility: hidden !important; }
+    .no-print { display: none !important; }
+
+    /* Modo A4 */
+    body.modo-impressao-a4 #fatura-impressao,
+    body.modo-impressao-a4 #fatura-impressao * {
+        visibility: visible !important;
+    }
+    body.modo-impressao-a4 #fatura-impressao {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        border: none !important;
+        display: block !important;
+    }
+
+    /* Modo Térmico 80mm */
+    body.modo-impressao-termica #fatura-termica-80mm,
+    body.modo-impressao-termica #fatura-termica-80mm * {
+        visibility: visible !important;
+    }
+    body.modo-impressao-termica #fatura-termica-80mm {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 6mm 4mm;
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        border: none !important;
+        display: block !important;
+        font-family: 'Courier New', monospace;
+    }
+}
+.fiscal-sheet {
+    background: #ffffff;
+    color: #111827;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 850px;
+    margin: 0 auto 40px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.ticket-80mm {
+    display: none;
+    background: #fff;
+    color: #000;
+    width: 80mm;
+    margin: 20px auto;
+    padding: 12px 10px;
+    border: 1px dashed #ccc;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.35;
+}
+</style>
+
+<div class="fade-up">
+    <!-- Bar com Ações -->
+    <div class="no-print mb-4" style="display:flex; justify-content:space-between; align-items:center; max-width:850px; margin:0 auto 20px; flex-wrap:wrap; gap:12px;">
+        <a href="{% url 'lista_faturas' %}" class="btn-glass">
+            <i class="fas fa-arrow-left"></i> Voltar à Lista
+        </a>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="imprimirA4()" class="btn-glass" style="background:#3b82f6;color:#fff;border-color:#3b82f6;">
+                <i class="fas fa-file-invoice"></i> Imprimir A4
+            </button>
+            <button onclick="imprimirTermico()" class="btn-glass" style="background:#10b981;color:#fff;border-color:#10b981;">
+                <i class="fas fa-receipt"></i> Imprimir Talão (80mm)
+            </button>
+        </div>
+    </div>
+
+    <!-- Folha A4 Oficial da Fatura -->
+    <div id="fatura-impressao" class="fiscal-sheet">
+        <!-- Topo: Emitente & Documento -->
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #e5e7eb; padding-bottom:20px; margin-bottom:24px;">
+            <div style="max-width:420px;">
+                <h2 style="margin:0 0 6px; font-size:22px; font-weight:800; color:#111827;">{{ fatura.emitente_nome }}</h2>
+                <div style="font-size:13px; color:#4b5563; line-height:1.5;">
+                    <p style="margin:0;"><strong>NIF:</strong> {{ fatura.emitente_nif }}</p>
+                    <p style="margin:0;"><strong>Endereço:</strong> {{ fatura.emitente_endereco }}</p>
+                    <p style="margin:0;"><strong>Regime de IVA:</strong> {{ fatura.emitente_regime_iva }}</p>
+                </div>
+            </div>
+
+            <div style="text-align:right;">
+                <div style="display:inline-block; padding:6px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; margin-bottom:10px;">
+                    <span style="font-size:16px; font-weight:800; color:#1d4ed8;">
+                        {% if fatura.serie_fiscal.tipo_documento == 'FT' %}FATURA
+                        {% elif fatura.serie_fiscal.tipo_documento == 'FR' %}FATURA-RECIBO
+                        {% elif fatura.serie_fiscal.tipo_documento == 'NC' %}NOTA DE CRÉDITO
+                        {% else %}NOTA DE DÉBITO{% endif %}
+                    </span>
+                </div>
+                <h3 style="margin:0 0 4px; font-size:18px; font-weight:700; color:#111827;">{{ fatura.numero_fatura }}</h3>
+                <div style="font-size:12px; color:#6b7280;">
+                    <p style="margin:0;">Data de Emissão: <strong>{{ fatura.data_emissao|date:"d/m/Y" }}</strong></p>
+                    <p style="margin:0;">Data de Vencimento: <strong>{{ fatura.data_vencimento|date:"d/m/Y" }}</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dados do Adquirente -->
+        <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px 20px; margin-bottom:24px;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#6b7280; margin-bottom:8px;">Dados do Cliente / Adquirente</div>
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; font-size:13px; color:#1f2937;">
+                <div>
+                    <p style="margin:0 0 4px;"><strong>Nome:</strong> {{ fatura.cliente_nome }}</p>
+                    <p style="margin:0;"><strong>Endereço:</strong> {{ fatura.cliente_endereco }}</p>
+                </div>
+                <div>
+                    <p style="margin:0 0 4px;"><strong>NIF:</strong> {{ fatura.cliente_nif }}</p>
+                    <p style="margin:0;"><strong>Regime:</strong> {{ fatura.cliente.regime_iva }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Artigos -->
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:24px;">
+            <thead>
+                <tr style="border-bottom:2px solid #111827; background:#f3f4f6; color:#111827; text-align:left;">
+                    <th style="padding:8px;">#</th>
+                    <th style="padding:8px;">Código</th>
+                    <th style="padding:8px;">Descrição</th>
+                    <th style="padding:8px; text-align:center;">Qtd</th>
+                    <th style="padding:8px; text-align:right;">Preço Unit.</th>
+                    <th style="padding:8px; text-align:right;">Desc.</th>
+                    <th style="padding:8px; text-align:center;">Taxa IVA</th>
+                    <th style="padding:8px; text-align:right;">Total Líquido</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in fatura.itens.all %}
+                <tr style="border-bottom:1px solid #e5e7eb;">
+                    <td style="padding:8px;">{{ item.numero_linha }}</td>
+                    <td style="padding:8px; font-family:monospace; color:#4b5563;">{{ item.codigo_produto }}</td>
+                    <td style="padding:8px; font-weight:600;">
+                        {{ item.descricao }}
+                        {% if item.motivo_isencao %}
+                        <div style="font-size:10px; color:#dc2626; font-weight:normal;">
+                            * {{ item.motivo_isencao.codigo }} - {{ item.motivo_isencao.mencao_legal }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td style="padding:8px; text-align:center;">{{ item.quantidade|floatformat:2 }}</td>
+                    <td style="padding:8px; text-align:right;">{{ item.preco_unitario|floatformat:2 }}</td>
+                    <td style="padding:8px; text-align:right;">{{ item.desconto_linha|floatformat:2 }}</td>
+                    <td style="padding:8px; text-align:center;">{{ item.taxa_iva|floatformat:0 }}%</td>
+                    <td style="padding:8px; text-align:right; font-weight:600;">{{ item.total_linha|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Resumo de Impostos & Totais Finais -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:24px; margin-bottom:30px;">
+            <!-- Quadro Resumo do IVA -->
+            <div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:#6b7280; margin-bottom:6px;">Quadro Resumo de Impostos (AGT)</div>
+                <table style="width:100%; border-collapse:collapse; font-size:11px; border:1px solid #e5e7eb;">
+                    <thead>
+                        <tr style="background:#f9fafb; border-bottom:1px solid #e5e7eb; color:#4b5563;">
+                            <th style="padding:6px;">Taxa</th>
+                            <th style="padding:6px; text-align:right;">Incidência</th>
+                            <th style="padding:6px; text-align:right;">Valor IVA</th>
+                            <th style="padding:6px;">Motivo Isenção</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in resumo_iva %}
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:6px;">{{ r.taxa|floatformat:0 }}%</td>
+                            <td style="padding:6px; text-align:right;">{{ r.incidencia|floatformat:2 }}</td>
+                            <td style="padding:6px; text-align:right;">{{ r.montante_iva|floatformat:2 }}</td>
+                            <td style="padding:6px; font-size:10px; color:#6b7280;">{{ r.motivo|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totais Fiscais -->
+            <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:16px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#4b5563;">
+                    <span>Total Ilíquido:</span>
+                    <span>{{ fatura.total_incidencia|floatformat:2 }} Kz</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#4b5563;">
+                    <span>Descontos Globais:</span>
+                    <span>{{ fatura.total_descontos|floatformat:2 }} Kz</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px; color:#4b5563;">
+                    <span>Total IVA Liquidado:</span>
+                    <span>{{ fatura.total_iva|floatformat:2 }} Kz</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; border-top:2px solid #111827; padding-top:10px; color:#111827;">
+                    <span>TOTAL A PAGAR:</span>
+                    <span>{{ fatura.total_bruto|floatformat:2 }} Kz</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé Fiscal Oficial da AGT -->
+        <div style="border-top:1px dashed #9ca3af; padding-top:14px; font-size:11px; color:#4b5563; text-align:center; line-height:1.6;">
+            <p style="margin:0; font-weight:700; font-family:monospace; color:#111827; letter-spacing:1px;">
+                {{ fatura.hash_curto }}
+            </p>
+            <p style="margin:2px 0 0; font-size:10px; color:#6b7280;">
+                Data/Hora da Gravação no Sistema: {{ fatura.system_entry_date|date:"Y-m-d H:i:s" }} | Operador: {{ fatura.operador.username }}
+            </p>
+            <p style="margin:2px 0 0; font-size:10px; color:#9ca3af;">
+                Documento emitido por computador através do software {{ config.nome_software }} v{{ config.versao_software }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Talão Térmico de 80mm (Layout Compacto para Impressoras de Balcão) -->
+    <div id="fatura-termica-80mm" class="ticket-80mm">
+        <div style="text-align:center; margin-bottom:8px;">
+            <h4 style="margin:0; font-size:13px; font-weight:bold;">{{ fatura.emitente_nome }}</h4>
+            <div>NIF: {{ fatura.emitente_nif }}</div>
+            <div>{{ fatura.emitente_endereco }}</div>
+            <div style="margin-top:4px; font-weight:bold; font-size:12px;">
+                {% if fatura.serie_fiscal.tipo_documento == 'FT' %}FATURA
+                {% elif fatura.serie_fiscal.tipo_documento == 'FR' %}FATURA-RECIBO
+                {% elif fatura.serie_fiscal.tipo_documento == 'NC' %}NOTA DE CRÉDITO
+                {% else %}NOTA DE DÉBITO{% endif %}
+            </div>
+            <div>{{ fatura.numero_fatura }}</div>
+            <div>Data: {{ fatura.data_emissao|date:"d/m/Y" }} {{ fatura.system_entry_date|date:"H:i" }}</div>
+        </div>
+        <div style="border-top:1px dashed #000; padding:4px 0; margin-bottom:6px;">
+            <div>Adquirente: {{ fatura.cliente_nome }}</div>
+            <div>NIF: {{ fatura.cliente_nif }}</div>
+        </div>
+        <div style="border-top:1px dashed #000; border-bottom:1px dashed #000; padding:4px 0; margin-bottom:6px;">
+            <table style="width:100%; font-size:10px; border-collapse:collapse;">
+                <thead>
+                    <tr style="text-align:left;">
+                        <th>Artigo</th>
+                        <th style="text-align:center;">Qtd</th>
+                        <th style="text-align:right;">P.Unit</th>
+                        <th style="text-align:right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in fatura.itens.all %}
+                    <tr>
+                        <td colspan="4" style="padding-top:2px;">{{ item.descricao }}</td>
+                    </tr>
+                    <tr style="border-bottom:1px dotted #ccc;">
+                        <td>{{ item.taxa_iva|floatformat:0 }}% IVA</td>
+                        <td style="text-align:center;">{{ item.quantidade|floatformat:0 }}</td>
+                        <td style="text-align:right;">{{ item.preco_unitario|floatformat:2 }}</td>
+                        <td style="text-align:right; font-weight:bold;">{{ item.total_linha|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="font-size:11px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between;">
+                <span>Incidência Líquida:</span>
+                <span>{{ fatura.total_incidencia|floatformat:2 }} Kz</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span>Total IVA:</span>
+                <span>{{ fatura.total_iva|floatformat:2 }} Kz</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; border-top:1px dashed #000; padding-top:4px; margin-top:4px;">
+                <span>TOTAL:</span>
+                <span>{{ fatura.total_bruto|floatformat:2 }} Kz</span>
+            </div>
+        </div>
+        <div style="border-top:1px dashed #000; padding-top:6px; text-align:center; font-size:9px;">
+            <div style="font-weight:bold; margin-bottom:2px;">{{ fatura.hash_curto }}</div>
+            <div>Operador: {{ fatura.operador.username }}</div>
+            <div>Obrigado pela sua preferência!</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function imprimirA4() {
+    document.body.classList.remove('modo-impressao-termica');
+    document.body.classList.add('modo-impressao-a4');
+    window.print();
+}
+
+function imprimirTermico() {
+    document.body.classList.remove('modo-impressao-a4');
+    document.body.classList.add('modo-impressao-termica');
+    window.print();
+}
+</script>
+{% endblock %}

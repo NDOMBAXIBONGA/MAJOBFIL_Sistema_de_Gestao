@@ -72,13 +72,8 @@ def lista_relatorios(request):
             total_arrecadado = relatorio.calcular_total_arrecadado()
             diferenca = relatorio.calcular_diferenca()
             
-            # Determinar status
-            if diferenca < 0:
-                status_relatorio = 'completo'
-            elif diferenca > 0:
-                status_relatorio = 'negativo'
-            else:
-                status_relatorio = 'pendente'
+            # Determinar status consistente com o modelo
+            status_relatorio = relatorio.get_status()
 
             # Aplicar filtro de status se especificado
             if status and status != '' and status != status_relatorio:

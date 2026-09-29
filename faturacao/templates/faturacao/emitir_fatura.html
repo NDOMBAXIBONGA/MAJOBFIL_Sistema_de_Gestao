@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Emitir Fatura Fiscal (AGT){% endblock %}
+{% block page_title %}Emitir Documento Fiscal{% endblock %}
+{% block page_subtitle %}Criação e assinatura digital em conformidade com o Regime Jurídico das Faturas{% endblock %}
+
+{% block content %}
+<div class="fade-up" style="max-width:1050px; margin:0 auto;">
+    <form method="POST" id="formFatura" action="{% url 'emitir_fatura' %}">
+        {% csrf_token %}
+        <input type="hidden" name="itens_json" id="itens_json" value="[]">
+
+        <!-- Topo: Série e Dados Gerais -->
+        <div class="glass-card mb-4">
+            <div class="glass-card-body">
+                <h4 style="margin:0 0 16px; font-size:16px; font-weight:700; color:#60a5fa;">
+                    <i class="fas fa-sliders-h"></i> Dados do Documento Fiscal
+                </h4>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Série Fiscal Ativa *</label>
+                        <select name="serie_id" required class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                            {% for s in series %}
+                            <option value="{{ s.id }}">
+                                {{ s.get_tipo_documento_display }} (Série: {{ s.serie }}/{{ s.ano }}) - Próximo: #{{ s.ultimo_numero|add:1 }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Data de Emissão</label>
+                        <input type="text" readonly value="{{ hoje|date:'d/m/Y' }}" class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Operador Responsável</label>
+                        <input type="text" readonly value="{{ request.user.nome|default:request.user.username }}" class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adquirente / Cliente -->
+        <div class="glass-card mb-4">
+            <div class="glass-card-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h4 style="margin:0; font-size:16px; font-weight:700; color:#34d399;">
+                        <i class="fas fa-user-tag"></i> Dados do Adquirente (Cliente)
+                    </h4>
+                    <button type="button" class="btn-glass btn-sm" onclick="toggleNovoCliente()">
+                        <i class="fas fa-user-plus"></i> Inserir Novo NIF
+                    </button>
+                </div>
+
+                <!-- Selecionar Existente -->
+                <div id="divClienteExistente">
+                    <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Cliente Registado</label>
+                    <select name="cliente_id" id="cliente_id" class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                        {% for c in clientes %}
+                        <option value="{{ c.id }}">{{ c.nome_razao_social }} (NIF: {{ c.nif }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Novo Cliente Rápido -->
+                <div id="divNovoCliente" style="display:none; margin-top:12px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px dashed rgba(255,255,255,0.1);">
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px;">
+                        <div>
+                            <label style="display:block; font-size:11px; margin-bottom:4px;">NIF de Angola *</label>
+                            <input type="text" name="novo_cliente_nif" id="novo_cliente_nif" placeholder="Ex: 5412345678" class="form-control" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:11px; margin-bottom:4px;">Nome / Razão Social *</label>
+                            <input type="text" name="novo_cliente_nome" id="novo_cliente_nome" placeholder="Nome do Cliente ou Empresa" class="form-control" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linhas da Fatura (Itens) -->
+        <div class="glass-card mb-4">
+            <div class="glass-card-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h4 style="margin:0; font-size:16px; font-weight:700; color:#f59e0b;">
+                        <i class="fas fa-boxes"></i> Artigos e Serviços
+                    </h4>
+                    <button type="button" class="btn-glass btn-sm" onclick="adicionarLinhaItem()" style="border-color:#f59e0b; color:#f59e0b;">
+                        <i class="fas fa-plus-circle"></i> Adicionar Artigo
+                    </button>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;" id="tabelaItens">
+                        <thead>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); text-align:left;">
+                                <th style="padding:8px; width:40px;">#</th>
+                                <th style="padding:8px; width:120px;">Código</th>
+                                <th style="padding:8px;">Descrição do Artigo/Serviço</th>
+                                <th style="padding:8px; width:80px;">Qtd</th>
+                                <th style="padding:8px; width:110px;">Preço Unit.</th>
+                                <th style="padding:8px; width:80px;">Desc.</th>
+                                <th style="padding:8px; width:100px;">Taxa IVA</th>
+                                <th style="padding:8px; width:140px;">Motivo Isenção (se 0%)</th>
+                                <th style="padding:8px; width:110px; text-align:right;">Subtotal</th>
+                                <th style="padding:8px; width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoItens">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Painel de Totais -->
+                <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+                    <div style="width:300px; padding:16px; background:rgba(0,0,0,0.25); border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px; color:var(--text-secondary);">
+                            <span>Incidência Líquida:</span>
+                            <span id="txtIncidencia">0.00 Kz</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px; color:#10b981;">
+                            <span>Total IVA:</span>
+                            <span id="txtIVA">0.00 Kz</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px; color:#fff;">
+                            <span>TOTAL BRUTO:</span>
+                            <span id="txtTotal">0.00 Kz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observações & Botão Emitir -->
+        <div class="glass-card mb-4">
+            <div class="glass-card-body">
+                <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Observações da Fatura</label>
+                <textarea name="observacoes" rows="2" placeholder="Observações opcionais a constar na fatura..." class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></textarea>
+
+                <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:12px;">
+                    <a href="{% url 'lista_faturas' %}" class="btn-glass">Cancelar</a>
+                    <button type="submit" class="btn-glass" style="background:#10b981; color:#fff; border-color:#10b981; padding:10px 24px; font-weight:700;">
+                        <i class="fas fa-stamp"></i> Emitir e Assinar Digitalmente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let contadorLinhas = 0;
+const motivosIsencao = [
+    {% for m in motivos_isencao %}
+    { codigo: "{{ m.codigo }}", nome: "{{ m.codigo }} - {{ m.mencao_legal|truncatechars:35 }}" },
+    {% endfor %}
+];
+
+function toggleNovoCliente() {
+    const divNovo = document.getElementById('divNovoCliente');
+    const divExist = document.getElementById('divClienteExistente');
+    if (divNovo.style.display === 'none') {
+        divNovo.style.display = 'block';
+        divExist.style.opacity = '0.4';
+    } else {
+        divNovo.style.display = 'none';
+        divExist.style.opacity = '1';
+    }
+}
+
+function adicionarLinhaItem(codigo = '', descricao = '', qtd = 1, preco = 0, taxaIva = 14, isencao = '') {
+    contadorLinhas++;
+    const tbody = document.getElementById('corpoItens');
+    const tr = document.createElement('tr');
+    tr.id = `linha_${contadorLinhas}`;
+    tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+    
+    let opcoesIsencao = '<option value="">Nenhum</option>';
+    motivosIsencao.forEach(m => {
+        opcoesIsencao += `<option value="${m.codigo}" ${m.codigo === isencao ? 'selected' : ''}>${m.nome}</option>`;
+    });
+
+    tr.innerHTML = `
+        <td style="padding:8px; color:var(--text-secondary);">${contadorLinhas}</td>
+        <td style="padding:8px;"><input type="text" class="form-control item-cod" value="${codigo || 'ART' + contadorLinhas}" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></td>
+        <td style="padding:8px;"><input type="text" required class="form-control item-desc" value="${descricao}" placeholder="Nome do produto..." style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></td>
+        <td style="padding:8px;"><input type="number" step="0.01" min="0.01" class="form-control item-qtd" value="${qtd}" oninput="recalcularTotais()" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></td>
+        <td style="padding:8px;"><input type="number" step="0.01" min="0" class="form-control item-preco" value="${preco}" oninput="recalcularTotais()" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></td>
+        <td style="padding:8px;"><input type="number" step="0.01" min="0" class="form-control item-desc-val" value="0.00" oninput="recalcularTotais()" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);"></td>
+        <td style="padding:8px;">
+            <select class="form-control item-taxa" onchange="verificarIsencao(this); recalcularTotais();" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                <option value="14.00" ${taxaIva == 14 ? 'selected' : ''}>14% (Geral)</option>
+                <option value="7.00" ${taxaIva == 7 ? 'selected' : ''}>7% (Cesta Básica)</option>
+                <option value="5.00" ${taxaIva == 5 ? 'selected' : ''}>5%</option>
+                <option value="0.00" ${taxaIva == 0 ? 'selected' : ''}>0% (Isento)</option>
+            </select>
+        </td>
+        <td style="padding:8px;">
+            <select class="form-control item-isencao" style="width:100%; padding:6px; border-radius:4px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.1); display:${taxaIva == 0 ? 'block' : 'none'};">
+                ${opcoesIsencao}
+            </select>
+        </td>
+        <td style="padding:8px; text-align:right; font-weight:700; color:#fff;" class="item-subtotal">0.00 Kz</td>
+        <td style="padding:8px; text-align:center;">
+            <button type="button" onclick="removerLinha('${tr.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    recalcularTotais();
+}
+
+function verificarIsencao(selectTaxa) {
+    const tr = selectTaxa.closest('tr');
+    const selectIsencao = tr.querySelector('.item-isencao');
+    if (parseFloat(selectTaxa.value) === 0) {
+        selectIsencao.style.display = 'block';
+        selectIsencao.required = true;
+    } else {
+        selectIsencao.style.display = 'none';
+        selectIsencao.required = false;
+        selectIsencao.value = '';
+    }
+}
+
+function removerLinha(idLinha) {
+    const tr = document.getElementById(idLinha);
+    if (tr) tr.remove();
+    recalcularTotais();
+}
+
+function recalcularTotais() {
+    let totIncidencia = 0;
+    let totIVA = 0;
+    const itens = [];
+
+    document.querySelectorAll('#corpoItens tr').forEach(tr => {
+        const cod = tr.querySelector('.item-cod').value;
+        const desc = tr.querySelector('.item-desc').value;
+        const qtd = parseFloat(tr.querySelector('.item-qtd').value) || 0;
+        const preco = parseFloat(tr.querySelector('.item-preco').value) || 0;
+        const descVal = parseFloat(tr.querySelector('.item-desc-val').value) || 0;
+        const taxa = parseFloat(tr.querySelector('.item-taxa').value) || 0;
+        const isencao = tr.querySelector('.item-isencao').value;
+
+        const subtotalLiq = Math.max(0, (qtd * preco) - descVal);
+        const montanteIva = subtotalLiq * (taxa / 100);
+        const totalLinha = subtotalLiq + montanteIva;
+
+        tr.querySelector('.item-subtotal').innerText = totalLinha.toFixed(2) + ' Kz';
+
+        totIncidencia += subtotalLiq;
+        totIVA += montanteIva;
+
+        itens.push({
+            codigo_produto: cod,
+            descricao: desc,
+            quantidade: qtd,
+            preco_unitario: preco,
+            desconto: descVal,
+            taxa_iva: taxa,
+            codigo_isencao: isencao
+        });
+    });
+
+    const totGeral = totIncidencia + totIVA;
+
+    document.getElementById('txtIncidencia').innerText = totIncidencia.toFixed(2) + ' Kz';
+    document.getElementById('txtIVA').innerText = totIVA.toFixed(2) + ' Kz';
+    document.getElementById('txtTotal').innerText = totGeral.toFixed(2) + ' Kz';
+
+    document.getElementById('itens_json').value = JSON.stringify(itens);
+}
+
+// Inicializar com uma primeira linha vazia
+window.addEventListener('DOMContentLoaded', () => {
+    adicionarLinhaItem('ART1', 'Serviço / Produto Padrão', 1, 1000, 14);
+});
+</script>
+{% endblock %}

@@ -544,7 +544,16 @@
 function openModal(id)  { document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape') document.querySelectorAll('.lg-modal.show').forEach(m=>closeModal(m.id)); });
+document.addEventListener('keydown', e => { 
+    if(e.key==='Escape') {
+        document.querySelectorAll('.lg-modal.show').forEach(m=>closeModal(m.id)); 
+    }
+    if(e.key==='F2') {
+        e.preventDefault();
+        const s = document.getElementById('searchInput');
+        if (s) { s.focus(); s.select(); }
+    }
+});
 
 let currentType = 'todos';
 let precoUnitarioAtual = 0;
@@ -627,16 +636,32 @@ function confirmarVenda() {
     const itemType  = document.getElementById('itemType').value;
     const quantidade = parseInt(document.getElementById('quantidadeVenda').value);
     const observacao = document.getElementById('observacao').value;
-    if (!quantidade || quantidade <= 0) { alert('Informe uma quantidade válida.'); return; }
+    if (!quantidade || quantidade <= 0) {
+        if (window.showToast) window.showToast('Informe uma quantidade válida.', 'warning');
+        else alert('Informe uma quantidade válida.');
+        return; 
+    }
     const btn = document.getElementById('btnConfirmarVenda');
     const orig = btn.innerHTML; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processando...'; btn.disabled=true;
     fetch('{% url "registrar_venda" %}', {
         method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
         body: JSON.stringify({estoque_id:estoqueId,item_type:itemType,quantidade,observacao})
     }).then(r=>r.json()).then(data=>{
-        if(data.success){ alert('Venda registada com sucesso!'); closeModal('vendaModal'); location.reload(); }
-        else { alert('Erro: '+data.error); btn.innerHTML=orig; btn.disabled=false; }
-    }).catch(()=>{ alert('Erro de conexão.'); btn.innerHTML=orig; btn.disabled=false; });
+        if(data.success){ 
+            if (window.showToast) window.showToast('Venda #' + data.venda_id + ' registada com sucesso!', 'success');
+            closeModal('vendaModal'); 
+            setTimeout(() => { location.reload(); }, 800);
+        }
+        else { 
+            if (window.showToast) window.showToast('Erro: ' + data.error, 'danger');
+            else alert('Erro: ' + data.error);
+            btn.innerHTML=orig; btn.disabled=false; 
+        }
+    }).catch(()=>{ 
+        if (window.showToast) window.showToast('Erro de conexão ao servidor.', 'danger');
+        else alert('Erro de conexão.');
+        btn.innerHTML=orig; btn.disabled=false; 
+    });
 }
 
 function confirmarVendaRetroativa() {
@@ -646,18 +671,42 @@ function confirmarVendaRetroativa() {
     const dataVenda=document.getElementById('retroativaDataVenda').value;
     const justificativa=document.getElementById('retroativaJustificativa').value;
     const observacao=document.getElementById('retroativaObservacao').value;
-    if(!quantidade||quantidade<=0){alert('Informe uma quantidade válida.');return;}
-    if(!dataVenda){alert('Informe a data da venda.');return;}
-    if(!justificativa){alert('Informe a justificativa.');return;}
+    if(!quantidade||quantidade<=0){
+        if(window.showToast) window.showToast('Informe uma quantidade válida.', 'warning');
+        else alert('Informe uma quantidade válida.');
+        return;
+    }
+    if(!dataVenda){
+        if(window.showToast) window.showToast('Informe a data da venda.', 'warning');
+        else alert('Informe a data da venda.');
+        return;
+    }
+    if(!justificativa){
+        if(window.showToast) window.showToast('Informe a justificativa da venda retroativa.', 'warning');
+        else alert('Informe a justificativa.');
+        return;
+    }
     const btn=document.getElementById('btnConfirmarRetroativa');
     const orig=btn.innerHTML; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processando...'; btn.disabled=true;
     fetch('{% url "registrar_venda_retroativa" %}', {
         method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
         body:JSON.stringify({estoque_id:estoqueId,item_type:itemType,quantidade,data_venda:dataVenda,justificativa,observacao})
     }).then(r=>r.json()).then(data=>{
-        if(data.success){alert(data.message||'Venda retroativa registada!');closeModal('vendaRetroativaModal');location.reload();}
-        else{alert('Erro: '+data.error);btn.innerHTML=orig;btn.disabled=false;}
-    }).catch(()=>{alert('Erro de conexão.');btn.innerHTML=orig;btn.disabled=false;});
+        if(data.success){
+            if(window.showToast) window.showToast(data.message||'Venda retroativa registada!', 'success');
+            closeModal('vendaRetroativaModal');
+            setTimeout(() => { location.reload(); }, 800);
+        }
+        else{
+            if(window.showToast) window.showToast('Erro: ' + data.error, 'danger');
+            else alert('Erro: '+data.error);
+            btn.innerHTML=orig; btn.disabled=false;
+        }
+    }).catch(()=>{
+        if(window.showToast) window.showToast('Erro de conexão ao servidor.', 'danger');
+        else alert('Erro de conexão.');
+        btn.innerHTML=orig; btn.disabled=false;
+    });
 }
 
 function confirmarDevolucao() {
@@ -665,19 +714,42 @@ function confirmarDevolucao() {
     let quantidade=document.getElementById('devolucaoQuantidade').value;
     const motivo=document.getElementById('devolucaoMotivo').value;
     const observacao=document.getElementById('devolucaoObservacao').value;
-    if(!vendaId){alert('ID da venda não encontrado.');return;}
-    if(!motivo){alert('Informe o motivo da devolução.');return;}
+    if(!vendaId){
+        if(window.showToast) window.showToast('ID da venda não encontrado.', 'danger');
+        return;
+    }
+    if(!motivo){
+        if(window.showToast) window.showToast('Informe o motivo da devolução.', 'warning');
+        else alert('Informe o motivo da devolução.');
+        return;
+    }
     quantidade = (!quantidade||quantidade==='')?null:parseInt(quantidade);
-    if(quantidade!==null&&(isNaN(quantidade)||quantidade<=0)){alert('Quantidade inválida.');return;}
+    if(quantidade!==null&&(isNaN(quantidade)||quantidade<=0)){
+        if(window.showToast) window.showToast('Quantidade a devolver inválida.', 'warning');
+        else alert('Quantidade inválida.');
+        return;
+    }
     const btn=document.getElementById('btnConfirmarDevolucao');
     const orig=btn.innerHTML; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processando...'; btn.disabled=true;
     fetch('{% url "registrar_devolucao" %}', {
         method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
         body:JSON.stringify({venda_id:vendaId,quantidade,motivo,observacao})
     }).then(r=>r.json()).then(data=>{
-        if(data.success){alert(data.message);closeModal('devolucaoModal');location.reload();}
-        else{alert('Erro: '+data.error);btn.innerHTML=orig;btn.disabled=false;}
-    }).catch(()=>{alert('Erro de conexão.');btn.innerHTML=orig;btn.disabled=false;});
+        if(data.success){
+            if(window.showToast) window.showToast(data.message, 'success');
+            closeModal('devolucaoModal');
+            setTimeout(() => { location.reload(); }, 800);
+        }
+        else{
+            if(window.showToast) window.showToast('Erro: ' + data.error, 'danger');
+            else alert('Erro: '+data.error);
+            btn.innerHTML=orig; btn.disabled=false;
+        }
+    }).catch(()=>{
+        if(window.showToast) window.showToast('Erro de conexão ao servidor.', 'danger');
+        else alert('Erro de conexão.');
+        btn.innerHTML=orig; btn.disabled=false;
+    });
 }
 
 function selectType(type) {

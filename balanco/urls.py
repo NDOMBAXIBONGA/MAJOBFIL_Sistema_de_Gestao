@@ -6,6 +6,7 @@ urlpatterns = [
     # Principais
     path('', views.lista_balancos, name='lista_balancos'),
     path('balanco/<int:balanco_id>/', views.detalhe_balanco, name='detalhe_balanco'),
+    path('balanco/<int:balanco_id>/recalcular/', views.recalcular_balanco, name='recalcular_balanco'),
     path('balanco/criar/personalizado/', views.criar_balanco_personalizado, name='criar_balanco_personalizado'),
     path('balanco/excluir/<int:balanco_id>/', views.excluir_balanco, name='excluir_balanco'),
     

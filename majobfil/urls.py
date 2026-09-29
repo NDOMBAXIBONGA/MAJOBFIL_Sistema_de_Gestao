@@ -25,6 +25,7 @@ urlpatterns = [
     path('loja/', include("lojas.urls")),
     path('relatorio/', include("relatorio.urls")),
     path('produtos/', include("produtos.urls")),
+    path('faturacao/', include("faturacao.urls")),
     path('api/totais-vendas/', views.api_totais_vendas, name='api_totais_vendas'),
     path('vendas/<int:venda_id>/editar-data/', views.editar_data_venda, name='editar_data_venda'),
 ]

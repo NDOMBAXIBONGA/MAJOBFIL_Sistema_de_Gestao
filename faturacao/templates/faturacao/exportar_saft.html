@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Exportar SAF-T (AO) - AGT{% endblock %}
+{% block page_title %}Exportação SAF-T (AO){% endblock %}
+{% block page_subtitle %}Ficheiro de Auditoria Tributária para submissão no portal da AGT{% endblock %}
+
+{% block content %}
+<div class="fade-up" style="max-width:650px; margin:40px auto;">
+    <div class="glass-card">
+        <div class="glass-card-body" style="padding:32px;">
+            <div style="text-align:center; margin-bottom:24px;">
+                <div style="width:64px; height:64px; margin:0 auto 16px; border-radius:16px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:center; font-size:28px; color:#10b981;">
+                    <i class="fas fa-file-code"></i>
+                </div>
+                <h3 style="margin:0 0 8px; font-size:20px; font-weight:800;">SAF-T Angola (AO_1.01_01)</h3>
+                <p style="margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5;">
+                    Exporte o ficheiro XML de faturação eletrónica mensal certificado conforme o esquema XSD da Administração Geral Tributária (AGT).
+                </p>
+            </div>
+
+            <form method="POST" action="{% url 'exportar_saft' %}">
+                {% csrf_token %}
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:24px;">
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Mês de Competência</label>
+                        <select name="mes" class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.25); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                            {% for num, nome in meses %}
+                            <option value="{{ num }}" {% if mes_atual == num %}selected{% endif %}>{{ num|stringformat:"02d" }} - {{ nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-secondary);">Ano Fiscal</label>
+                        <select name="ano" class="form-control" style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.25); color:#fff; border:1px solid rgba(255,255,255,0.1);">
+                            {% for a in anos %}
+                            <option value="{{ a }}" {% if ano_atual == a %}selected{% endif %}>{{ a }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:14px; font-size:12px; color:#93c5fd; line-height:1.5; margin-bottom:24px;">
+                    <i class="fas fa-info-circle"></i> O ficheiro gerado contém o cabeçalho oficial da empresa, a lista de adquirentes do período e todas as faturas e linhas com as respetivas assinaturas digitais RSA.
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <a href="{% url 'lista_faturas' %}" class="btn-glass">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                    <button type="submit" class="btn-glass" style="background:#10b981; color:#fff; border-color:#10b981; padding:10px 24px; font-weight:700;">
+                        <i class="fas fa-download"></i> Gerar e Baixar XML
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -49,7 +49,7 @@
                 <select name="loja" class="form-input form-select">
                     <option value="">Todas as lojas</option>
                     {% for loja in lojas %}
-                    <option value="{{ loja.id }}" {% if filtros.loja_id == loja.id|stringformat:"i" %}selected{% endif %}>{{ loja.nome }}</option>
+                    <option value="{{ loja.id }}" {% if filtros.loja_id == loja.id|stringformat:"s" %}selected{% endif %}>{{ loja.nome }}</option>
                     {% endfor %}
                 </select>
             </div>

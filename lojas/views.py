@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.db.models import Sum, Q, Count, F
 from django.db import transaction
@@ -110,9 +109,8 @@ def render_produtos_loja(request, loja):
         'valor_total_estoque': f"{valor_total_estoque:.2f}"
     })
 
-@require_POST
-@csrf_exempt
 @login_required
+@require_POST
 def registrar_venda(request):
     try:
         print("=== REGISTRAR VENDA CHAMADA ===")
@@ -498,9 +496,8 @@ def listar_devolucoes(request):
     }
     return render(request, 'vendas/listar_devolucoes.html', context)
 
-@require_POST
-@csrf_exempt
 @login_required
+@require_POST
 def registrar_devolucao(request):
     """
     Função para registrar devolução de venda
@@ -744,9 +741,8 @@ def detalhes_venda_com_devolucao(request, venda_id):
 
 # ==================== FUNÇÃO PARA REGISTRAR VENDAS RETROATIVAS ====================
 
-@require_POST
-@csrf_exempt
 @login_required
+@require_POST
 def registrar_venda_retroativa(request):
     """
     Função para registrar vendas de dias anteriores (vendas retroativas)
@@ -955,9 +951,8 @@ def registrar_venda_retroativa(request):
 
 # ==================== FUNÇÃO PARA EDITAR DATA DE VENDA ====================
 
-@require_POST
-@csrf_exempt
 @login_required
+@require_POST
 def editar_data_venda(request, venda_id):
     """
     Função para editar a data de uma venda existente
@@ -1093,8 +1088,8 @@ def listar_vendas_retroativas(request):
 
 # ==================== FUNÇÕES EXISTENTES (mantidas) ====================
 
+@login_required
 @require_GET
-@csrf_exempt
 def api_totais_vendas(request):
     """API simplificada para retornar os totais de vendas"""
     try:
@@ -1114,6 +1109,13 @@ def api_totais_vendas(request):
                 'status': 'error',
                 'message': f'Loja com ID {loja_id} não encontrada'
             }, status=404)
+            
+        # Validar permissão
+        if not request.user.is_superuser and request.user not in loja.gerentes.all():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Você não tem permissão para acessar os dados desta loja.'
+            }, status=403)
         
         vendas_query = Venda.objects.filter(
             Q(estoque_loja__loja=loja) | Q(estoque_recarga__loja=loja)
@@ -1257,8 +1259,14 @@ def excluir_loja(request, loja_id):
     
     if request.method == 'POST':
         try:
-            loja.delete()
-            messages.success(request, 'Loja excluída com sucesso!')
+            has_history = Venda.objects.filter(Q(estoque_loja__loja=loja) | Q(estoque_recarga__loja=loja)).exists()
+            if has_history:
+                loja.ativo = False
+                loja.save()
+                messages.warning(request, f'A loja "{loja.nome}" possui histórico de vendas e foi desativada em vez de excluída para preservar os registros contábeis.')
+            else:
+                loja.delete()
+                messages.success(request, 'Loja excluída com sucesso!')
         except Exception as e:
             messages.error(request, f'Erro ao excluir loja: {str(e)}')
         return redirect('listar_lojas')

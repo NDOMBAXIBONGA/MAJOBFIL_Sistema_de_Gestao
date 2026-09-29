@@ -7,6 +7,14 @@
 
 {% block topbar_actions %}
 <a href="{% url 'listar_vendas' %}" class="btn-glass btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
+{% if not venda.devolvida %}
+<a href="{% url 'faturar_venda' venda.pk %}?tipo=FR" class="btn-glass btn-sm" style="background:#10b981; color:#fff; border-color:#10b981;" title="Emitir Fatura-Recibo Oficial com Assinatura Digital AGT">
+    <i class="fas fa-file-invoice-dollar"></i> Emitir Fatura AGT
+</a>
+{% endif %}
+<button onclick="window.print()" class="btn-glass btn-sm" title="Imprimir Comprovativo de Venda">
+    <i class="fas fa-print"></i> Imprimir
+</button>
 {% endblock %}
 
 {% block content %}

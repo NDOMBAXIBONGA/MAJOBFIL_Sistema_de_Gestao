@@ -1577,17 +1577,90 @@
                 color: black;
             }
 
-            .lg-main {
-                margin-left: 0;
-                padding-top: 0;
-            }
-
             .glass-card {
                 background: white;
                 border: 1px solid #ddd;
                 box-shadow: none;
             }
         }
+
+        /* ── Toasts Flutuantes (VisionOS Style) ────────────── */
+        .lg-toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+            max-width: 420px;
+            width: calc(100% - 48px);
+        }
+
+        .lg-toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            background: rgba(15, 15, 35, 0.90);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: var(--radius);
+            color: #fff;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            font-size: 13.5px;
+            line-height: 1.4;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), opacity 0.35s ease;
+        }
+
+        .lg-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .lg-toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .lg-toast.success { border-color: rgba(52, 211, 153, 0.4); }
+        .lg-toast.success .lg-toast-icon { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+
+        .lg-toast.danger { border-color: rgba(248, 113, 113, 0.4); }
+        .lg-toast.danger .lg-toast-icon { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+
+        .lg-toast.warning { border-color: rgba(251, 191, 36, 0.4); }
+        .lg-toast.warning .lg-toast-icon { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+
+        .lg-toast.info { border-color: rgba(56, 189, 248, 0.4); }
+        .lg-toast.info .lg-toast-icon { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+
+        .lg-toast-content {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .lg-toast-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            transition: color 0.15s;
+        }
+        .lg-toast-close:hover { color: #fff; }
     </style>
     <style>
         {% block extra_css %}
@@ -1687,6 +1760,29 @@
             </div>
             {% endif %}
 
+            <div class="nav-section-label">Fiscalidade (AGT)</div>
+            <div class="nav-item">
+                <a href="{% url 'lista_faturas' %}" class="nav-link-lg {% block nav_faturacao %}{% endblock %}"
+                    title="Faturas Fiscais">
+                    <span class="nav-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <span>Faturas Fiscais</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'emitir_fatura' %}" class="nav-link-lg {% block nav_emitir_fatura %}{% endblock %}"
+                    title="Emitir Fatura">
+                    <span class="nav-icon"><i class="fas fa-file-circle-plus"></i></span>
+                    <span>Emitir Fatura</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'exportar_saft' %}" class="nav-link-lg {% block nav_saft %}{% endblock %}"
+                    title="Exportar SAF-T (AO)">
+                    <span class="nav-icon"><i class="fas fa-file-export"></i></span>
+                    <span>Exportar SAF-T</span>
+                </a>
+            </div>
+
             <div class="nav-section-label">Conta</div>
             <div class="nav-item">
                 <a href="{% url 'perfil' %}" class="nav-link-lg {% block nav_perfil %}{% endblock %}" title="Perfil">
@@ -1714,7 +1810,7 @@
             </button>
             <!-- Desktop Collapse -->
             <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Recolher menu">
-                <i class="fas fa-sidebar" id="toggleIcon"></i>
+                <i class="fas fa-bars-staggered" id="toggleIcon"></i>
             </button>
             <!-- Page Title -->
             <div class="topbar-page-title">
@@ -1801,12 +1897,12 @@
                     sidebar.classList.add('collapsed');
                     topbar.classList.add('sidebar-collapsed');
                     main.classList.add('sidebar-collapsed');
-                    toggleIcon.className = 'fas fa-sidebar-flip';
+                    toggleIcon.className = 'fas fa-chevron-right';
                 } else {
                     sidebar.classList.remove('collapsed');
                     topbar.classList.remove('sidebar-collapsed');
                     main.classList.remove('sidebar-collapsed');
-                    toggleIcon.className = 'fas fa-sidebar';
+                    toggleIcon.className = 'fas fa-bars-staggered';
                 }
             }
         }
@@ -1861,7 +1957,52 @@
                 setTimeout(() => alert.remove(), 500);
             }, 5000);
         });
+
+        /* ── Sistema Global de Toasts Flutuantes ───────────── */
+        window.showToast = function(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('lgToastContainer');
+            if (!container) return;
+
+            const iconMap = {
+                success: 'fa-circle-check',
+                danger: 'fa-circle-xmark',
+                error: 'fa-circle-xmark',
+                warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            const toastType = type === 'error' ? 'danger' : type;
+            const iconClass = iconMap[toastType] || iconMap.info;
+
+            const toast = document.createElement('div');
+            toast.className = `lg-toast ${toastType}`;
+            toast.innerHTML = `
+                <div class="lg-toast-icon">
+                    <i class="fas ${iconClass}"></i>
+                </div>
+                <div class="lg-toast-content">${message}</div>
+                <button class="lg-toast-close" onclick="this.parentElement.remove()" aria-label="Fechar">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, duration);
+        };
     </script>
+
+    <!-- Container de Toasts Globais -->
+    <div id="lgToastContainer" class="lg-toast-container" aria-live="polite"></div>
 
     {% block extra_js %}{% endblock %}
 </body>

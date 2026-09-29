@@ -48,10 +48,13 @@
                 <i class="fas fa-edit"></i> Editar
             </a>
             {% if usuario.id != user.id %}
-            <a href="{% url 'toggle_usuario_status' usuario.id %}" class="btn-glass btn-sm btn-status-toggle">
-                <i class="fas fa-{% if usuario.is_active %}ban{% else %}check{% endif %}"></i>
-                {% if usuario.is_active %}Desativar{% else %}Ativar{% endif %}
-            </a>
+            <form method="POST" action="{% url 'toggle_usuario_status' usuario.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-glass btn-sm btn-status-toggle">
+                    <i class="fas fa-{% if usuario.is_active %}ban{% else %}check{% endif %}"></i>
+                    {% if usuario.is_active %}Desativar{% else %}Ativar{% endif %}
+                </button>
+            </form>
             <a href="{% url 'deletar_usuario' usuario.id %}" class="btn-glass btn-danger btn-sm btn-delete">
                 <i class="fas fa-trash"></i> Deletar
             </a>

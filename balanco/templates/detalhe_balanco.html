@@ -8,6 +8,12 @@
 {% block topbar_actions %}
 <a href="{% url 'lista_balancos' %}" class="btn-glass btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
 {% if user.is_superuser %}
+<form method="POST" action="{% url 'recalcular_balanco' balanco.pk %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn-glass btn-warning btn-sm" onclick="return confirm('Deseja recalcular e sincronizar os totais deste balanço?');" title="Recalcular totais com base nas vendas e estoques">
+        <i class="fas fa-rotate"></i> Recalcular
+    </button>
+</form>
 <a href="{% url 'excluir_balanco' balanco.pk %}" class="btn-glass btn-danger btn-sm" onclick="return confirm('Tem a certeza que deseja eliminar este balanço?');"><i class="fas fa-trash"></i> Excluir</a>
 {% endif %}
 {% endblock %}

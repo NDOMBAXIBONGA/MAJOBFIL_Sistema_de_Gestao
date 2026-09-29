@@ -17,6 +17,7 @@ class Produto(models.Model):
         blank=True,
         null=True
     )
+    ativo = models.BooleanField(default=True, verbose_name='Ativo')
     
     def save(self, *args, **kwargs):
         # Se o produto já existe no banco de dados
@@ -26,9 +27,13 @@ class Produto(models.Model):
             
             # Se existe imagem antiga e a imagem foi alterada
             if old_produto and old_produto.imagem and old_produto.imagem != self.imagem:
-                # Remove o arquivo antigo
-                if os.path.isfile(old_produto.imagem.path):
-                    os.remove(old_produto.imagem.path)
+                try:
+                    if hasattr(old_produto.imagem, 'path') and os.path.isfile(old_produto.imagem.path):
+                        os.remove(old_produto.imagem.path)
+                    else:
+                        old_produto.imagem.delete(save=False)
+                except Exception:
+                    pass
         
         super().save(*args, **kwargs)
     
@@ -48,6 +53,7 @@ class Recarga(models.Model):
     total_vendas = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     resto = models.IntegerField(default=0)
     imagem = models.ImageField(upload_to='recargas/', null=True, blank=True)
+    ativo = models.BooleanField(default=True, verbose_name='Ativo')
 
     def save(self, *args, **kwargs):
         # Se a recarga já existe no banco de dados
@@ -57,9 +63,13 @@ class Recarga(models.Model):
             
             # Se existe imagem antiga e a imagem foi alterada
             if old_recarga and old_recarga.imagem and old_recarga.imagem != self.imagem:
-                # Remove o arquivo antigo
-                if os.path.isfile(old_recarga.imagem.path):
-                    os.remove(old_recarga.imagem.path)
+                try:
+                    if hasattr(old_recarga.imagem, 'path') and os.path.isfile(old_recarga.imagem.path):
+                        os.remove(old_recarga.imagem.path)
+                    else:
+                        old_recarga.imagem.delete(save=False)
+                except Exception:
+                    pass
         
         super().save(*args, **kwargs)
 

@@ -37,6 +37,7 @@ class Loja(models.Model):
         verbose_name='Gerentes', 
         related_name='lojas_gerenciadas'
     )
+    ativo = models.BooleanField(default=True, verbose_name='Ativa')
     
     def __str__(self):
         return self.nome
@@ -251,7 +252,7 @@ class Loja(models.Model):
 
 class EstoqueLoja(models.Model):
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE)
-    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE)
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.PROTECT)
     quantidade = models.PositiveIntegerField(default=0)
     
     class Meta:
@@ -293,7 +294,7 @@ class EstoqueLoja(models.Model):
 
 class EstoqueRecarga(models.Model):
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE, verbose_name='Loja')
-    recarga = models.ForeignKey(Recarga, on_delete=models.CASCADE, verbose_name='Recarga')
+    recarga = models.ForeignKey(Recarga, on_delete=models.PROTECT, verbose_name='Recarga')
     quantidade = models.PositiveIntegerField(default=0, verbose_name='Quantidade em Estoque')
     
     # Campos de data
@@ -356,7 +357,7 @@ class Venda(models.Model):
     # Para produtos
     estoque_loja = models.ForeignKey(
         'EstoqueLoja', 
-        on_delete=models.CASCADE, 
+        on_delete=models.PROTECT, 
         null=True, 
         blank=True,
         verbose_name='Estoque do Produto',
@@ -366,8 +367,8 @@ class Venda(models.Model):
     # Para recargas
     estoque_recarga = models.ForeignKey(
         'EstoqueRecarga',
-        on_delete=models.CASCADE,
-        null=True,
+        on_delete=models.PROTECT,
+        null=True, 
         blank=True,
         verbose_name='Estoque da Recarga',
         related_name='vendas_recarga'
@@ -499,9 +500,9 @@ class MovimentacaoEstoque(models.Model):
     tipo_item = models.CharField('Tipo de Item', max_length=20, choices=TIPO_ITEM)
     
     # Campos para produto
-    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE, null=True, blank=True)
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.SET_NULL, null=True, blank=True)
     # Campos para recarga
-    recarga = models.ForeignKey(Recarga, on_delete=models.CASCADE, null=True, blank=True)
+    recarga = models.ForeignKey(Recarga, on_delete=models.SET_NULL, null=True, blank=True)
     
     quantidade = models.PositiveIntegerField('Quantidade')
     quantidade_anterior = models.PositiveIntegerField('Quantidade Anterior', default=0)

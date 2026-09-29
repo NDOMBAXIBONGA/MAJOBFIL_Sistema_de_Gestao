@@ -100,9 +100,29 @@ def lista_balancos(request):
     
     return render(request, 'lista_balancos.html', context)
 
+from django.views.decorators.http import require_POST
+
+@login_required
+@require_POST
+def recalcular_balanco(request, balanco_id):
+    """View para recalcular dados do balanço sob demanda via POST"""
+    balanco = get_object_or_404(Balanco, id=balanco_id)
+    if not request.user.is_superuser and balanco.loja not in request.user.lojas_gerenciadas.all():
+        messages.error(request, 'Sem permissão para alterar este balanço.')
+        return redirect('lista_balancos')
+    
+    try:
+        balanco.calcular_todos_dados()
+        balanco.save()
+        messages.success(request, 'Balanço recalculado com sucesso!')
+    except Exception as e:
+        messages.error(request, f'Erro ao calcular dados do balanço: {e}')
+        
+    return redirect('detalhe_balanco', balanco_id=balanco.id)
+
 @login_required
 def detalhe_balanco(request, balanco_id):
-    """Detalhes de um balanço específico - VERSÃO COM PAGINAÇÃO"""
+    """Detalhes de um balanço específico - VERSÃO COM PAGINAÇÃO (Somente Leitura)"""
     balanco = get_object_or_404(Balanco, id=balanco_id)
     
     # Verificar permissão
@@ -110,14 +130,13 @@ def detalhe_balanco(request, balanco_id):
         messages.error(request, 'Sem permissão para visualizar este balanço.')
         return redirect('lista_balancos')
     
-    # FORÇAR recálculo completo dos dados
-    try:
-        balanco.calcular_todos_dados()
-        balanco.save()
-    except Exception as e:
-        print(f"Erro ao calcular dados do balanço: {e}")
-        # Continua mesmo com erro
-    
+    # Se o balanço ainda não possui dados calculados, calcula uma única vez na inicialização
+    if not balanco.detalhes_vendas_diarias:
+        try:
+            balanco.calcular_todos_dados()
+            balanco.save()
+        except Exception as e:
+            print(f"Erro ao inicializar dados do balanço: {e}")
     # Obter TODOS os dados detalhados
     try:
         # Dados das vendas diárias (para paginação)

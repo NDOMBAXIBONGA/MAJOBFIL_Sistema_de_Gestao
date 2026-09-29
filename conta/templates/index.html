@@ -60,6 +60,45 @@
     </div>
 </div>
 
+<!-- Charts Row -->
+<div class="grid grid-2 mb-4 fade-up fade-up-2">
+    <!-- Chart: Vendas Diárias -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <div class="glass-card-title">
+                <div class="card-icon" style="background: rgba(139,92,246,0.2); color: var(--accent-1);">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                Faturamento Recente (Últimos 7 Dias)
+            </div>
+            <span class="badge-glass violet">Kwanza (AOA)</span>
+        </div>
+        <div class="glass-card-body" style="padding: 20px;">
+            <div style="position: relative; height: 240px; width: 100%;">
+                <canvas id="chartVendasDias"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart: Vendas por Loja -->
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <div class="glass-card-title">
+                <div class="card-icon" style="background: rgba(56,189,248,0.2); color: var(--accent-2);">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                Vendas por Loja (Mês Atual)
+            </div>
+            <span class="badge-glass cyan">{{ total_faturas }} Faturas</span>
+        </div>
+        <div class="glass-card-body" style="padding: 20px;">
+            <div style="position: relative; height: 240px; width: 100%;">
+                <canvas id="chartLojas"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Two column layout -->
 <div class="grid grid-2 mb-4">
     <!-- User Info Card -->
@@ -185,6 +224,13 @@
                 <span class="quick-action-label">Minhas Lojas</span>
                 <span class="quick-action-sub">Gerir lojas</span>
             </a>
+            <a href="{% url 'lista_faturas' %}" class="quick-action-btn">
+                <div class="quick-action-icon" style="background: rgba(59,130,246,0.2); color: #60a5fa;">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="quick-action-label">Faturas AGT</span>
+                <span class="quick-action-sub">Documentos fiscais</span>
+            </a>
             {% if user.is_superuser %}
             <a href="{% url 'lista_balancos' %}" class="quick-action-btn">
                 <div class="quick-action-icon" style="background: rgba(168,85,247,0.2); color: hsl(280,70%,70%);">
@@ -308,4 +354,122 @@ color: var(--text-primary);
 .quick-action-sub {
 font-size: 11px; color: var(--text-muted);
 }
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    Chart.defaults.color = 'rgba(255, 255, 255, 0.65)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // 1. Gráfico de Linhas (Faturamento Recente)
+    const canvasDias = document.getElementById('chartVendasDias');
+    if (canvasDias) {
+        const ctxDias = canvasDias.getContext('2d');
+        const gradientDias = ctxDias.createLinearGradient(0, 0, 0, 220);
+        gradientDias.addColorStop(0, 'rgba(139, 92, 246, 0.45)');
+        gradientDias.addColorStop(1, 'rgba(139, 92, 246, 0.02)');
+
+        new Chart(ctxDias, {
+            type: 'line',
+            data: {
+                labels: {{ dias_labels|safe }},
+                datasets: [{
+                    label: 'Vendas (Kz)',
+                    data: {{ valores_dias|safe }},
+                    borderColor: '#a78bfa',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#8b5cf6',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    backgroundColor: gradientDias,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 15, 35, 0.92)',
+                        titleColor: '#fff',
+                        bodyColor: '#34d399',
+                        borderColor: 'rgba(255,255,255,0.15)',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: (ctx) => ' ' + ctx.parsed.y.toLocaleString('pt-AO', {minimumFractionDigits: 2}) + ' Kz'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: {
+                            callback: (v) => v >= 1000 ? (v/1000).toFixed(0) + 'k' : v
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Gráfico Donut (Vendas por Loja)
+    const canvasLojas = document.getElementById('chartLojas');
+    if (canvasLojas) {
+        const ctxLojas = canvasLojas.getContext('2d');
+        const labelsLojas = {{ lojas_labels|safe }};
+        const valoresLojas = {{ lojas_valores|safe }};
+        
+        // Dados padrão caso ainda não haja vendas no mês
+        const temDados = valoresLojas.some(v => v > 0);
+        const dataFinal = temDados ? valoresLojas : [1];
+        const labelsFinal = temDados ? labelsLojas : ['Sem vendas registadas'];
+        const colorsFinal = temDados 
+            ? ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f43f5e', '#ec4899']
+            : ['rgba(255,255,255,0.15)'];
+
+        new Chart(ctxLojas, {
+            type: 'doughnut',
+            data: {
+                labels: labelsFinal,
+                datasets: [{
+                    data: dataFinal,
+                    backgroundColor: colorsFinal,
+                    borderWidth: 2,
+                    borderColor: 'rgba(12, 12, 30, 0.8)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 15, 35, 0.92)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(255,255,255,0.15)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: (ctx) => ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString('pt-AO', {minimumFractionDigits: 2}) + ' Kz'
+                        }
+                    }
+                },
+                cutout: '68%'
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

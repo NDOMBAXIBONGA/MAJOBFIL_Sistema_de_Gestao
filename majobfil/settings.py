@@ -1,10 +1,20 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 import dj_database_url
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Carregar variáveis de ambiente do .env
+load_dotenv(BASE_DIR / '.env')
+
 # Configurações de segurança
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-DEBUG = True
-SECRET_KEY = os.environ.get('SECRET_KEY', 'sua-chave-local-aqui')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-development-local-key-majofil-system-fallback'
+
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -12,23 +22,9 @@ ALLOWED_HOSTS = [
     '.up.railway.app',  # Aceita qualquer subdomínio do railway
 ]
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-#SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-dev-key')
-#DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
-#ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = [
-    #'admin_interface',
-    #'colorfield', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,7 +37,7 @@ INSTALLED_APPS = [
     'lojas',
     'produtos',
     'relatorio',
-    
+    'faturacao',
 ]
 
 # IMPORTANTE para Django 3.0+
@@ -86,29 +82,30 @@ LOGIN_URL = 'login'
 
 WSGI_APPLICATION = 'majobfil.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# Em produção (DEBUG=False) usa DATABASE_URL (ex: PostgreSQL no Railway).
+# Em desenvolvimento local (DEBUG=True) ou testes automatizados, utiliza SQLite local para estabilidade e independência de conexão externa.
+import sys
+DATABASE_URL = os.environ.get('DATABASE_URL')
+IS_TESTING = 'test' in sys.argv
 
-"""DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DATABASE_URL and not DEBUG and not IS_TESTING:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}"""
-
-
-DATABASES = {
-    'default': dj_database_url.config(
-     default='postgresql://postgres:EobAzbjQOmQmxUaTEjydtQoPolorQDsW@nozomi.proxy.rlwy.net:41455/railway',
-       conn_max_age=600,
-       conn_health_checks=True,
-   )
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -124,36 +121,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'Africa/Luanda'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage' # comentar em produao
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Adicione estas configurações ao seu settings.py
-
-AUTH_USER_MODEL = 'conta.Conta'  # Substitua 'sua_app' pelo nome do seu app
+AUTH_USER_MODEL = 'conta.Conta'
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.up.railway.app',
 ]
+
+# Configurações de segurança para produção
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

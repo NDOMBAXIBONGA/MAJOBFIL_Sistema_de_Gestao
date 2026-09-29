@@ -64,8 +64,8 @@ def listar_todos_itens(request):
     q = request.GET.get('q', '').strip()
     tipo = request.GET.get('tipo', '').strip()
     
-    produtos = Produto.objects.all().order_by('nome')
-    recargas = Recarga.objects.all().order_by('nome')
+    produtos = Produto.objects.filter(ativo=True).order_by('nome')
+    recargas = Recarga.objects.filter(ativo=True).order_by('nome')
     
     if q:
         produtos = produtos.filter(nome__icontains=q)
@@ -97,7 +97,9 @@ def listar_todos_itens(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def deletar_item(request, item_id, item_type):
-    """View unificada para deletar produto ou recarga"""
+    """View unificada para deletar produto ou recarga com proteção de histórico"""
+    from lojas.models import Venda, MovimentacaoEstoque
+    
     if item_type == 'produto':
         item = get_object_or_404(Produto, id=item_id)
         redirect_url = 'listar_todos_itens'
@@ -110,8 +112,23 @@ def deletar_item(request, item_id, item_type):
     
     if request.method == 'POST':
         item_nome = item.nome
-        item.delete()
-        messages.success(request, f'Item "{item_nome}" deletado com sucesso!')
+        
+        # Verificar se tem vendas ou movimentações associadas
+        has_history = False
+        if item_type == 'produto':
+            has_history = Venda.objects.filter(estoque_loja__produto=item).exists() or \
+                          MovimentacaoEstoque.objects.filter(produto=item).exists()
+        else:
+            has_history = Venda.objects.filter(estoque_recarga__recarga=item).exists() or \
+                          MovimentacaoEstoque.objects.filter(recarga=item).exists()
+                          
+        if has_history:
+            item.ativo = False
+            item.save()
+            messages.warning(request, f'O item "{item_nome}" foi desativado em vez de excluído para preservar o histórico financeiro e contábil.')
+        else:
+            item.delete()
+            messages.success(request, f'Item "{item_nome}" deletado com sucesso!')
         return redirect(redirect_url)
     
     context = {
